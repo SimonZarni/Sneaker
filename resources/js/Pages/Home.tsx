@@ -57,6 +57,13 @@ export default function Home({ featured }: any) {
                                 </Link>
 
                                 <Link
+                                    href="/orders"
+                                    className="hover:text-brand-slate transition-colors"
+                                >
+                                    My Orders
+                                </Link>
+
+                                <Link
                                     href="/logout"
                                     method="post"
                                     as="button"
@@ -281,20 +288,6 @@ export default function Home({ featured }: any) {
             </section>
 
             {/* Branding Ticker & Footer */}
-            {/* <section className="py-12 bg-brand-charcoal text-brand-white overflow-hidden">
-                <div className="flex whitespace-nowrap">
-                    <div className="flex animate-pulse">
-                        {[...Array(5)].map((_, i) => (
-                            <span
-                                key={i}
-                                className="text-4xl font-black uppercase tracking-tightest mx-12 opacity-20"
-                            >
-                                Nike / Adidas / Jordan / Yeezy / New Balance
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            </section> */}
             <section className="py-12 bg-brand-charcoal text-brand-white overflow-hidden">
                 <div className="flex animate-marquee-reverse whitespace-nowrap">
                     {/* First Set */}

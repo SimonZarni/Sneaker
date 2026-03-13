@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\Gender;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -9,57 +12,50 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
-    /**
-     * Display the collection with dynamic filtering.
-     */
     public function index(Request $request): Response
     {
-        // 1. Start the query with necessary relationships
         $query = Product::with(['brand', 'category', 'gender'])
             ->where('is_active', true);
 
-        // 2. Apply filters conditionally based on URL parameters (?brand=1, etc.)
-        $query->when($request->input('brand'), function ($q, $brandId) {
-            return $q->where('brand_id', $brandId);
-        });
+        $query->when($request->input('brand'), fn($q, $v) => $q->where('brand_id', $v));
+        $query->when($request->input('gender'), fn($q, $v) => $q->where('gender_id', $v));
+        $query->when($request->input('category'), fn($q, $v) => $q->where('category_id', $v));
+        $query->when($request->input('search'), fn($q, $v) => $q->where('name', 'like', "%{$v}%"));
 
-        $query->when($request->input('gender'), function ($q, $genderId) {
-            return $q->where('gender_id', $genderId);
-        });
+        // Price sort
+        match ($request->input('sort')) {
+            'price_asc'  => $query->orderBy('base_price', 'asc'),
+            'price_desc' => $query->orderBy('base_price', 'desc'),
+            default      => $query->latest(),
+        };
 
-        $query->when($request->input('category'), function ($q, $categoryId) {
-            return $q->where('category_id', $categoryId);
-        });
-
-        $query->when($request->input('search'), function ($q, $search) {
-            return $q->where('name', 'like', "%{$search}%");
-        });
-
-        // 3. Execute query with latest drops first
-        $products = $query->latest()->get();
+        $products = $query->get()->map(fn($p) => [
+            'id'             => $p->id,
+            'name'           => $p->name,
+            'base_price'     => $p->base_price,
+            'main_image_url' => $p->main_image_url,
+            'brand'          => ['id' => $p->brand_id, 'name' => $p->brand?->name],
+            'category'       => ['id' => $p->category_id, 'name' => $p->category?->name],
+            'gender'         => ['id' => $p->gender_id, 'name' => $p->gender?->name],
+        ]);
 
         return Inertia::render('Shop/Index', [
-            'products' => $products,
-            // Pass the current filters back so the UI can stay in sync
-            'filters' => $request->only(['brand', 'gender', 'category'])
+            'products'   => $products,
+            'brands'     => Brand::orderBy('name')->get(['id', 'name']),
+            'categories' => Category::orderBy('name')->get(['id', 'name']),
+            'genders'    => Gender::orderBy('name')->get(['id', 'name']),
+            'filters'    => $request->only(['brand', 'gender', 'category', 'search', 'sort']),
+            'total'      => Product::where('is_active', true)->count(),
         ]);
     }
 
-    /**
-     * Display a specific sneaker drop.
-     */
     public function show(int $id): Response
     {
         $product = Product::with([
-            'brand',
-            'category',
-            'gender', // Added gender here as well
-            'variants.size',
-            'variants.color'
+            'brand', 'category', 'gender',
+            'variants.size', 'variants.color',
         ])->findOrFail($id);
 
-        return Inertia::render('Shop/Show', [
-            'product' => $product
-        ]);
+        return Inertia::render('Shop/Show', ['product' => $product]);
     }
 }

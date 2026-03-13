@@ -22,26 +22,23 @@ class CheckoutController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Fetch Cart with all specific sneaker details
         $cart = Cart::with([
             'items.productVariant.product.brand',
             'items.productVariant.product.category',
             'items.productVariant.size',
-            'items.productVariant.color'
+            'items.productVariant.color',
         ])->where('user_id', $user->id)->first();
 
-        // 2. Redirect if Vault is empty
         if (!$cart || $cart->items->isEmpty()) {
             return redirect()->route('shop.index')->with('error', 'Your vault is empty.');
         }
 
-        // 3. Fetch User's saved addresses for the "Quick Select" feature
         $savedAddresses = UserAddress::where('user_id', $user->id)
             ->orderBy('is_default', 'desc')
             ->get();
 
         return Inertia::render('Shop/Checkout', [
-            'cart' => $cart,
+            'cart'           => $cart,
             'savedAddresses' => $savedAddresses,
         ]);
     }
@@ -51,116 +48,130 @@ class CheckoutController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validate Input (Mapping to your orders and user_addresses migrations)
-        $validated = $request->validate([
-            'shipping_full_name' => 'required|string|max:255',
-            'shipping_phone' => 'required|string|max:20',
+        $isCard = $request->input('payment_method') === 'Credit Card';
+
+        // ── Validation ────────────────────────────────────────────────────────
+        $rules = [
+            'shipping_full_name'    => 'required|string|max:255',
+            'shipping_phone'        => 'required|string|max:20',
             'shipping_address_line' => 'required|string',
-            'shipping_city' => 'required|string',
-            'shipping_country' => 'required|string',
+            'shipping_city'         => 'required|string',
+            'shipping_country'      => 'required|string',
             'shipping_state_region' => 'nullable|string',
-            'shipping_postal_code' => 'nullable|string',
-            'payment_method' => 'required|string', // e.g., "Credit Card" or "Bank Transfer"
-        ]);
+            'shipping_postal_code'  => 'nullable|string',
+            'payment_method'        => 'required|in:Credit Card,COD',
+        ];
+
+        // Only require card fields when the user chose card payment
+        if ($isCard) {
+            $rules['cardholder_name'] = 'required|string|max:255';
+            $rules['card_number']     = 'required|digits:4';      // we receive last-4 only
+            $rules['card_expiry']     = ['required', 'string', 'regex:/^\d{2}\/\d{2}$/'];
+            $rules['card_cvc']        = 'required|digits_between:3,4';
+        }
+
+        $validated = $request->validate($rules);
 
         $user = Auth::user();
 
-        // 2. Fetch the Cart again to calculate final price securely on the server
+        // ── Re-fetch cart server-side for secure total calculation ────────────
         $cart = Cart::with([
             'items.productVariant.product.brand',
             'items.productVariant.product.category',
             'items.productVariant.size',
-            'items.productVariant.color'
+            'items.productVariant.color',
         ])->where('user_id', $user->id)->firstOrFail();
 
-        // Calculate total amount
         $totalAmount = $cart->items->reduce(function ($carry, $item) {
-            // If the variant is missing, skip this item's cost
-            if (!$item->product_variant || !$item->product_variant->product) {
+            if (!$item->productVariant || !$item->productVariant->product) {
                 return $carry;
             }
-
-            return $carry + ($item->product_variant->product->base_price * $item->quantity);
+            return $carry + ($item->productVariant->product->base_price * $item->quantity);
         }, 0);
 
-        // 3. Begin Database Transaction for Safety
-        return DB::transaction(function () use ($validated, $user, $cart, $totalAmount) {
+        // ── Determine payment statuses ────────────────────────────────────────
+        // Card  → payment confirmed immediately
+        // COD   → payment status stays as "COD" (collected on delivery)
+        $paymentStatus = $isCard ? 'Confirmed' : 'COD';
 
-            // A. Sync Address Book (Update existing or Create new)
+        // ── DB Transaction ────────────────────────────────────────────────────
+        return DB::transaction(function () use ($validated, $user, $cart, $totalAmount, $isCard, $paymentStatus) {
+
+            // A. Sync Address Book
             $userAddress = UserAddress::updateOrCreate(
                 [
-                    'user_id' => $user->id,
+                    'user_id'      => $user->id,
                     'address_line' => $validated['shipping_address_line'],
-                    'city' => $validated['shipping_city'],
+                    'city'         => $validated['shipping_city'],
                 ],
                 [
-                    'full_name' => $validated['shipping_full_name'],
-                    'phone' => $validated['shipping_phone'],
-                    'state_region' => $validated['shipping_state_region'],
-                    'postal_code' => $validated['shipping_postal_code'],
-                    'country' => $validated['shipping_country'],
-                    'is_default' => UserAddress::where('user_id', $user->id)->count() === 0,
+                    'full_name'    => $validated['shipping_full_name'],
+                    'phone'        => $validated['shipping_phone'],
+                    'state_region' => $validated['shipping_state_region'] ?? null,
+                    'postal_code'  => $validated['shipping_postal_code']  ?? null,
+                    'country'      => $validated['shipping_country'],
+                    'is_default'   => UserAddress::where('user_id', $user->id)->count() === 0,
                 ]
             );
 
-            // B. Create the Order (Snapshot of this specific transaction)
+            // B. Create Order
             $order = Order::create([
-                'user_id' => $user->id,
-                'address_id' => $userAddress->id,
-                'order_number' => 'SDRP-' . strtoupper(Str::random(12)),
-                'total_amount' => $totalAmount,
-                'order_status' => 'Confirmed',
-                'payment_status' => 'Pending',
-                'delivery_status' => 'Pending',
-                'shipping_full_name' => $validated['shipping_full_name'],
-                'shipping_phone' => $validated['shipping_phone'],
+                'user_id'               => $user->id,
+                'address_id'            => $userAddress->id,
+                'order_number'          => 'SDRP-' . strtoupper(Str::random(12)),
+                'total_amount'          => $totalAmount,
+                'order_status'          => 'Confirmed',
+                'payment_status'        => $paymentStatus,
+                'delivery_status'       => 'Pending',
+                'shipping_full_name'    => $validated['shipping_full_name'],
+                'shipping_phone'        => $validated['shipping_phone'],
                 'shipping_address_line' => $validated['shipping_address_line'],
-                'shipping_city' => $validated['shipping_city'],
-                'shipping_state_region' => $validated['shipping_state_region'],
-                'shipping_postal_code' => $validated['shipping_postal_code'],
-                'shipping_country' => $validated['shipping_country'],
-                'placed_at' => now(),
+                'shipping_city'         => $validated['shipping_city'],
+                'shipping_state_region' => $validated['shipping_state_region'] ?? null,
+                'shipping_postal_code'  => $validated['shipping_postal_code']  ?? null,
+                'shipping_country'      => $validated['shipping_country'],
+                'placed_at'             => now(),
             ]);
 
+            // C. Create Order Items + decrement stock
             foreach ($cart->items as $item) {
                 if (!$item->productVariant) continue;
 
-                // 2. Insert the snapshot into order_items
                 OrderItem::create([
                     'order_id'           => $order->id,
                     'product_id'         => $item->productVariant->product_id,
                     'product_variant_id' => $item->product_variant_id,
-
-                    // We save these as strings so they never change
                     'product_name'       => $item->productVariant->product->name,
                     'brand_name'         => $item->productVariant->product->brand->name,
                     'category_name'      => $item->productVariant->product->category->name,
-                    'gender_name'        => 'Unisex', // Adjust if you have a gender column
+                    'gender_name'        => $item->productVariant->product->gender->name ?? 'Unisex',
                     'color_name'         => $item->productVariant->color->name,
                     'size_value'         => $item->productVariant->size->size_value,
-
-                    // Financials
                     'unit_price'         => $item->productVariant->product->base_price,
                     'quantity'           => $item->quantity,
                     'subtotal'           => $item->productVariant->product->base_price * $item->quantity,
                 ]);
 
-                // 3. Decrement stock so others can't buy the same pair
                 $item->productVariant->decrement('stock_quantity', $item->quantity);
             }
 
-            // E. Create Payment Record
+            // D. Create Payment Record
             Payment::create([
-                'order_id' => $order->id,
-                'payment_method' => $validated['payment_method'],
-                'payment_status' => 'Pending',
+                'order_id'        => $order->id,
+                'payment_method'  => $validated['payment_method'],
+                'payment_status'  => $paymentStatus,
+                // Store masked card details only for card payments
+                'cardholder_name' => $isCard ? $validated['cardholder_name'] : null,
+                'card_last4'      => $isCard ? $validated['card_number']     : null,
+                'paid_at'         => $isCard ? now() : null,
             ]);
 
-            // F. Clear the Vault (Cart Items)
+            // E. Clear the Cart
             $cart->items()->delete();
 
-            // Redirect back to shop or a success page
-            return redirect()->route('shop.index')->with('success', "Order {$order->order_number} secured successfully.");
+            // return redirect()->route('shop.index')
+            //     ->with('success', "Order {$order->order_number} secured successfully.");
+            return redirect()->route('orders.success', $order->id);
         });
     }
 }

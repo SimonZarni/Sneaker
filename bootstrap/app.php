@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        // Register the admin middleware alias
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
+        ]);
+
         // ADD THIS: Global redirect configuration for Laravel 11
         $middleware->redirectTo(
             guests: '/login', // Where to send people who aren't logged in
