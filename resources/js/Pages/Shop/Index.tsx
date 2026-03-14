@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
+import CartDrawer from "@/Components/CartDrawer";
 
 interface Product {
     id: number;
@@ -9,6 +10,7 @@ interface Product {
     brand: { id: number; name: string };
     category: { id: number; name: string };
     gender: { id: number; name: string };
+    wishlisted: boolean;
 }
 
 interface FilterItem { id: number; name: string }
@@ -29,10 +31,12 @@ const SORT_OPTIONS = [
 ];
 
 export default function ShopIndex({ products, brands, categories, genders, filters, total }: Props) {
-    const { auth }: any = usePage().props;
+    const { auth, cart }: any = usePage().props;
+    const cartCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
     const [search,      setSearch]      = useState(filters.search ?? "");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isCartOpen,  setIsCartOpen]  = useState(false);
     const searchRef = useRef<HTMLInputElement>(null);
 
     const activeBrand    = filters.brand    ?? "";
@@ -78,6 +82,7 @@ export default function ShopIndex({ products, brands, categories, genders, filte
                         {auth.user ? (
                             <>
                                 <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Orders</Link>
+                                <Link href={route("wishlist.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Wishlist</Link>
                                 <Link href="/logout" method="post" as="button" style={{ color: "rgba(45,50,62,0.4)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
                                     Log Out
                                 </Link>
@@ -85,6 +90,12 @@ export default function ShopIndex({ products, brands, categories, genders, filte
                         ) : (
                             <Link href="/login" style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Login</Link>
                         )}
+                        <button onClick={() => setIsCartOpen(true)} style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#0A0A0A" }}>
+                            Vault
+                            <span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "2px 6px", borderRadius: "9999px", fontSize: "8px" }}>
+                                {cartCount}
+                            </span>
+                        </button>
                     </div>
                 </div>
             </nav>
@@ -229,11 +240,13 @@ export default function ShopIndex({ products, brands, categories, genders, filte
                 ) : (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1px", backgroundColor: "#f0f0f0", border: "1px solid #f0f0f0", overflow: "hidden" }}>
                         {products.map((product) => (
-                            <ProductCard key={product.id} product={product} />
+                            <ProductCard key={product.id} product={product} auth={auth} />
                         ))}
                     </div>
                 )}
             </div>
+
+            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         </div>
     );
 }
@@ -284,21 +297,50 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
             </button>
+
         </div>
     );
 }
 
 // ── Product Card ──────────────────────────────────────────────────────────────
-function ProductCard({ product }: { product: Product }) {
-    const [hovered, setHovered] = useState(false);
+function ProductCard({ product, auth }: { product: Product; auth: any }) {
+    const [hovered,    setHovered]    = useState(false);
+    const [wishlisted, setWishlisted] = useState(product.wishlisted);
+    const [wishFlash,  setWishFlash]  = useState(false);
+
+    const handleWishlist = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!auth?.user) { window.location.href = '/login'; return; }
+        router.post(route('wishlist.toggle'), { product_id: product.id }, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                setWishlisted(v => !v);
+                setWishFlash(true);
+                setTimeout(() => setWishFlash(false), 1200);
+            },
+        });
+    };
 
     return (
         <Link
             href={route("shop.show", product.id)}
-            style={{ display: "block", backgroundColor: "#fff", padding: "28px", textDecoration: "none", color: "inherit", transition: "background-color 0.3s" }}
+            style={{ display: "block", backgroundColor: "#fff", padding: "28px", textDecoration: "none", color: "inherit", transition: "background-color 0.3s", position: "relative" }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
+            {/* Wishlist heart */}
+            <button
+                onClick={handleWishlist}
+                title={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                style={{ position: "absolute", top: "16px", right: "16px", zIndex: 10, background: "rgba(255,255,255,0.9)", border: "none", cursor: "pointer", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", transition: "transform 0.2s", transform: wishFlash ? "scale(1.3)" : "scale(1)" }}
+            >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={wishlisted ? "#0A0A0A" : "none"} stroke="#0A0A0A" strokeWidth="1.8">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                </svg>
+            </button>
+
             {/* Image */}
             <div style={{ aspectRatio: "1/1", backgroundColor: "#F5F5F7", overflow: "hidden", marginBottom: "20px" }}>
                 <img

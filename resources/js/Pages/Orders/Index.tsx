@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
+import CartDrawer from "@/Components/CartDrawer";
 
 interface Order {
     id: number;
@@ -55,7 +56,7 @@ function formatPrice(val: string | number) {
 
 export default function OrdersIndex({ orders }: Props) {
     const { auth, cart }: any = usePage().props;
-
+    const [isCartOpen, setIsCartOpen] = useState(false);
     const cartCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
     return (
@@ -101,12 +102,12 @@ export default function OrdersIndex({ orders }: Props) {
                                 Account
                             </Link>
                         )}
-                        <Link href="/shop" className="flex items-center gap-2 group">
+                        <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 group">
                             <span>Vault</span>
                             <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px] group-hover:bg-brand-slate transition-colors">
                                 {cartCount}
                             </span>
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </nav>
@@ -149,7 +150,7 @@ export default function OrdersIndex({ orders }: Props) {
 
                 {/* Orders Table */}
                 {orders.length > 0 && (
-                    <div className="space-y-px">
+                    <div className="border border-brand-surface">
                         {/* Column Headers */}
                         <div className="grid grid-cols-12 gap-4 px-6 pb-4 text-[9px] font-black uppercase tracking-[0.3em] text-brand-slate/40">
                             <div className="col-span-1">#</div>
@@ -164,7 +165,7 @@ export default function OrdersIndex({ orders }: Props) {
                         {orders.map((order, idx) => (
                             <div
                                 key={order.id}
-                                className="group grid grid-cols-12 gap-4 items-center px-6 py-6 bg-brand-surface/20 hover:bg-brand-surface transition-colors border border-transparent hover:border-brand-charcoal/10"
+                                className="group grid grid-cols-12 gap-4 items-center px-6 py-6 bg-brand-white hover:bg-brand-surface/40 transition-colors border-b border-brand-surface last:border-b-0"
                             >
                                 {/* Row # */}
                                 <div className="col-span-1 text-[10px] font-black text-brand-slate/30 tabular-nums">
@@ -241,6 +242,7 @@ export default function OrdersIndex({ orders }: Props) {
                     </div>
                 )}
             </main>
+            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         </div>
     );
 }

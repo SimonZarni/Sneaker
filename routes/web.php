@@ -9,6 +9,10 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -53,6 +57,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}/success', [OrderController::class, 'success'])->name('orders.success');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+
+    // Wishlist
+    Route::get('/wishlist',              [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle',      [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::delete('/wishlist/{id}',      [WishlistController::class, 'destroy'])->name('wishlist.destroy');
+
+    // Reviews
+    Route::post('/reviews',              [ReviewController::class, 'store'])->name('reviews.store');
+    Route::delete('/reviews/{id}',       [ReviewController::class, 'destroy'])->name('reviews.destroy');
 });
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
@@ -85,6 +98,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/products/{id}',       [AdminProductController::class, 'update'])->name('products.update');
         Route::patch('/products/{id}/toggle',[AdminProductController::class, 'toggleActive'])->name('products.toggleActive');
         Route::delete('/products/{id}',      [AdminProductController::class, 'destroy'])->name('products.destroy');
+
+        // Reviews
+        Route::get('/reviews',                [AdminReviewController::class, 'index'])->name('reviews.index');
+        Route::patch('/reviews/{id}/approve', [AdminReviewController::class, 'approve'])->name('reviews.approve');
+        Route::delete('/reviews/{id}',        [AdminReviewController::class, 'reject'])->name('reviews.reject');
+
+        // Customers
+        Route::get('/customers',                     [AdminCustomerController::class, 'index'])->name('customers.index');
+        Route::get('/customers/{id}',                [AdminCustomerController::class, 'show'])->name('customers.show');
+        Route::patch('/customers/{id}/toggle-active',[AdminCustomerController::class, 'toggleActive'])->name('customers.toggleActive');
     });
 });
 

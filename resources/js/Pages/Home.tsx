@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from "@inertiajs/react";
 import React, { useState } from "react";
+import CartDrawer from "@/Components/CartDrawer";
 
 export default function Home({ featured }: any) {
     const { navigation, cart, auth }: any = usePage().props;
@@ -9,6 +10,7 @@ export default function Home({ featured }: any) {
         type: "gender" | "brand";
         id: number;
     } | null>(null);
+    const [isCartOpen, setIsCartOpen] = useState(false);
 
     const cartCount =
         cart?.items?.reduce(
@@ -78,12 +80,12 @@ export default function Home({ featured }: any) {
                                 href="/login"
                                 className="hover:text-brand-slate transition-colors"
                             >
-                                Account
+                                Login
                             </Link>
                         )}
 
                         {/* Vault / Cart */}
-                        <button className="flex items-center gap-2 group">
+                        <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 group">
                             <span>Vault</span>
                             <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px] group-hover:bg-brand-slate transition-colors">
                                 {cartCount}
@@ -314,6 +316,8 @@ export default function Home({ featured }: any) {
                     </div>
                 </div>
             </section>
+
+            <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
             <footer className="py-20 bg-brand-white border-t border-brand-surface">
                 <div className="mx-auto max-w-7xl px-4 text-center">
