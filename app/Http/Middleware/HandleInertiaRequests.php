@@ -41,7 +41,7 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                 ] : null,
             ],
-            
+
             // 1. Existing Cart Logic
             'cart' => Auth::check()
                 ? \App\Models\Cart::with([
@@ -55,7 +55,7 @@ class HandleInertiaRequests extends Middleware
 
             // 2. Global Navigation Data (New)
             'navigation' => [
-                'brands' => \App\Models\Brand::select('id', 'name')->get(),
+                'brands' => \App\Models\Brand::select('id', 'name', 'logo_url')->get(),
                 'categories' => \App\Models\Category::select('id', 'name')->get(),
                 'genders' => \App\Models\Gender::select('id', 'name')->get(),
             ],
