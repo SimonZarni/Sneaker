@@ -57,6 +57,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}/success', [OrderController::class, 'success'])->name('orders.success');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
     // Wishlist
     Route::get('/wishlist',              [WishlistController::class, 'index'])->name('wishlist.index');
@@ -83,6 +84,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{id}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::patch('/orders/{id}/delivery', [AdminOrderController::class, 'updateDeliveryStatus'])->name('orders.updateDelivery');
+        Route::post('/orders/{id}/cancel',   [AdminOrderController::class, 'cancel'])->name('orders.cancel');
 
         // Settings (brands, categories, genders, colors)
         Route::get('/settings',                          [\App\Http\Controllers\Admin\AdminSettingsController::class, 'index'])->name('settings.index');

@@ -4,32 +4,26 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AdminOrderController extends Controller
 {
     private const DELIVERY_STEPS = ['Pending', 'Processing', 'Shipped', 'Delivered'];
 
-    /**
-     * List all orders with summary data, newest first.
-     */
     public function index(Request $request)
     {
         $query = Order::with(['user', 'items', 'payment'])->latest('placed_at');
 
-        // Filter by delivery status if provided
         if ($status = $request->input('status')) {
             $query->where('delivery_status', $status);
         }
-
-        // Filter by payment status
         if ($payment = $request->input('payment')) {
             $query->where('payment_status', $payment);
         }
-
-        // Search by order number or customer name
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
@@ -51,7 +45,6 @@ class AdminOrderController extends Controller
             'placed_at'       => $order->placed_at?->toISOString(),
         ]);
 
-        // Stats for the dashboard header
         $stats = [
             'total'      => Order::count(),
             'pending'    => Order::where('delivery_status', 'Pending')->count(),
@@ -68,24 +61,17 @@ class AdminOrderController extends Controller
         ]);
     }
 
-    /**
-     * Show a single order's full detail for the admin.
-     */
     public function show(int $id)
     {
         $order = Order::with(['user', 'items.product', 'payment'])->findOrFail($id);
 
         return Inertia::render('Admin/Orders/Show', [
-            'order'          => $this->formatOrder($order),
-            'deliverySteps'  => self::DELIVERY_STEPS,
-            'admin'          => ['name' => Auth::guard('admin')->user()->full_name],
+            'order'         => $this->formatOrder($order),
+            'deliverySteps' => self::DELIVERY_STEPS,
+            'admin'         => ['name' => Auth::guard('admin')->user()->full_name],
         ]);
     }
 
-    /**
-     * Update the delivery_status of an order.
-     * Only allows moving forward through the defined steps.
-     */
     public function updateDeliveryStatus(Request $request, int $id)
     {
         $request->validate([
@@ -98,6 +84,55 @@ class AdminOrderController extends Controller
         return back()->with('success', "Order {$order->order_number} updated to {$request->delivery_status}.");
     }
 
+    public function cancel(Request $request, int $id)
+    {
+        $order = Order::with(['items', 'payment'])->findOrFail($id);
+
+        // Must still be Pending
+        if ($order->delivery_status !== 'Pending') {
+            return back()->withErrors(['cancel' => 'This order can no longer be cancelled.']);
+        }
+
+        // Must be within 24 hours
+        if ($order->placed_at->diffInHours(now()) > 24) {
+            return back()->withErrors(['cancel' => 'The 24-hour cancellation window has passed.']);
+        }
+
+        $request->validate([
+            'cancellation_reason' => 'required|string|in:Fraudulent order detected,Item out of stock / fulfillment failure,Customer requested cancellation,Duplicate order,Shipping address undeliverable,Other',
+            'cancellation_note'   => 'nullable|string|max:500|required_if:cancellation_reason,Other',
+        ]);
+
+        DB::transaction(function () use ($order, $request) {
+            foreach ($order->items as $item) {
+                if ($item->product_variant_id) {
+                    ProductVariant::where('id', $item->product_variant_id)
+                        ->increment('stock_quantity', $item->quantity);
+                }
+            }
+
+            $paymentMethod = $order->payment?->payment_method;
+            $isCard        = $paymentMethod && strtolower($paymentMethod) !== 'cod';
+            $newPayStatus  = $isCard ? 'Refunded' : $order->payment_status;
+
+            $order->update([
+                'order_status'        => 'Cancelled',
+                'delivery_status'     => 'Cancelled',
+                'payment_status'      => $newPayStatus,
+                'cancelled_at'        => now(),
+                'cancellation_reason' => $request->cancellation_reason,
+                'cancellation_note'   => $request->cancellation_note,
+            ]);
+
+            // Also update the payments table record
+            if ($isCard && $order->payment) {
+                $order->payment->update(['payment_status' => 'Refunded']);
+            }
+        });
+
+        return back()->with('success', "Order {$order->order_number} has been cancelled.");
+    }
+
     private function formatOrder(Order $order): array
     {
         return [
@@ -108,6 +143,9 @@ class AdminOrderController extends Controller
             'payment_status'        => $order->payment_status,
             'delivery_status'       => $order->delivery_status,
             'placed_at'             => $order->placed_at?->toISOString(),
+            'cancelled_at'          => $order->cancelled_at?->toISOString(),
+            'cancellation_reason'   => $order->cancellation_reason,
+            'cancellation_note'     => $order->cancellation_note,
             'customer_name'         => $order->user?->name,
             'customer_email'        => $order->user?->email,
             'shipping_full_name'    => $order->shipping_full_name,

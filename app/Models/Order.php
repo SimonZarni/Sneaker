@@ -25,10 +25,14 @@ class Order extends Model
         'shipping_postal_code',
         'shipping_country',
         'placed_at',
+        'cancelled_at',
+        'cancellation_reason',
+        'cancellation_note',
     ];
 
     protected $casts = [
-        'placed_at' => 'datetime',
+        'placed_at'    => 'datetime',
+        'cancelled_at' => 'datetime',
         'total_amount' => 'decimal:2',
     ];
 
