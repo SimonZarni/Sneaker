@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AdminDashboardController extends Controller
@@ -25,14 +25,30 @@ class AdminDashboardController extends Controller
 
         // ── Revenue stats ─────────────────────────────────────────────────────
         $revenueStats = [
-            'total'    => (float) Order::where('order_status', 'Confirmed')->sum('total_amount'),
-            'cod'      => (float) Order::where('payment_status', 'COD')->sum('total_amount'),
-            'card'     => (float) Order::where('payment_status', 'Confirmed')->sum('total_amount'),
+            'total' => (float) Order::where('order_status', 'Confirmed')->sum('total_amount'),
+            'cod'   => (float) Order::where('payment_status', 'COD')->sum('total_amount'),
+            'card'  => (float) Order::where('payment_status', 'Confirmed')->sum('total_amount'),
         ];
 
         // ── Other counts ──────────────────────────────────────────────────────
         $totalCustomers = User::count();
         $totalProducts  = Product::where('is_active', true)->count();
+
+        // ── Low stock variants (≤ 5) ──────────────────────────────────────────
+        $lowStock = ProductVariant::with(['product:id,name,is_active', 'color:id,name,hex_code', 'size:id,size_value'])
+            ->where('stock_quantity', '<=', 5)
+            ->whereHas('product', fn($q) => $q->where('is_active', true))
+            ->orderBy('stock_quantity', 'asc')
+            ->get()
+            ->map(fn($v) => [
+                'id'             => $v->id,
+                'product_id'     => $v->product_id,
+                'product_name'   => $v->product->name,
+                'color_name'     => $v->color->name,
+                'color_hex'      => $v->color->hex_code,
+                'size_value'     => $v->size->size_value,
+                'stock_quantity' => $v->stock_quantity,
+            ]);
 
         // ── 5 most recent orders ──────────────────────────────────────────────
         $recentOrders = Order::with('user')
@@ -54,6 +70,7 @@ class AdminDashboardController extends Controller
             'revenueStats'   => $revenueStats,
             'totalCustomers' => $totalCustomers,
             'totalProducts'  => $totalProducts,
+            'lowStock'       => $lowStock,
             'recentOrders'   => $recentOrders,
             'admin'          => ['name' => Auth::guard('admin')->user()->full_name],
         ]);

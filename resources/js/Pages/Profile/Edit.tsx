@@ -410,7 +410,7 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                                 );
                             })() : (
                                 <button onClick={() => { setTab("addresses"); setShowAddForm(true); }} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", background: "none", border: "1px dashed #d1d5db", padding: "16px 24px", cursor: "pointer", color: "rgba(45,50,62,0.4)" }}>
-                                    + Add Your First Address
+                                    + Add Your Address
                                 </button>
                             )}
                         </Section>
