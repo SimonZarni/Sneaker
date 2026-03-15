@@ -80,7 +80,15 @@ class CheckoutController extends Controller
             'items.productVariant.product.category',
             'items.productVariant.size',
             'items.productVariant.color',
-        ])->where('user_id', $user->id)->firstOrFail();
+        ])->where('user_id', $user->id)->first();
+
+        // Guard: cart missing entirely, or all items were removed/deactivated
+        // between the page load and the form submission.
+        // Without this, firstOrFail() would 404, or a $0 order would be created.
+        if (!$cart || $cart->items->isEmpty()) {
+            return redirect()->route('shop.index')
+                ->with('error', 'Your cart is empty. Please add items before checking out.');
+        }
 
         $totalAmount = $cart->items->reduce(function ($carry, $item) {
             if (!$item->productVariant || !$item->productVariant->product) {
@@ -157,7 +165,7 @@ class CheckoutController extends Controller
             $order = Order::create([
                 'user_id'               => $user->id,
                 'address_id'            => $userAddress->id,
-                'order_number'          => 'SDRP-' . strtoupper(Str::random(12)),
+                'order_number'          => 'SDRP-' . strtoupper(Str::uuid()),
                 'total_amount'          => $totalAmount,
                 'order_status'          => 'Confirmed',
                 'payment_status'        => $paymentStatus,

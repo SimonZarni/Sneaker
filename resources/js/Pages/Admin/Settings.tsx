@@ -120,14 +120,17 @@ function EntityPanel<T extends { id: number; name: string }>({
     renderAddForm: (onSave: () => void, onCancel: () => void) => React.ReactNode;
     renderEditForm: (item: T, onSave: () => void, onCancel: () => void) => React.ReactNode;
 }) {
-    const [adding,     setAdding]     = useState(false);
-    const [editingId,  setEditingId]  = useState<number | null>(null);
-    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [adding,      setAdding]      = useState(false);
+    const [editingId,   setEditingId]   = useState<number | null>(null);
+    const [deletingId,  setDeletingId]  = useState<number | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const handleDelete = (id: number) => {
+        setDeleteError(null);
         router.delete(route("admin.settings.destroy", { type, id }), {
             preserveScroll: true,
             onSuccess: () => setDeletingId(null),
+            onError: (e) => setDeleteError(e.delete ?? "Something went wrong. Please try again."),
         });
     };
 
@@ -180,21 +183,30 @@ function EntityPanel<T extends { id: number; name: string }>({
                             </div>
                         ) : deletingId === item.id ? (
                             /* Inline delete confirmation */
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", backgroundColor: "#fef2f2" }}>
-                                <p style={{ fontSize: "10px", fontWeight: 700, color: "#991b1b" }}>
-                                    Delete <strong>"{item.name}"</strong>? This cannot be undone.
-                                </p>
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                    <button
-                                        onClick={() => handleDelete(item.id)}
-                                        style={{ ...btnPrimary, backgroundColor: "#dc2626" }}
-                                    >
-                                        Delete
-                                    </button>
-                                    <button onClick={() => setDeletingId(null)} style={btnGhost}>
-                                        Cancel
-                                    </button>
+                            <div style={{ backgroundColor: "#fef2f2", borderLeft: "3px solid #dc2626" }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px" }}>
+                                    <p style={{ fontSize: "10px", fontWeight: 700, color: "#991b1b" }}>
+                                        Delete <strong>"{item.name}"</strong>? This cannot be undone.
+                                    </p>
+                                    <div style={{ display: "flex", gap: "8px" }}>
+                                        <button
+                                            onClick={() => handleDelete(item.id)}
+                                            style={{ ...btnPrimary, backgroundColor: "#dc2626" }}
+                                        >
+                                            Delete
+                                        </button>
+                                        <button onClick={() => { setDeletingId(null); setDeleteError(null); }} style={btnGhost}>
+                                            Cancel
+                                        </button>
+                                    </div>
                                 </div>
+                                {deleteError && (
+                                    <div style={{ padding: "8px 20px 12px", borderTop: "1px solid #fecaca" }}>
+                                        <p style={{ fontSize: "10px", fontWeight: 700, color: "#dc2626" }}>
+                                            ✕ {deleteError}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             /* Normal display row */

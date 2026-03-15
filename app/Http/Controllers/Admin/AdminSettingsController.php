@@ -7,6 +7,8 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Color;
 use App\Models\Gender;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -120,14 +122,70 @@ class AdminSettingsController extends Controller
 
     public function destroy(string $type, int $id)
     {
-        match ($type) {
-            'brand'    => Brand::findOrFail($id)->delete(),
-            'category' => Category::findOrFail($id)->delete(),
-            'gender'   => Gender::findOrFail($id)->delete(),
-            'color'    => Color::findOrFail($id)->delete(),
+        $error = match ($type) {
+            'brand'    => $this->destroyBrand($id),
+            'category' => $this->destroyCategory($id),
+            'gender'   => $this->destroyGender($id),
+            'color'    => $this->destroyColor($id),
             default    => abort(404),
         };
 
+        if ($error) {
+            return back()->withErrors(['delete' => $error]);
+        }
+
         return back()->with('success', ucfirst($type) . ' deleted.');
+    }
+
+    private function destroyBrand(int $id): ?string
+    {
+        $brand = Brand::findOrFail($id);
+        $count = Product::where('brand_id', $id)->count();
+
+        if ($count > 0) {
+            return "Cannot delete \"{$brand->name}\" — {$count} " . ($count === 1 ? 'product is' : 'products are') . ' assigned to it. Reassign or delete those products first.';
+        }
+
+        $brand->delete();
+        return null;
+    }
+
+    private function destroyCategory(int $id): ?string
+    {
+        $category = Category::findOrFail($id);
+        $count    = Product::where('category_id', $id)->count();
+
+        if ($count > 0) {
+            return "Cannot delete \"{$category->name}\" — {$count} " . ($count === 1 ? 'product is' : 'products are') . ' assigned to it. Reassign or delete those products first.';
+        }
+
+        $category->delete();
+        return null;
+    }
+
+    private function destroyGender(int $id): ?string
+    {
+        $gender = Gender::findOrFail($id);
+        $count  = Product::where('gender_id', $id)->count();
+
+        if ($count > 0) {
+            return "Cannot delete \"{$gender->name}\" — {$count} " . ($count === 1 ? 'product is' : 'products are') . ' assigned to it. Reassign or delete those products first.';
+        }
+
+        $gender->delete();
+        return null;
+    }
+
+    private function destroyColor(int $id): ?string
+    {
+        $color = Color::findOrFail($id);
+        $count = ProductVariant::where('color_id', $id)->count();
+
+        if ($count > 0) {
+            return "Cannot delete \"{$color->name}\" — {$count} product " . ($count === 1 ? 'variant uses' : 'variants use') . ' this color. Remove those variants first.';
+        }
+
+        $color->delete();
+        return null;
     }
 }

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
+import Pagination from "@/Components/Pagination";
 import AdminLayout from "@/Components/AdminLayout";
 
 interface Order {
@@ -18,7 +19,7 @@ interface Order {
 
 interface Stats { total: number; pending: number; processing: number; shipped: number; delivered: number }
 interface Props {
-    orders: Order[];
+    orders: { data: Order[]; current_page: number; last_page: number; from: number|null; to: number|null; total: number; links: any[] };
     stats: Stats;
     filters: { status?: string; payment?: string; search?: string };
     admin: { name: string };
@@ -48,7 +49,7 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
     const activePayment = filters.payment ?? "";
 
     const apply = (overrides: Record<string, string>) => {
-        router.get(route("admin.orders.index"), { search, status: activeStatus, payment: activePayment, ...overrides }, { preserveState: true, replace: true });
+        router.get(route("admin.orders.index"), { search, status: activeStatus, payment: activePayment, page: 1, ...overrides }, { preserveState: true, replace: true });
     };
 
     const clearFilters = () => {
@@ -154,13 +155,13 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
                     ))}
                 </div>
 
-                {orders.length === 0 && (
+                {orders.data.length === 0 && (
                     <div style={{ padding: "80px 24px", textAlign: "center", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(45,50,62,0.2)" }}>
                         No orders found
                     </div>
                 )}
 
-                {orders.map((order) => (
+                {orders.data.map((order) => (
                     <div key={order.id} style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 0.6fr 1fr 1.2fr 1fr 1fr 0.8fr", gap: "16px", alignItems: "center", padding: "18px 24px", borderBottom: "1px solid #fafafa" }}>
                         <div>
                             <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{order.order_number}</p>
@@ -184,9 +185,7 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
                 ))}
             </div>
 
-            <p style={{ marginTop: "12px", fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.3)", textAlign: "right" }}>
-                {orders.length} {orders.length === 1 ? "order" : "orders"} shown
-            </p>
+            <Pagination data={orders} preserveFilters={{ search, status: activeStatus, payment: activePayment }} />
         </AdminLayout>
     );
 }

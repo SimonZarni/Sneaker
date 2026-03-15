@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -15,8 +16,8 @@ class AdminCustomerController extends Controller
         $customers = User::withCount('orders')
             ->withSum('orders', 'total_amount')
             ->latest()
-            ->get()
-            ->map(fn($u) => [
+            ->paginate(25)
+            ->through(fn($u) => [
                 'id'           => $u->id,
                 'name'         => $u->name,
                 'email'        => $u->email,
@@ -29,10 +30,10 @@ class AdminCustomerController extends Controller
             ]);
 
         $stats = [
-            'total'    => $customers->count(),
-            'active'   => $customers->where('is_active', true)->count(),
-            'inactive' => $customers->where('is_active', false)->count(),
-            'revenue'  => (float) $customers->sum('total_spent'),
+            'total'    => User::count(),
+            'active'   => User::where('is_active', true)->count(),
+            'inactive' => User::where('is_active', false)->count(),
+            'revenue'  => (float) Order::sum('total_amount'),
         ];
 
         return Inertia::render('Admin/Customers/Index', [

@@ -31,7 +31,7 @@ class AdminOrderController extends Controller
             });
         }
 
-        $orders = $query->get()->map(fn($order) => [
+        $orders = $query->paginate(20)->through(fn($order) => [
             'id'              => $order->id,
             'order_number'    => $order->order_number,
             'customer_name'   => $order->shipping_full_name,
@@ -118,9 +118,13 @@ class AdminOrderController extends Controller
         ]);
 
         DB::transaction(function () use ($order, $request) {
+            // Restore stock — cross-check variant still belongs to the same product.
+            // If the product was edited and the variant was deleted/recreated,
+            // the old variant_id no longer exists and stock should not be touched.
             foreach ($order->items as $item) {
-                if ($item->product_variant_id) {
+                if ($item->product_variant_id && $item->product_id) {
                     ProductVariant::where('id', $item->product_variant_id)
+                        ->where('product_id', $item->product_id)
                         ->increment('stock_quantity', $item->quantity);
                 }
             }

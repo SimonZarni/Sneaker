@@ -75,10 +75,14 @@ class OrderController extends Controller
         ]);
 
         DB::transaction(function () use ($order, $request) {
-            // Restore stock for each item
+            // Restore stock for each item.
+            // Cross-check that the variant still belongs to the same product —
+            // if the admin edited the product and the variant was deleted/recreated,
+            // the old variant_id no longer exists and we should not touch stock.
             foreach ($order->items as $item) {
-                if ($item->product_variant_id) {
+                if ($item->product_variant_id && $item->product_id) {
                     ProductVariant::where('id', $item->product_variant_id)
+                        ->where('product_id', $item->product_id)
                         ->increment('stock_quantity', $item->quantity);
                 }
             }

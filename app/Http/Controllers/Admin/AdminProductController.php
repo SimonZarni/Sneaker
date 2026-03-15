@@ -48,7 +48,7 @@ class AdminProductController extends Controller
             $query->where('is_active', true);
         }
 
-        $products = $query->latest()->get()->map(fn($p) => [
+        $products = $query->latest()->paginate(20)->through(fn($p) => [
             'id'             => $p->id,
             'name'           => $p->name,
             'brand'          => $p->brand?->name,
@@ -102,6 +102,11 @@ class AdminProductController extends Controller
             'variants.*.sizes.*.size_id'      => 'required|exists:sizes,id',
             'variants.*.sizes.*.stock_quantity' => 'required|integer|min:0',
         ]);
+
+        // Check for duplicate (color_id, size_id) pairs within the submission
+        if ($error = $this->findDuplicateVariant($request->variants)) {
+            return back()->withErrors(['variants' => $error]);
+        }
 
         DB::transaction(function () use ($request) {
             $adminId = Auth::guard('admin')->id();
@@ -201,6 +206,11 @@ class AdminProductController extends Controller
 
         $product = Product::findOrFail($id);
 
+        // Check for duplicate (color_id, size_id) pairs within the submission
+        if ($error = $this->findDuplicateVariant($request->variants)) {
+            return back()->withErrors(['variants' => $error]);
+        }
+
         DB::transaction(function () use ($request, $product) {
             $product->update([
                 'brand_id'            => $request->brand_id,
@@ -243,15 +253,24 @@ class AdminProductController extends Controller
                             ]);
                     } else {
                         // New variant row — create and record its new ID
-                        $newVariant = ProductVariant::create([
-                            'product_id'     => $product->id,
-                            'color_id'       => $variantData['color_id'],
-                            'size_id'        => $sizeEntry['size_id'],
-                            'stock_quantity' => $sizeEntry['stock_quantity'],
-                            'variant_price'  => $variantPrice($variantData),
-                            'image_url'      => $variantData['image_url'] ?? null,
-                        ]);
-                        $submittedVariantIds[] = $newVariant->id;
+                        try {
+                            $newVariant = ProductVariant::create([
+                                'product_id'     => $product->id,
+                                'color_id'       => $variantData['color_id'],
+                                'size_id'        => $sizeEntry['size_id'],
+                                'stock_quantity' => $sizeEntry['stock_quantity'],
+                                'variant_price'  => $variantPrice($variantData),
+                                'image_url'      => $variantData['image_url'] ?? null,
+                            ]);
+                            $submittedVariantIds[] = $newVariant->id;
+                        } catch (\Illuminate\Database\QueryException $e) {
+                            if ($e->getCode() === '23000') {
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    'variants' => 'A duplicate color/size combination was detected. Each color and size combination must be unique.',
+                                ]);
+                            }
+                            throw $e;
+                        }
                     }
                 }
             }
@@ -298,5 +317,38 @@ class AdminProductController extends Controller
 
         return redirect()->route('admin.products.index')
             ->with('success', "Product \"{$name}\" deleted permanently.");
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Check for duplicate (color_id, size_id) pairs within the submitted variants.
+     * Returns a human-readable error string if a duplicate is found, null if clean.
+     */
+    private function findDuplicateVariant(array $variants): ?string
+    {
+        $seen = [];
+
+        foreach ($variants as $variantData) {
+            $colorId = (int) ($variantData['color_id'] ?? 0);
+            if ($colorId === 0) continue;
+
+            $sizes = array_values((array) ($variantData['sizes'] ?? []));
+
+            foreach ($sizes as $sizeEntry) {
+                $sizeId = (int) ($sizeEntry['size_id'] ?? 0);
+                if ($sizeId === 0) continue;
+
+                $key = "{$colorId}:{$sizeId}";
+
+                if (isset($seen[$key])) {
+                    return "Duplicate variant detected: the same color and size combination appears more than once. Each color/size pair must be unique.";
+                }
+
+                $seen[$key] = true;
+            }
+        }
+
+        return null;
     }
 }

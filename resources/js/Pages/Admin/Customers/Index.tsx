@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import AdminLayout from "@/Components/AdminLayout";
+import Pagination from "@/Components/Pagination";
 
 interface Customer {
     id: number;
@@ -21,8 +22,18 @@ interface Stats {
     revenue: number;
 }
 
+interface Paginator {
+    data: Customer[];
+    current_page: number;
+    last_page: number;
+    from: number | null;
+    to: number | null;
+    total: number;
+    links: { url: string | null; label: string; active: boolean }[];
+}
+
 interface Props {
-    customers: Customer[];
+    customers: Paginator;
     stats: Stats;
     admin: { name: string };
 }
@@ -36,7 +47,8 @@ export default function AdminCustomersIndex({ customers, stats, admin }: Props) 
     const [statusTab, setStatusTab] = useState<"all" | "active" | "inactive">("all");
     const [sortBy,    setSortBy]    = useState<"joined" | "spent" | "orders">("joined");
 
-    const filtered = customers
+    // Client-side filter + sort on the current page's data only
+    const filtered = customers.data
         .filter(c => {
             const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) ||
                                 c.email.toLowerCase().includes(search.toLowerCase());
@@ -202,6 +214,8 @@ export default function AdminCustomersIndex({ customers, stats, admin }: Props) 
                     </div>
                 </div>
             )}
+
+            <Pagination data={customers} />
         </AdminLayout>
     );
 }
