@@ -21,7 +21,7 @@ export default function Home({ featured }: any) {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="SNEAKER.DRP - The Vault" />
+            <Head title="SNEAKER.DRP — The Vault" />
 
             {/* NAVIGATION WRAPPER */}
             <nav
