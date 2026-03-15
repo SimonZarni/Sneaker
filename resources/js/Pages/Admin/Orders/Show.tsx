@@ -75,9 +75,9 @@ const STEP_COLORS: Record<string,string> = { Pending:"#f59e0b", Processing:"#3b8
 function DeliveryTimeline({ steps, current, orderId }: { steps: string[]; current: string; orderId: number }) {
     const isCancelled = current === "Cancelled";
     const currentIdx  = steps.indexOf(current);
+    const { errors }: any = usePage().props;
 
     const handleUpdate = (step: string) => {
-        if (step === current) return;
         router.patch(route("admin.orders.updateDelivery", orderId), { delivery_status: step }, { preserveScroll: true });
     };
 
@@ -90,8 +90,12 @@ function DeliveryTimeline({ steps, current, orderId }: { steps: string[]; curren
         );
     }
 
+    const nextStep    = steps[currentIdx + 1] ?? null;
+    const isDelivered = currentIdx === steps.length - 1;
+
     return (
         <div>
+            {/* Progress dots */}
             <div style={{ display: "flex", alignItems: "center", marginBottom: "28px" }}>
                 {steps.map((step, i) => {
                     const done = i <= currentIdx; const active = i === currentIdx;
@@ -106,25 +110,34 @@ function DeliveryTimeline({ steps, current, orderId }: { steps: string[]; curren
                     );
                 })}
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "10px" }}>
-                {steps.map((step, i) => {
-                    const isCurrent = step === current;
-                    const isAhead   = i > currentIdx;
-                    if (isCurrent) {
-                        return (
-                            <div key={step} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
-                                <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                                {step} (Current)
-                            </div>
-                        );
-                    }
-                    return (
-                        <button key={step} onClick={() => handleUpdate(step)} style={{ padding: "10px 20px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: `1px solid ${isAhead ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: "#fff", color: isAhead ? "#0A0A0A" : "rgba(45,50,62,0.3)", cursor: "pointer" }}>
-                            {i < currentIdx ? "↩ Revert to" : "→ Mark as"} {step}
-                        </button>
-                    );
-                })}
+
+            {/* Action area — current badge + single next-step button only */}
+            <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "10px", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
+                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                    {current} (Current)
+                </div>
+
+                {isDelivered ? (
+                    <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "rgba(45,50,62,0.35)" }}>
+                        Final status reached
+                    </span>
+                ) : (
+                    <button
+                        onClick={() => handleUpdate(nextStep!)}
+                        style={{ padding: "10px 20px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: "1px solid #0A0A0A", backgroundColor: "#fff", color: "#0A0A0A", cursor: "pointer" }}
+                    >
+                        → Mark as {nextStep}
+                    </button>
+                )}
             </div>
+
+            {/* Backend validation error */}
+            {errors?.delivery_status && (
+                <p style={{ marginTop: "10px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: "#dc2626" }}>
+                    {errors.delivery_status}
+                </p>
+            )}
         </div>
     );
 }

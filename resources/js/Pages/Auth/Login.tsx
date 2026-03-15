@@ -94,9 +94,20 @@ export default function Login({
                                 className="w-full border-0 border-b-2 border-brand-surface focus:border-brand-charcoal bg-transparent px-0 py-3 text-sm font-medium outline-none transition-colors placeholder:text-brand-slate/20"
                             />
                             {errors.email && (
-                                <p className="mt-2 text-[9px] font-black uppercase tracking-wide text-red-500">
-                                    {errors.email}
-                                </p>
+                                errors.email.includes('suspended') ? (
+                                    <div className="mt-3 border border-amber-200 bg-amber-50 px-4 py-3">
+                                        <p className="text-[9px] font-black uppercase tracking-wide text-amber-700">
+                                            {errors.email}
+                                        </p>
+                                        <a href="mailto:support@sneaker.drp" className="text-[9px] font-black uppercase tracking-wide text-amber-600 border-b border-amber-400 mt-1 inline-block">
+                                            Contact Support →
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <p className="mt-2 text-[9px] font-black uppercase tracking-wide text-red-500">
+                                        {errors.email}
+                                    </p>
+                                )
                             )}
                         </div>
 

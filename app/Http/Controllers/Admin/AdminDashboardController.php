@@ -26,8 +26,12 @@ class AdminDashboardController extends Controller
         // ── Revenue stats ─────────────────────────────────────────────────────
         $revenueStats = [
             'total' => (float) Order::where('order_status', 'Confirmed')->sum('total_amount'),
-            'cod'   => (float) Order::where('payment_status', 'COD')->sum('total_amount'),
-            'card'  => (float) Order::where('payment_status', 'Confirmed')->sum('total_amount'),
+            'cod'   => (float) Order::where('payment_status', 'COD')
+                                    ->where('order_status', '!=', 'Cancelled')
+                                    ->sum('total_amount'),
+            'card'  => (float) Order::where('payment_status', 'Confirmed')
+                                    ->where('order_status', '!=', 'Cancelled')
+                                    ->sum('total_amount'),
         ];
 
         // ── Other counts ──────────────────────────────────────────────────────

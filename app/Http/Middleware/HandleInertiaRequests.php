@@ -42,15 +42,23 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
 
-            // 1. Existing Cart Logic
+            // 1. Cart — only include items whose variant and product still exist and are active.
+            //    This prevents a null relationship crash on any page load if a product is
+            //    deleted or deactivated while it is sitting in a user's cart.
             'cart' => Auth::check()
-                ? \App\Models\Cart::with([
-                    'items.productVariant.product',
-                    'items.productVariant.size',
-                    'items.productVariant.color'
-                ])
-                ->where('user_id', Auth::id())
-                ->first()
+                ? (function () {
+                    $cart = \App\Models\Cart::with([
+                        'items' => fn($q) => $q->whereHas('productVariant', fn($q) =>
+                            $q->whereHas('product', fn($q) =>
+                                $q->where('is_active', true)
+                            )
+                        ),
+                        'items.productVariant.product',
+                        'items.productVariant.size',
+                        'items.productVariant.color',
+                    ])->where('user_id', Auth::id())->first();
+                    return $cart;
+                })()
                 : null,
 
             // 2. Global Navigation Data (New)

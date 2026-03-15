@@ -86,7 +86,8 @@ class CheckoutController extends Controller
             if (!$item->productVariant || !$item->productVariant->product) {
                 return $carry;
             }
-            return $carry + ($item->productVariant->product->base_price * $item->quantity);
+            $price = $item->productVariant->variant_price ?? $item->productVariant->product->base_price;
+            return $carry + ($price * $item->quantity);
         }, 0);
 
         // ── Determine payment statuses ────────────────────────────────────────
@@ -97,7 +98,45 @@ class CheckoutController extends Controller
         // ── DB Transaction ────────────────────────────────────────────────────
         return DB::transaction(function () use ($validated, $user, $cart, $totalAmount, $isCard, $paymentStatus) {
 
-            // A. Sync Address Book
+            // A. Stock validation — acquire row-level write locks so two concurrent
+            //    checkouts for the same variant cannot both read sufficient stock
+            //    and both succeed. The second transaction will wait at lockForUpdate()
+            //    until the first commits, then re-read the already-decremented quantity.
+            //    Also blocks checkout of any product deactivated after it entered the cart.
+            $stockErrors = [];
+            foreach ($cart->items as $item) {
+                if (!$item->productVariant) continue;
+
+                $variant = \App\Models\ProductVariant::with('product')
+                    ->lockForUpdate()
+                    ->find($item->product_variant_id);
+
+                $name  = optional($item->productVariant->product)->name ?? 'Item';
+                $color = optional($item->productVariant->color)->name   ?? '';
+                $size  = optional($item->productVariant->size)->size_value ?? '';
+
+                // Check product is still active
+                if (!$variant || !$variant->product || !$variant->product->is_active) {
+                    $stockErrors[] = "{$name} ({$color} / {$size}) is no longer available.";
+                    continue;
+                }
+
+                // Check sufficient stock
+                if ($variant->stock_quantity < $item->quantity) {
+                    $available     = $variant->stock_quantity;
+                    $stockErrors[] = "{$name} ({$color} / {$size}): "
+                        . "you requested {$item->quantity} but only {$available} "
+                        . ($available === 1 ? 'is' : 'are') . ' in stock.';
+                }
+            }
+
+            if (!empty($stockErrors)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'stock' => $stockErrors,
+                ]);
+            }
+
+            // B. Sync Address Book
             $userAddress = UserAddress::updateOrCreate(
                 [
                     'user_id'      => $user->id,
@@ -114,7 +153,7 @@ class CheckoutController extends Controller
                 ]
             );
 
-            // B. Create Order
+            // C. Create Order
             $order = Order::create([
                 'user_id'               => $user->id,
                 'address_id'            => $userAddress->id,
@@ -133,9 +172,11 @@ class CheckoutController extends Controller
                 'placed_at'             => now(),
             ]);
 
-            // C. Create Order Items + decrement stock
+            // D. Create Order Items + decrement stock
             foreach ($cart->items as $item) {
                 if (!$item->productVariant) continue;
+
+                $unitPrice = $item->productVariant->variant_price ?? $item->productVariant->product->base_price;
 
                 OrderItem::create([
                     'order_id'           => $order->id,
@@ -147,26 +188,25 @@ class CheckoutController extends Controller
                     'gender_name'        => $item->productVariant->product->gender->name ?? 'Unisex',
                     'color_name'         => $item->productVariant->color->name,
                     'size_value'         => $item->productVariant->size->size_value,
-                    'unit_price'         => $item->productVariant->product->base_price,
+                    'unit_price'         => $unitPrice,
                     'quantity'           => $item->quantity,
-                    'subtotal'           => $item->productVariant->product->base_price * $item->quantity,
+                    'subtotal'           => $unitPrice * $item->quantity,
                 ]);
 
                 $item->productVariant->decrement('stock_quantity', $item->quantity);
             }
 
-            // D. Create Payment Record
+            // E. Create Payment Record
             Payment::create([
                 'order_id'        => $order->id,
                 'payment_method'  => $validated['payment_method'],
                 'payment_status'  => $paymentStatus,
-                // Store masked card details only for card payments
                 'cardholder_name' => $isCard ? $validated['cardholder_name'] : null,
                 'card_last4'      => $isCard ? $validated['card_number']     : null,
                 'paid_at'         => $isCard ? now() : null,
             ]);
 
-            // E. Clear the Cart
+            // F. Clear the Cart
             $cart->items()->delete();
 
             // return redirect()->route('shop.index')

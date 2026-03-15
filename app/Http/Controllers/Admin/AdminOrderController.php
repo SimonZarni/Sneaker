@@ -79,6 +79,20 @@ class AdminOrderController extends Controller
         ]);
 
         $order = Order::findOrFail($id);
+
+        $currentIndex = array_search($order->delivery_status, self::DELIVERY_STEPS);
+        $newIndex     = array_search($request->delivery_status, self::DELIVERY_STEPS);
+
+        // Only allow moving exactly one step forward — no skipping, no going backward
+        if ($newIndex !== $currentIndex + 1) {
+            $next = self::DELIVERY_STEPS[$currentIndex + 1] ?? null;
+            $msg  = $next
+                ? "Invalid transition. Order is currently {$order->delivery_status} — the next step is {$next}."
+                : "This order has already reached its final delivery status.";
+
+            return back()->withErrors(['delivery_status' => $msg]);
+        }
+
         $order->update(['delivery_status' => $request->delivery_status]);
 
         return back()->with('success', "Order {$order->order_number} updated to {$request->delivery_status}.");

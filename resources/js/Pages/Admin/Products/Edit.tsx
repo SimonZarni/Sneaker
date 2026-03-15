@@ -6,7 +6,7 @@ interface LookupItem { id: number; name: string }
 interface ColorItem  { id: number; name: string; hex_code: string | null }
 interface SizeItem   { id: number; size_value: string }
 interface SizeEntry  { size_id: number; stock_quantity: number; variant_id?: number }
-interface VariantRow { _key: string; color_id: number | ""; image_url: string; sizes: SizeEntry[] }
+interface VariantRow { _key: string; color_id: number | ""; image_url: string; variant_price: string; sizes: SizeEntry[] }
 
 interface ExistingProduct {
     id: number;
@@ -18,7 +18,7 @@ interface ExistingProduct {
     description: string | null;
     main_image_url: string | null;
     is_active: boolean;
-    variants: { color_id: number; image_url: string | null; sizes: SizeEntry[] }[];
+    variants: { color_id: number; image_url: string | null; variant_price: string | null; sizes: SizeEntry[] }[];
 }
 
 interface Props {
@@ -41,7 +41,7 @@ const S = {
 };
 
 function newVariantRow(): VariantRow {
-    return { _key: Math.random().toString(36).slice(2), color_id: "", image_url: "", sizes: [] };
+    return { _key: Math.random().toString(36).slice(2), color_id: "", image_url: "", variant_price: "", sizes: [] };
 }
 
 export default function AdminProductsEdit({ product, brands, categories, genders, colors, sizes, admin }: Props) {
@@ -59,17 +59,18 @@ export default function AdminProductsEdit({ product, brands, categories, genders
     // Seed variants from existing product data
     const [variants, setVariants] = useState<VariantRow[]>(
         product.variants.map((v) => ({
-            _key:      Math.random().toString(36).slice(2),
-            color_id:  v.color_id,
-            image_url: v.image_url ?? "",
-            sizes:     v.sizes,
+            _key:          Math.random().toString(36).slice(2),
+            color_id:      v.color_id,
+            image_url:     v.image_url ?? "",
+            variant_price: v.variant_price != null ? String(v.variant_price) : "",
+            sizes:         v.sizes,
         }))
     );
 
     const addVariant = () => setVariants((v) => [...v, newVariantRow()]);
     const removeVariant = (key: string) => setVariants((v) => v.filter((r) => r._key !== key));
 
-    const updateVariant = (key: string, field: "color_id" | "image_url", value: any) =>
+    const updateVariant = (key: string, field: "color_id" | "image_url" | "variant_price", value: any) =>
         setVariants((v) => v.map((r) => r._key === key ? { ...r, [field]: value } : r));
 
     const toggleSize = (key: string, sizeId: number) => {
@@ -222,9 +223,27 @@ export default function AdminProductsEdit({ product, brands, categories, genders
                                                 </button>
                                             </div>
 
-                                            <div style={{ marginBottom: "16px" }}>
-                                                <label style={{ ...S.label, fontSize: "8px" }}>Variant Image URL (optional)</label>
-                                                <input style={{ ...S.input, fontSize: "12px" }} value={variant.image_url} onChange={(e) => updateVariant(variant._key, "image_url", e.target.value)} placeholder="https://..." />
+                                            <div style={{ display: "grid", gridTemplateColumns: "1fr 160px", gap: "12px", marginBottom: "16px" }}>
+                                                <div>
+                                                    <label style={{ ...S.label, fontSize: "8px" }}>Variant Image URL (optional)</label>
+                                                    <input style={{ ...S.input, fontSize: "12px" }} value={variant.image_url} onChange={(e) => updateVariant(variant._key, "image_url", e.target.value)} placeholder="https://..." />
+                                                </div>
+                                                <div>
+                                                    <label style={{ ...S.label, fontSize: "8px" }}>Variant Price (optional)</label>
+                                                    <div style={{ position: "relative" }}>
+                                                        <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "rgba(45,50,62,0.4)", pointerEvents: "none" }}>$</span>
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            step="0.01"
+                                                            style={{ ...S.input, fontSize: "12px", paddingLeft: "22px" }}
+                                                            value={variant.variant_price}
+                                                            onChange={(e) => updateVariant(variant._key, "variant_price", e.target.value)}
+                                                            placeholder="Base price"
+                                                        />
+                                                    </div>
+                                                    <p style={{ fontSize: "8px", color: "rgba(45,50,62,0.4)", marginTop: "4px" }}>Leave blank to use product base price</p>
+                                                </div>
                                             </div>
 
                                             <div>

@@ -7,7 +7,7 @@ interface ColorItem  { id: number; name: string; hex_code: string | null }
 interface SizeItem   { id: number; size_value: string }
 
 interface SizeEntry       { size_id: number; stock_quantity: number }
-interface VariantRow      { _key: string; color_id: number | ""; image_url: string; sizes: SizeEntry[] }
+interface VariantRow      { _key: string; color_id: number | ""; image_url: string; variant_price: string; sizes: SizeEntry[] }
 
 interface Props {
     brands: LookupItem[];
@@ -29,7 +29,7 @@ const S = {
 };
 
 function newVariantRow(): VariantRow {
-    return { _key: Math.random().toString(36).slice(2), color_id: "", image_url: "", sizes: [] };
+    return { _key: Math.random().toString(36).slice(2), color_id: "", image_url: "", variant_price: "", sizes: [] };
 }
 
 export default function AdminProductsCreate({ brands, categories, genders, colors, sizes, admin }: Props) {
@@ -208,6 +208,7 @@ export default function AdminProductsCreate({ brands, categories, genders, color
                                         usedColorIds={usedColorIds.filter((id) => id !== variant.color_id)}
                                         onColorChange={(val) => updateVariant(variant._key, "color_id", val)}
                                         onImageChange={(val) => updateVariant(variant._key, "image_url", val)}
+                                        onVariantPriceChange={(val) => updateVariant(variant._key, "variant_price", val)}
                                         onToggleSize={(sizeId) => toggleSize(variant._key, sizeId)}
                                         onUpdateStock={(sizeId, qty) => updateStock(variant._key, sizeId, qty)}
                                         onRemove={() => removeVariant(variant._key)}
@@ -288,7 +289,7 @@ export default function AdminProductsCreate({ brands, categories, genders, color
 // ── Variant Builder Row ───────────────────────────────────────────────────────
 function VariantBuilder({
     variant, index, colors, sizes, usedColorIds,
-    onColorChange, onImageChange, onToggleSize, onUpdateStock, onRemove, errors, errorPrefix,
+    onColorChange, onImageChange, onVariantPriceChange, onToggleSize, onUpdateStock, onRemove, errors, errorPrefix,
 }: {
     variant: VariantRow;
     index: number;
@@ -297,6 +298,7 @@ function VariantBuilder({
     usedColorIds: number[];
     onColorChange: (val: number | "") => void;
     onImageChange: (val: string) => void;
+    onVariantPriceChange: (val: string) => void;
     onToggleSize: (sizeId: number) => void;
     onUpdateStock: (sizeId: number, qty: number) => void;
     onRemove: () => void;
@@ -328,15 +330,33 @@ function VariantBuilder({
                 </button>
             </div>
 
-            {/* Variant image */}
-            <div style={{ marginBottom: "16px" }}>
-                <label style={{ ...S.label, fontSize: "8px" }}>Variant Image URL (optional — overrides main image)</label>
-                <input
-                    style={{ ...S.input, fontSize: "12px" }}
-                    value={variant.image_url}
-                    onChange={(e) => onImageChange(e.target.value)}
-                    placeholder="https://..."
-                />
+            {/* Variant image + optional price — side by side */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 160px", gap: "12px", marginBottom: "16px" }}>
+                <div>
+                    <label style={{ ...S.label, fontSize: "8px" }}>Variant Image URL (optional — overrides main image)</label>
+                    <input
+                        style={{ ...S.input, fontSize: "12px" }}
+                        value={variant.image_url}
+                        onChange={(e) => onImageChange(e.target.value)}
+                        placeholder="https://..."
+                    />
+                </div>
+                <div>
+                    <label style={{ ...S.label, fontSize: "8px" }}>Variant Price (optional)</label>
+                    <div style={{ position: "relative" }}>
+                        <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "rgba(45,50,62,0.4)", pointerEvents: "none" }}>$</span>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            style={{ ...S.input, fontSize: "12px", paddingLeft: "22px" }}
+                            value={variant.variant_price}
+                            onChange={(e) => onVariantPriceChange(e.target.value)}
+                            placeholder="Leave blank to use base price"
+                        />
+                    </div>
+                    <p style={{ fontSize: "8px", color: "rgba(45,50,62,0.4)", marginTop: "4px" }}>Leave blank to use product base price</p>
+                </div>
             </div>
 
             {/* Size grid */}

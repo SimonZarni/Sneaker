@@ -96,7 +96,7 @@ export default function AdminLogin({ sessionExpired }: { sessionExpired?: string
                         <div className="space-y-4">
                             <button
                                 type="submit"
-                                disabled={processing}
+                                disabled={processing || !!errors.email?.includes('Too many')}
                                 className="w-full bg-brand-charcoal text-white py-5 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-brand-slate transition-all disabled:opacity-30"
                             >
                                 {processing ? "Verifying..." : "Access Dashboard"}

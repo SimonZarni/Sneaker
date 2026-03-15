@@ -49,12 +49,11 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth'])->group(function () {
     Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
+    Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
+    Route::post('/cart/bulk-update', [CartController::class, 'bulkUpdate'])->name('cart.bulk-update');
+    Route::post('/cart/bulk-save', [CartController::class, 'bulkSave'])->name('cart.bulk-save');
 });
-
-Route::patch('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
-Route::post('/cart/bulk-update', [CartController::class, 'bulkUpdate'])->name('cart.bulk-update');
-Route::post('/cart/bulk-save', [CartController::class, 'bulkSave'])->name('cart.bulk-save');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');

@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Color;
 use App\Models\Gender;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Size;
@@ -95,6 +96,7 @@ class AdminProductController extends Controller
             'is_active'                       => 'boolean',
             'variants'                        => 'present|array',
             'variants.*.color_id'             => 'required|exists:colors,id',
+            'variants.*.variant_price'        => 'nullable|numeric|min:0',
             'variants.*.image_url'            => 'nullable|url|max:2048',
             'variants.*.sizes'                => 'required|array|min:1',
             'variants.*.sizes.*.size_id'      => 'required|exists:sizes,id',
@@ -124,6 +126,7 @@ class AdminProductController extends Controller
                         'color_id'       => $variantData['color_id'],
                         'size_id'        => $sizeEntry['size_id'],
                         'stock_quantity' => $sizeEntry['stock_quantity'],
+                        'variant_price'  => isset($variantData['variant_price']) && $variantData['variant_price'] !== '' ? $variantData['variant_price'] : null,
                         'image_url'      => $variantData['image_url'] ?? null,
                     ]);
                 }
@@ -145,9 +148,10 @@ class AdminProductController extends Controller
             ->map(function ($variants, $colorId) {
                 $first = $variants->first();
                 return [
-                    'color_id'  => $colorId,
-                    'image_url' => $first->image_url,
-                    'sizes'     => $variants->map(fn($v) => [
+                    'color_id'      => $colorId,
+                    'image_url'     => $first->image_url,
+                    'variant_price' => $first->variant_price,
+                    'sizes'         => $variants->map(fn($v) => [
                         'size_id'        => $v->size_id,
                         'stock_quantity' => $v->stock_quantity,
                         'variant_id'     => $v->id,
@@ -187,42 +191,76 @@ class AdminProductController extends Controller
             'is_active'                         => 'boolean',
             'variants'                          => 'present|array',
             'variants.*.color_id'               => 'required|exists:colors,id',
+            'variants.*.variant_price'          => 'nullable|numeric|min:0',
             'variants.*.image_url'              => 'nullable|url|max:2048',
             'variants.*.sizes'                  => 'required|array|min:1',
             'variants.*.sizes.*.size_id'        => 'required|exists:sizes,id',
             'variants.*.sizes.*.stock_quantity' => 'required|integer|min:0',
+            'variants.*.sizes.*.variant_id'     => 'nullable|integer|exists:product_variants,id',
         ]);
 
         $product = Product::findOrFail($id);
 
         DB::transaction(function () use ($request, $product) {
             $product->update([
-                'brand_id'           => $request->brand_id,
-                'category_id'        => $request->category_id,
-                'gender_id'          => $request->gender_id,
-                'name'               => $request->name,
-                'description'        => $request->description,
-                'base_price'         => $request->base_price,
-                'main_image_url'     => $request->main_image_url,
-                'is_active'          => $request->boolean('is_active', true),
+                'brand_id'            => $request->brand_id,
+                'category_id'         => $request->category_id,
+                'gender_id'           => $request->gender_id,
+                'name'                => $request->name,
+                'description'         => $request->description,
+                'base_price'          => $request->base_price,
+                'main_image_url'      => $request->main_image_url,
+                'is_active'           => $request->boolean('is_active', true),
                 'updated_by_admin_id' => Auth::guard('admin')->id(),
             ]);
 
-            // Delete all existing variants and re-create from submission
-            // This is the simplest correct approach — avoids complex diff logic
-            $product->variants()->delete();
+            // ── Diff variants instead of delete+recreate ──────────────────────
+            // This preserves existing variant IDs so cart_items FKs are never
+            // broken by a simple edit (e.g. adding a price, updating stock).
+            // Only variants that were genuinely removed get deleted.
+
+            $variantPrice = fn($data) => isset($data['variant_price']) && $data['variant_price'] !== ''
+                ? $data['variant_price']
+                : null;
+
+            // Collect the variant IDs submitted by the form (existing rows only)
+            $submittedVariantIds = [];
 
             foreach ($request->variants as $variantData) {
                 foreach ($variantData['sizes'] as $sizeEntry) {
-                    ProductVariant::create([
-                        'product_id'     => $product->id,
-                        'color_id'       => $variantData['color_id'],
-                        'size_id'        => $sizeEntry['size_id'],
-                        'stock_quantity' => $sizeEntry['stock_quantity'],
-                        'image_url'      => $variantData['image_url'] ?? null,
-                    ]);
+                    if (!empty($sizeEntry['variant_id'])) {
+                        // Existing variant — update in place, no delete needed
+                        $submittedVariantIds[] = $sizeEntry['variant_id'];
+
+                        ProductVariant::where('id', $sizeEntry['variant_id'])
+                            ->where('product_id', $product->id) // safety: ensure it belongs to this product
+                            ->update([
+                                'color_id'       => $variantData['color_id'],
+                                'size_id'        => $sizeEntry['size_id'],
+                                'stock_quantity' => $sizeEntry['stock_quantity'],
+                                'variant_price'  => $variantPrice($variantData),
+                                'image_url'      => $variantData['image_url'] ?? null,
+                            ]);
+                    } else {
+                        // New variant row — create and record its new ID
+                        $newVariant = ProductVariant::create([
+                            'product_id'     => $product->id,
+                            'color_id'       => $variantData['color_id'],
+                            'size_id'        => $sizeEntry['size_id'],
+                            'stock_quantity' => $sizeEntry['stock_quantity'],
+                            'variant_price'  => $variantPrice($variantData),
+                            'image_url'      => $variantData['image_url'] ?? null,
+                        ]);
+                        $submittedVariantIds[] = $newVariant->id;
+                    }
                 }
             }
+
+            // Delete only variants that were not in the submitted form
+            // (i.e. the admin explicitly removed them)
+            $product->variants()
+                ->whereNotIn('id', $submittedVariantIds)
+                ->delete();
         });
 
         return redirect()->route('admin.products.index')
@@ -243,6 +281,18 @@ class AdminProductController extends Controller
     public function destroy(int $id)
     {
         $product = Product::findOrFail($id);
+
+        // Block deletion if there are live (non-terminal) orders containing this product
+        $activeOrderCount = \App\Models\OrderItem::where('product_id', $id)
+            ->whereHas('order', fn($q) => $q->whereNotIn('order_status', ['Cancelled', 'Delivered']))
+            ->count();
+
+        if ($activeOrderCount > 0) {
+            return back()->withErrors([
+                'delete' => "Cannot delete \"{$product->name}\" — it appears in {$activeOrderCount} active order(s). Deactivate it instead.",
+            ]);
+        }
+
         $name = $product->name;
         $product->delete(); // cascade deletes variants
 
