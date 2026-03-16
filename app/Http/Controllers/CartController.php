@@ -65,13 +65,18 @@ class CartController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate(['quantity' => 'required|integer|min:1']);
+        $request->validate(['quantity' => 'required|integer|min:1|max:99']);
 
-        $cartItem = CartItem::whereHas('cart', function ($query) {
-            $query->where('user_id', Auth::id());
-        })->findOrFail($id);
+        $cartItem = CartItem::with('productVariant')
+            ->whereHas('cart', function ($query) {
+                $query->where('user_id', Auth::id());
+            })->findOrFail($id);
 
-        $cartItem->update(['quantity' => $request->quantity]);
+        // Clamp against actual stock — never allow more than what's available
+        $stock    = $cartItem->productVariant?->stock_quantity ?? 0;
+        $quantity = min($request->quantity, max($stock, 1));
+
+        $cartItem->update(['quantity' => $quantity]);
 
         return back()->with('success', 'Vault updated.');
     }
@@ -82,17 +87,22 @@ class CartController extends Controller
     public function bulkUpdate(Request $request)
     {
         $request->validate([
-            'items' => 'required|array',
-            'items.*.id' => 'required|exists:cart_items,id',
-            'items.*.quantity' => 'required|integer|min:1'
+            'items'              => 'required|array',
+            'items.*.id'         => 'required|exists:cart_items,id',
+            'items.*.quantity'   => 'required|integer|min:1|max:99',
         ]);
 
         foreach ($request->items as $itemData) {
-            $cartItem = CartItem::whereHas('cart', function ($query) {
-                $query->where('user_id', Auth::id());
-            })->findOrFail($itemData['id']);
+            $cartItem = CartItem::with('productVariant')
+                ->whereHas('cart', function ($query) {
+                    $query->where('user_id', Auth::id());
+                })->findOrFail($itemData['id']);
 
-            $cartItem->update(['quantity' => $itemData['quantity']]);
+            // Clamp against actual stock
+            $stock    = $cartItem->productVariant?->stock_quantity ?? 0;
+            $quantity = min((int) $itemData['quantity'], max($stock, 1));
+
+            $cartItem->update(['quantity' => $quantity]);
         }
 
         return redirect()->route('checkout.index');
@@ -104,17 +114,22 @@ class CartController extends Controller
     public function bulkSave(Request $request)
     {
         $request->validate([
-            'items' => 'required|array',
-            'items.*.id' => 'required|exists:cart_items,id',
-            'items.*.quantity' => 'required|integer|min:1'
+            'items'              => 'required|array',
+            'items.*.id'         => 'required|exists:cart_items,id',
+            'items.*.quantity'   => 'required|integer|min:1|max:99',
         ]);
 
         foreach ($request->items as $itemData) {
-            $cartItem = CartItem::whereHas('cart', function ($query) {
-                $query->where('user_id', Auth::id());
-            })->findOrFail($itemData['id']);
+            $cartItem = CartItem::with('productVariant')
+                ->whereHas('cart', function ($query) {
+                    $query->where('user_id', Auth::id());
+                })->findOrFail($itemData['id']);
 
-            $cartItem->update(['quantity' => $itemData['quantity']]);
+            // Clamp against actual stock
+            $stock    = $cartItem->productVariant?->stock_quantity ?? 0;
+            $quantity = min((int) $itemData['quantity'], max($stock, 1));
+
+            $cartItem->update(['quantity' => $quantity]);
         }
 
         return back()->with('success', 'Vault saved.');

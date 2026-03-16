@@ -28,11 +28,4 @@ class CartItem extends Model
     {
         return $this->belongsTo(ProductVariant::class);
     }
-
-    // Add this inside the CartItem class
-    public function getSubtotalAttribute()
-    {
-        // Fetches the price from the variant and multiplies by quantity
-        return $this->productVariant->variant_price * $this->quantity;
-    }
 }
