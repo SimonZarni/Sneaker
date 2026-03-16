@@ -9,6 +9,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -120,19 +121,21 @@ class ProfileController extends Controller
 
         $userId = Auth::id();
 
-        // If marking as default, unset others first
-        if (!empty($validated['is_default'])) {
-            UserAddress::where('user_id', $userId)->update(['is_default' => false]);
-        }
+        DB::transaction(function () use ($validated, $userId) {
+            // If marking as default, unset others first
+            if (!empty($validated['is_default'])) {
+                UserAddress::where('user_id', $userId)->update(['is_default' => false]);
+            }
 
-        // If this is the user's first address, auto-default it
-        $isFirst = UserAddress::where('user_id', $userId)->count() === 0;
+            // If this is the user's first address, auto-default it
+            $isFirst = UserAddress::where('user_id', $userId)->count() === 0;
 
-        UserAddress::create([
-            ...$validated,
-            'user_id'    => $userId,
-            'is_default' => $isFirst || !empty($validated['is_default']),
-        ]);
+            UserAddress::create([
+                ...$validated,
+                'user_id'    => $userId,
+                'is_default' => $isFirst || !empty($validated['is_default']),
+            ]);
+        });
 
         return back()->with('status', 'address-added');
     }
@@ -179,8 +182,11 @@ class ProfileController extends Controller
     public function setDefaultAddress(int $id): RedirectResponse
     {
         $userId = Auth::id();
-        UserAddress::where('user_id', $userId)->update(['is_default' => false]);
-        UserAddress::where('user_id', $userId)->findOrFail($id)->update(['is_default' => true]);
+
+        DB::transaction(function () use ($userId, $id) {
+            UserAddress::where('user_id', $userId)->update(['is_default' => false]);
+            UserAddress::where('user_id', $userId)->findOrFail($id)->update(['is_default' => true]);
+        });
 
         return back()->with('status', 'address-updated');
     }

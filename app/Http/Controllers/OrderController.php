@@ -59,26 +59,35 @@ class OrderController extends Controller
             ->where('user_id', Auth::id())
             ->findOrFail($id);
 
-        // Must still be Pending
-        if ($order->delivery_status !== 'Pending') {
-            return back()->withErrors(['cancel' => 'This order can no longer be cancelled.']);
-        }
-
-        // Must be within 24 hours
-        if ($order->placed_at->diffInHours(now()) > 24) {
-            return back()->withErrors(['cancel' => 'The 24-hour cancellation window has passed.']);
-        }
-
         $request->validate([
             'cancellation_reason' => 'required|string|in:Ordered by mistake,Changed my mind,Ordered the wrong size / color,Want to change shipping address,Ordered duplicate by mistake,Other',
             'cancellation_note'   => 'nullable|string|max:500|required_if:cancellation_reason,Other',
         ]);
 
         DB::transaction(function () use ($order, $request) {
-            // Restore stock for each item.
-            // Cross-check that the variant still belongs to the same product —
-            // if the admin edited the product and the variant was deleted/recreated,
-            // the old variant_id no longer exists and we should not touch stock.
+            // Re-read the order with a write lock inside the transaction.
+            // This blocks a second concurrent cancel request from proceeding
+            // until this transaction commits — preventing double stock restore.
+            $fresh = Order::where('id', $order->id)
+                ->where('user_id', $order->user_id)
+                ->lockForUpdate()
+                ->first();
+
+            // Re-check status inside the lock — the order may have been
+            // cancelled or progressed by the time we acquire the lock.
+            if (!$fresh || $fresh->delivery_status !== 'Pending') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'cancel' => 'This order can no longer be cancelled.',
+                ]);
+            }
+
+            if ($fresh->placed_at->diffInHours(now()) > 24) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'cancel' => 'The 24-hour cancellation window has passed.',
+                ]);
+            }
+
+            // Restore stock — cross-check variant still belongs to the same product.
             foreach ($order->items as $item) {
                 if ($item->product_variant_id && $item->product_id) {
                     ProductVariant::where('id', $item->product_variant_id)
@@ -87,12 +96,11 @@ class OrderController extends Controller
                 }
             }
 
-            // Determine new payment status
-            $paymentMethod  = $order->payment?->payment_method;
-            $isCard         = $paymentMethod && strtolower($paymentMethod) !== 'cod';
-            $newPayStatus   = $isCard ? 'Refunded' : $order->payment_status;
+            $paymentMethod = $fresh->payment?->payment_method;
+            $isCard        = $paymentMethod && strtolower($paymentMethod) !== 'cod';
+            $newPayStatus  = $isCard ? 'Refunded' : $fresh->payment_status;
 
-            $order->update([
+            $fresh->update([
                 'order_status'        => 'Cancelled',
                 'delivery_status'     => 'Cancelled',
                 'payment_status'      => $newPayStatus,
@@ -101,9 +109,8 @@ class OrderController extends Controller
                 'cancellation_note'   => $request->cancellation_note,
             ]);
 
-            // Also update the payments table record
-            if ($isCard && $order->payment) {
-                $order->payment->update(['payment_status' => 'Refunded']);
+            if ($isCard && $fresh->payment) {
+                $fresh->payment->update(['payment_status' => 'Refunded']);
             }
         });
 

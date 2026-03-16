@@ -46,6 +46,16 @@ class WishlistController extends Controller
             $existing->delete();
             $wishlisted = false;
         } else {
+            // Only wishlist active products — deactivated products should not
+            // be saveable, even if the button is still visible momentarily.
+            $product = \App\Models\Product::where('id', $productId)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$product) {
+                return back()->withErrors(['wishlist' => 'This product is no longer available.']);
+            }
+
             Wishlist::create(['user_id' => $userId, 'product_id' => $productId]);
             $wishlisted = true;
         }

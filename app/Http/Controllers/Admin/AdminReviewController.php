@@ -36,9 +36,9 @@ class AdminReviewController extends Controller
             'rating'       => $r->rating,
             'title'        => $r->title,
             'body'         => $r->body,
-            'user_name'    => $r->user->name,
+            'user_name'    => $r->user?->name    ?? 'Deleted User',
             'product_id'   => $r->product_id,
-            'product_name' => $r->product->name,
+            'product_name' => $r->product?->name ?? 'Deleted Product',
             'created_at'   => $r->created_at->toISOString(),
         ];
     }

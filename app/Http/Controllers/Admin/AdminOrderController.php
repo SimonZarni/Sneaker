@@ -78,39 +78,34 @@ class AdminOrderController extends Controller
             'delivery_status' => ['required', 'string', 'in:' . implode(',', self::DELIVERY_STEPS)],
         ]);
 
-        $order = Order::findOrFail($id);
+        DB::transaction(function () use ($request, $id) {
+            // Lock the order row so two admins clicking simultaneously cannot
+            // both read the same current status and both advance it, skipping a step.
+            $order = Order::where('id', $id)->lockForUpdate()->firstOrFail();
 
-        $currentIndex = array_search($order->delivery_status, self::DELIVERY_STEPS);
-        $newIndex     = array_search($request->delivery_status, self::DELIVERY_STEPS);
+            $currentIndex = array_search($order->delivery_status, self::DELIVERY_STEPS);
+            $newIndex     = array_search($request->delivery_status, self::DELIVERY_STEPS);
 
-        // Only allow moving exactly one step forward — no skipping, no going backward
-        if ($newIndex !== $currentIndex + 1) {
-            $next = self::DELIVERY_STEPS[$currentIndex + 1] ?? null;
-            $msg  = $next
-                ? "Invalid transition. Order is currently {$order->delivery_status} — the next step is {$next}."
-                : "This order has already reached its final delivery status.";
+            if ($newIndex !== $currentIndex + 1) {
+                $next = self::DELIVERY_STEPS[$currentIndex + 1] ?? null;
+                $msg  = $next
+                    ? "Invalid transition. Order is currently {$order->delivery_status} — the next step is {$next}."
+                    : "This order has already reached its final delivery status.";
 
-            return back()->withErrors(['delivery_status' => $msg]);
-        }
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'delivery_status' => $msg,
+                ]);
+            }
 
-        $order->update(['delivery_status' => $request->delivery_status]);
+            $order->update(['delivery_status' => $request->delivery_status]);
+        });
 
-        return back()->with('success', "Order {$order->order_number} updated to {$request->delivery_status}.");
+        return back()->with('success', "Order updated to {$request->delivery_status}.");
     }
 
     public function cancel(Request $request, int $id)
     {
         $order = Order::with(['items', 'payment'])->findOrFail($id);
-
-        // Must still be Pending
-        if ($order->delivery_status !== 'Pending') {
-            return back()->withErrors(['cancel' => 'This order can no longer be cancelled.']);
-        }
-
-        // Must be within 24 hours
-        if ($order->placed_at->diffInHours(now()) > 24) {
-            return back()->withErrors(['cancel' => 'The 24-hour cancellation window has passed.']);
-        }
 
         $request->validate([
             'cancellation_reason' => 'required|string|in:Fraudulent order detected,Item out of stock / fulfillment failure,Customer requested cancellation,Duplicate order,Shipping address undeliverable,Other',
@@ -118,9 +113,24 @@ class AdminOrderController extends Controller
         ]);
 
         DB::transaction(function () use ($order, $request) {
-            // Restore stock — cross-check variant still belongs to the same product.
-            // If the product was edited and the variant was deleted/recreated,
-            // the old variant_id no longer exists and stock should not be touched.
+            // Re-read with a write lock — prevents two admins from simultaneously
+            // cancelling the same order and restoring stock twice.
+            $fresh = Order::where('id', $order->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$fresh || $fresh->delivery_status !== 'Pending') {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'cancel' => 'This order can no longer be cancelled.',
+                ]);
+            }
+
+            if ($fresh->placed_at->diffInHours(now()) > 24) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'cancel' => 'The 24-hour cancellation window has passed.',
+                ]);
+            }
+
             foreach ($order->items as $item) {
                 if ($item->product_variant_id && $item->product_id) {
                     ProductVariant::where('id', $item->product_variant_id)
@@ -129,11 +139,11 @@ class AdminOrderController extends Controller
                 }
             }
 
-            $paymentMethod = $order->payment?->payment_method;
+            $paymentMethod = $fresh->payment?->payment_method;
             $isCard        = $paymentMethod && strtolower($paymentMethod) !== 'cod';
-            $newPayStatus  = $isCard ? 'Refunded' : $order->payment_status;
+            $newPayStatus  = $isCard ? 'Refunded' : $fresh->payment_status;
 
-            $order->update([
+            $fresh->update([
                 'order_status'        => 'Cancelled',
                 'delivery_status'     => 'Cancelled',
                 'payment_status'      => $newPayStatus,
@@ -142,9 +152,8 @@ class AdminOrderController extends Controller
                 'cancellation_note'   => $request->cancellation_note,
             ]);
 
-            // Also update the payments table record
-            if ($isCard && $order->payment) {
-                $order->payment->update(['payment_status' => 'Refunded']);
+            if ($isCard && $fresh->payment) {
+                $fresh->payment->update(['payment_status' => 'Refunded']);
             }
         });
 

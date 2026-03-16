@@ -159,20 +159,27 @@ class CheckoutController extends Controller
             }
 
             // B. Sync Address Book
+            // Only set is_default=true if this is the user's very first address.
+            // Never pass is_default=false on an update — that silently strips
+            // default status from an existing address every time they checkout.
+            $isFirstAddress = UserAddress::where('user_id', $user->id)->count() === 0;
+
             $userAddress = UserAddress::updateOrCreate(
                 [
                     'user_id'      => $user->id,
                     'address_line' => $validated['shipping_address_line'],
                     'city'         => $validated['shipping_city'],
                 ],
-                [
+                array_filter([
                     'full_name'    => $validated['shipping_full_name'],
                     'phone'        => $validated['shipping_phone'],
                     'state_region' => $validated['shipping_state_region'] ?? null,
                     'postal_code'  => $validated['shipping_postal_code']  ?? null,
                     'country'      => $validated['shipping_country'],
-                    'is_default'   => UserAddress::where('user_id', $user->id)->count() === 0,
-                ]
+                    // Only set is_default when creating the first address;
+                    // on subsequent checkouts with an existing address, leave it untouched.
+                    'is_default'   => $isFirstAddress ?: null,
+                ], fn($v) => $v !== null)
             );
 
             // C. Create Order
@@ -205,9 +212,9 @@ class CheckoutController extends Controller
                     'product_id'         => $item->productVariant->product_id,
                     'product_variant_id' => $item->product_variant_id,
                     'product_name'       => $item->productVariant->product->name,
-                    'brand_name'         => $item->productVariant->product->brand->name,
-                    'category_name'      => $item->productVariant->product->category->name,
-                    'gender_name'        => $item->productVariant->product->gender->name ?? 'Unisex',
+                    'brand_name'         => $item->productVariant->product->brand?->name    ?? '',
+                    'category_name'      => $item->productVariant->product->category?->name ?? '',
+                    'gender_name'        => $item->productVariant->product->gender?->name   ?? 'Unisex',
                     'color_name'         => $item->productVariant->color->name,
                     'size_value'         => $item->productVariant->size->size_value,
                     'unit_price'         => $unitPrice,

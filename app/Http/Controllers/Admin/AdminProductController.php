@@ -100,7 +100,7 @@ class AdminProductController extends Controller
             'variants.*.image_url'            => 'nullable|url|max:2048',
             'variants.*.sizes'                => 'required|array|min:1',
             'variants.*.sizes.*.size_id'      => 'required|exists:sizes,id',
-            'variants.*.sizes.*.stock_quantity' => 'required|integer|min:0',
+            'variants.*.sizes.*.stock_quantity' => 'required|integer|min:0|max:9999',
         ]);
 
         // Check for duplicate (color_id, size_id) pairs within the submission
@@ -200,7 +200,7 @@ class AdminProductController extends Controller
             'variants.*.image_url'              => 'nullable|url|max:2048',
             'variants.*.sizes'                  => 'required|array|min:1',
             'variants.*.sizes.*.size_id'        => 'required|exists:sizes,id',
-            'variants.*.sizes.*.stock_quantity' => 'required|integer|min:0',
+            'variants.*.sizes.*.stock_quantity' => 'required|integer|min:0|max:9999',
             'variants.*.sizes.*.variant_id'     => 'nullable|integer|exists:product_variants,id',
         ]);
 
