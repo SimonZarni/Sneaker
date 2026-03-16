@@ -74,6 +74,20 @@ class CheckoutController extends Controller
 
         $user = Auth::user();
 
+        // ── Idempotency guard ─────────────────────────────────────────────────
+        // Prevent duplicate orders from double-clicks or network retries.
+        // If this user already placed an order in the last 30 seconds, redirect
+        // to that order instead of creating a new one.
+        $recentOrder = \App\Models\Order::where('user_id', $user->id)
+            ->where('placed_at', '>=', now()->subSeconds(30))
+            ->latest('placed_at')
+            ->first();
+
+        if ($recentOrder) {
+            return redirect()->route('orders.show', $recentOrder->id)
+                ->with('success', 'Your order was already placed successfully.');
+        }
+
         // ── Re-fetch cart server-side for secure total calculation ────────────
         $cart = Cart::with([
             'items.productVariant.product.brand',
@@ -165,7 +179,7 @@ class CheckoutController extends Controller
             $order = Order::create([
                 'user_id'               => $user->id,
                 'address_id'            => $userAddress->id,
-                'order_number'          => 'SDRP-' . strtoupper(Str::uuid()),
+                'order_number'          => $this->generateOrderNumber(),
                 'total_amount'          => $totalAmount,
                 'order_status'          => 'Confirmed',
                 'payment_status'        => $paymentStatus,
@@ -221,5 +235,27 @@ class CheckoutController extends Controller
             //     ->with('success', "Order {$order->order_number} secured successfully.");
             return redirect()->route('orders.success', $order->id);
         });
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * Generate a unique 12-character alphanumeric order number prefixed with SDRP-.
+     * Retries on the rare chance of a collision (probability ~1 in 10^18 at low volumes).
+     * Example output: SDRP-VLBZU376WIHD
+     */
+    private function generateOrderNumber(): string
+    {
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+        do {
+            $suffix = '';
+            for ($i = 0; $i < 12; $i++) {
+                $suffix .= $chars[random_int(0, strlen($chars) - 1)];
+            }
+            $number = 'SDRP-' . $suffix;
+        } while (Order::where('order_number', $number)->exists());
+
+        return $number;
     }
 }

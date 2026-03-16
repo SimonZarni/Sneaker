@@ -106,23 +106,30 @@ class ProductController extends Controller
             : false;
 
         // ── Related products ──────────────────────────────────────────────────
-        $related = Product::with('brand')
-            ->where('is_active', true)
-            ->where('id', '!=', $id)
-            ->where(fn($q) =>
-                $q->where('brand_id', $product->brand_id)
-                  ->orWhere('category_id', $product->category_id)
-            )
-            ->inRandomOrder()
-            ->limit(4)
-            ->get()
-            ->map(fn($p) => [
-                'id'             => $p->id,
-                'name'           => $p->name,
-                'base_price'     => $p->base_price,
-                'main_image_url' => $p->main_image_url,
-                'brand'          => $p->brand?->name,
-            ]);
+        // Cache per product for 1 hour to avoid ORDER BY RAND() full table scan
+        // on every page load. Cache is tagged with the product id so it naturally
+        // expires when the catalog is large and TTL rolls over.
+        $related = \Illuminate\Support\Facades\Cache::remember(
+            "related.{$id}",
+            3600,
+            fn() => Product::with('brand')
+                ->where('is_active', true)
+                ->where('id', '!=', $id)
+                ->where(fn($q) =>
+                    $q->where('brand_id', $product->brand_id)
+                      ->orWhere('category_id', $product->category_id)
+                )
+                ->latest()
+                ->limit(4)
+                ->get()
+                ->map(fn($p) => [
+                    'id'             => $p->id,
+                    'name'           => $p->name,
+                    'base_price'     => $p->base_price,
+                    'main_image_url' => $p->main_image_url,
+                    'brand'          => $p->brand?->name,
+                ])
+        );
 
         return Inertia::render('Shop/Show', [
             'product'         => $product,
