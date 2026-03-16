@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
         // This ensures all Brands, Categories, and Products exist
         $this->call([
             SneakerSeeder::class,
+            AdminSeeder::class, // Don't forget to seed the admin account!
         ]);
     }
 }

@@ -64,7 +64,7 @@ export default function AdminLogin({ sessionExpired }: { sessionExpired?: string
                                     value={data.email}
                                     onChange={e => setData("email", e.target.value)}
                                     className={inputCls}
-                                    placeholder="admin@WALKER SNEAKER"
+                                    placeholder="walker@sneaker.store"
                                     autoComplete="email"
                                     autoFocus
                                 />
