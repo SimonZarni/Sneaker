@@ -61,7 +61,7 @@ export default function OrdersIndex({ orders }: Props) {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="My Orders — SNEAKER.DRP" />
+            <Head title="My Orders — WALKER SNEAKER" />
 
             {/* ── NAV ── */}
             <nav className="fixed top-0 w-full z-50 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md">
@@ -78,7 +78,7 @@ export default function OrdersIndex({ orders }: Props) {
 
                     {/* Logo */}
                     <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
-                        <Link href="/">SNEAKER.DRP</Link>
+                        <Link href="/">WALKER SNEAKER</Link>
                     </h1>
 
                     {/* Right */}

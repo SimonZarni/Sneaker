@@ -52,7 +52,7 @@ export default function OrderSuccess({ order }: Props) {
             {/* ── NAVBAR ── */}
             <nav style={{ backgroundColor: "#0A0A0A", padding: "0 40px", height: "56px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
                 <Link href={route("home")} style={{ fontSize: "15px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#fff", textDecoration: "none" }}>
-                    SNEAKER.DRP
+                    WALKER SNEAKER
                 </Link>
                 <Link href={route("orders.index")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
                     My Orders

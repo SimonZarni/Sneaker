@@ -1,4 +1,4 @@
-# SNEAKER.DRP — Setup Guide
+# WALKER SNEAKER — Setup Guide
 
 A full-stack sneaker e-commerce store built with **Laravel 12**, **React**, **TypeScript**, and **MySQL**. This guide walks you through setting up the project from scratch — no prior experience assumed.
 
@@ -63,7 +63,7 @@ copy .env.example .env
 Then open `.env` in any text editor (VS Code, Notepad, etc.) and update these lines:
 
 ```env
-APP_NAME="SNEAKER.DRP"
+APP_NAME="WALKER SNEAKER"
 APP_URL=http://localhost:8000
 
 DB_DATABASE=sneaker_shop
@@ -137,7 +137,7 @@ After seeding you will have:
 
 **Admin account:**
 - URL: `http://localhost:8000/admin/login`
-- Email: `admin@sneaker.drp`
+- Email: `admin@WALKER SNEAKER`
 - Password: `admin123`
 
 **Sample data includes:**

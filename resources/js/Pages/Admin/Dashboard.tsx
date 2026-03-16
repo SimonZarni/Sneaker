@@ -94,7 +94,7 @@ const DELIVERY_LEFT_BORDER: Record<string, string> = {
 export default function AdminDashboard({ orderStats, revenueStats, totalCustomers, totalProducts, lowStock, recentOrders, admin }: Props) {
     return (
         <AdminLayout adminName={admin.name} active="dashboard" pageTitle="Dashboard" pageLabel="Overview">
-            <Head title="Admin - Sneaker.DRP" />
+            <Head title="Admin - WALKER SNEAKER" />
 
             {/* ── TOP STAT CARDS ── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>

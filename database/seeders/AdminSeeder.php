@@ -12,7 +12,7 @@ class AdminSeeder extends Seeder
      * Run this seeder to create the default admin account.
      * After seeding, log in at /admin/login with these credentials.
      *
-     * Email:    admin@sneaker.drp
+     * Email:    admin@WALKER SNEAKER
      * Password: admin123
      */
     public function run(): void

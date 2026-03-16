@@ -35,14 +35,14 @@ export default function WishlistIndex({ items }: Props) {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="Wishlist — SNEAKER.DRP" />
+            <Head title="Wishlist — WALKER SNEAKER" />
 
             {/* ── NAV ── */}
             <nav className="border-b border-brand-surface py-5 sticky top-0 bg-brand-white/90 backdrop-blur-md z-50">
                 <div className="mx-auto max-w-7xl px-4 flex justify-between items-center">
                     <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest">
                         <Link href={route("home")} className="text-xl tracking-tightest">
-                            SNEAKER.DRP
+                            WALKER SNEAKER
                         </Link>
                         <Link href={route("shop.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
                             Shop

@@ -292,7 +292,7 @@ export default function OrdersShow({ order }: Props) {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title={`${order.order_number} — SNEAKER.DRP`} />
+            <Head title={`${order.order_number} — WALKER SNEAKER`} />
 
             {/* ── NAV ── */}
             <nav className="fixed top-0 w-full z-40 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md">
@@ -302,7 +302,7 @@ export default function OrdersShow({ order }: Props) {
                         <Link href="/orders" className="hover:text-brand-slate transition-colors">My Orders</Link>
                     </div>
                     <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
-                        <Link href="/">SNEAKER.DRP</Link>
+                        <Link href="/">WALKER SNEAKER</Link>
                     </h1>
                     <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
                         {auth?.user ? (

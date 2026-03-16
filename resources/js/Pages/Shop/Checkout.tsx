@@ -88,14 +88,14 @@ export default function Checkout({ cart, savedAddresses }: { cart: any; savedAdd
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="Secure Transaction — SNEAKER.DRP" />
+            <Head title="Secure Transaction — WALKER SNEAKER" />
 
             <nav className="border-b border-brand-surface py-10">
                 <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
                     <Link href="/shop" className="text-[10px] font-black uppercase tracking-[0.3em] hover:text-brand-slate transition-colors">
                         ← Exit Checkout
                     </Link>
-                    <h1 className="text-2xl font-black tracking-tightest">SNEAKER.DRP</h1>
+                    <h1 className="text-2xl font-black tracking-tightest">WALKER SNEAKER</h1>
                     <div className="w-24 hidden md:block" />
                 </div>
             </nav>

@@ -19,7 +19,7 @@ export default function AdminLogin({ sessionExpired }: { sessionExpired?: string
 
     return (
         <div className="min-h-screen bg-brand-charcoal flex items-center justify-center px-4">
-            <Head title="Admin Login — SNEAKER.DRP" />
+            <Head title="Admin Login — WALKER SNEAKER" />
 
             <div className="w-full max-w-sm">
                 {/* Logo */}
@@ -28,7 +28,7 @@ export default function AdminLogin({ sessionExpired }: { sessionExpired?: string
                         Admin Panel
                     </p>
                     <h1 className="text-3xl font-black tracking-tightest uppercase text-white">
-                        SNEAKER.DRP
+                        WALKER SNEAKER
                     </h1>
                 </div>
 
@@ -64,7 +64,7 @@ export default function AdminLogin({ sessionExpired }: { sessionExpired?: string
                                     value={data.email}
                                     onChange={e => setData("email", e.target.value)}
                                     className={inputCls}
-                                    placeholder="admin@sneaker.drp"
+                                    placeholder="admin@WALKER SNEAKER"
                                     autoComplete="email"
                                     autoFocus
                                 />
