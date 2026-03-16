@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use DeepCopy\f002\A;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -30,6 +31,7 @@ class DatabaseSeeder extends Seeder
         // This ensures all Brands, Categories, and Products exist
         $this->call([
             SneakerSeeder::class,
+            AdminSeeder::class, // Seed the admin account for logging into the admin panel
         ]);
     }
 }
