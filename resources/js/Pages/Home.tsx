@@ -38,10 +38,10 @@ export default function Home({ featured }: any) {
                             The Archive
                         </Link>
                         <Link
-                            href="#"
+                            href={route("about")}
                             className="hover:text-brand-slate transition-colors"
                         >
-                            Editorial
+                            About Us
                         </Link>
                     </div>
 

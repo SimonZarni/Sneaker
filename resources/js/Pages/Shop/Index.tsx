@@ -79,6 +79,7 @@ export default function ShopIndex({ products, brands, categories, genders, filte
                         <Link href={route("shop.index")} style={{ color: "#0A0A0A", textDecoration: "none", borderBottom: "2px solid #0A0A0A", paddingBottom: "2px" }}>
                             Shop
                         </Link>
+                        <Link href={route("about")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>About Us</Link>
                         {auth.user ? (
                             <>
                                 <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Orders</Link>
