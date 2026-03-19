@@ -184,7 +184,7 @@ export default function AdminProductsEdit({ product, brands, categories, genders
                         <div style={S.card}>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", paddingBottom: "12px", borderBottom: "1px solid #f5f5f5" }}>
                                 <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em" }}>Colorways & Stock</p>
-                                <button type="button" onClick={addVariant} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "none", cursor: "pointer" }}>
+                                <button type="button" onClick={addVariant} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "none", cursor: "pointer" }}>
                                     <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                                     Add Color
                                 </button>
@@ -259,12 +259,12 @@ export default function AdminProductsEdit({ product, brands, categories, genders
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => toggleSize(variant._key, size.id)}
-                                                                    style={{ padding: "7px 10px", fontSize: "10px", fontWeight: 900, border: `1px solid ${isChecked ? "#0A0A0A" : "#e5e7eb"}`, borderBottom: isChecked ? "none" : `1px solid #e5e7eb`, backgroundColor: isChecked ? "#0A0A0A" : "#fff", color: isChecked ? "#fff" : "rgba(45,50,62,0.4)", cursor: "pointer", transition: "all 0.1s", width: "58px", textAlign: "center" }}
+                                                                    style={{ padding: "7px 10px", fontSize: "10px", fontWeight: 900, border: `1px solid ${isChecked ? "#5B8C5A" : "#e5e7eb"}`, borderBottom: isChecked ? "none" : `1px solid #e5e7eb`, backgroundColor: isChecked ? "#5B8C5A" : "#fff", color: isChecked ? "#fff" : "rgba(45,50,62,0.4)", cursor: "pointer", transition: "all 0.1s", width: "58px", textAlign: "center" }}
                                                                 >
                                                                     {size.size_value}
                                                                 </button>
                                                                 {isChecked && entry && (
-                                                                    <div style={{ width: "58px", border: "1px solid #0A0A0A", borderTop: "1px solid #333", backgroundColor: "#fff" }}>
+                                                                    <div style={{ width: "58px", border: "1px solid #5B8C5A", borderTop: "1px solid #333", backgroundColor: "#fff" }}>
                                                                         <p style={{ fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.35)", textAlign: "center", paddingTop: "4px", marginBottom: "1px" }}>
                                                                             Stock
                                                                         </p>
@@ -310,7 +310,7 @@ export default function AdminProductsEdit({ product, brands, categories, genders
                                     <label style={S.label}>Status</label>
                                     <div style={{ display: "flex", gap: "8px" }}>
                                         {[{ label: "Active", value: true }, { label: "Inactive", value: false }].map((opt) => (
-                                            <button key={String(opt.value)} type="button" onClick={() => setIsActive(opt.value)} style={{ flex: 1, padding: "10px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: `1px solid ${isActive === opt.value ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: isActive === opt.value ? "#0A0A0A" : "#fff", color: isActive === opt.value ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer" }}>
+                                            <button key={String(opt.value)} type="button" onClick={() => setIsActive(opt.value)} style={{ flex: 1, padding: "10px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: `1px solid ${isActive === opt.value ? "#5B8C5A" : "#e5e7eb"}`, backgroundColor: isActive === opt.value ? "#5B8C5A" : "#fff", color: isActive === opt.value ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer" }}>
                                                 {opt.label}
                                             </button>
                                         ))}
@@ -330,7 +330,7 @@ export default function AdminProductsEdit({ product, brands, categories, genders
                             </div>
                         </div>
 
-                        <button type="submit" disabled={processing} style={{ width: "100%", padding: "16px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", border: "none", cursor: processing ? "not-allowed" : "pointer", opacity: processing ? 0.5 : 1, marginBottom: "10px" }}>
+                        <button type="submit" disabled={processing} style={{ width: "100%", padding: "16px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", border: "none", cursor: processing ? "not-allowed" : "pointer", opacity: processing ? 0.5 : 1, marginBottom: "10px" }}>
                             {processing ? "Saving..." : "Save Changes"}
                         </button>
 

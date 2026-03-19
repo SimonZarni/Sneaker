@@ -102,10 +102,10 @@ function DeliveryTimeline({ steps, current, orderId }: { steps: string[]; curren
                     return (
                         <React.Fragment key={step}>
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                                <div style={{ width: active ? "16px" : "12px", height: active ? "16px" : "12px", borderRadius: "50%", border: `2px solid ${done ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: done ? "#0A0A0A" : "#fff", transition: "all 0.2s" }} />
-                                <span style={{ marginTop: "8px", fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", whiteSpace: "nowrap", color: active ? "#0A0A0A" : done ? "rgba(45,50,62,0.5)" : "rgba(45,50,62,0.2)" }}>{step}</span>
+                                <div style={{ width: active ? "16px" : "12px", height: active ? "16px" : "12px", borderRadius: "50%", border: `2px solid ${done ? "#5B8C5A" : "#e5e7eb"}`, backgroundColor: done ? "#5B8C5A" : "#fff", transition: "all 0.2s" }} />
+                                <span style={{ marginTop: "8px", fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", whiteSpace: "nowrap", color: active ? "#5B8C5A" : done ? "rgba(45,50,62,0.5)" : "rgba(45,50,62,0.2)" }}>{step}</span>
                             </div>
-                            {i < steps.length - 1 && <div style={{ flex: 1, height: "1px", margin: "0 4px", marginBottom: "20px", backgroundColor: i < currentIdx ? "#0A0A0A" : "#e5e7eb" }} />}
+                            {i < steps.length - 1 && <div style={{ flex: 1, height: "1px", margin: "0 4px", marginBottom: "20px", backgroundColor: i < currentIdx ? "#5B8C5A" : "#e5e7eb" }} />}
                         </React.Fragment>
                     );
                 })}
@@ -113,7 +113,7 @@ function DeliveryTimeline({ steps, current, orderId }: { steps: string[]; curren
 
             {/* Action area — current badge + single next-step button only */}
             <div style={{ display: "flex", flexWrap: "wrap" as const, gap: "10px", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
                     <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                     {current} (Current)
                 </div>
@@ -125,7 +125,7 @@ function DeliveryTimeline({ steps, current, orderId }: { steps: string[]; curren
                 ) : (
                     <button
                         onClick={() => handleUpdate(nextStep!)}
-                        style={{ padding: "10px 20px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: "1px solid #0A0A0A", backgroundColor: "#fff", color: "#0A0A0A", cursor: "pointer" }}
+                        style={{ padding: "10px 20px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: "1px solid #5B8C5A", backgroundColor: "#fff", color: "#5B8C5A", cursor: "pointer" }}
                     >
                         → Mark as {nextStep}
                     </button>
@@ -205,7 +205,7 @@ function AdminCancelModal({ order, onClose }: { order: Order; onClose: () => voi
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             {REASONS.map(r => (
                                 <label key={r} style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
-                                    <div style={{ width: "16px", height: "16px", borderRadius: "50%", border: `2px solid ${reason === r ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: reason === r ? "#0A0A0A" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}>
+                                    <div style={{ width: "16px", height: "16px", borderRadius: "50%", border: `2px solid ${reason === r ? "#5B8C5A" : "#e5e7eb"}`, backgroundColor: reason === r ? "#5B8C5A" : "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}>
                                         {reason === r && <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#fff" }} />}
                                     </div>
                                     <input type="radio" style={{ display: "none" }} value={r} checked={reason === r} onChange={() => setReason(r)} />
@@ -252,7 +252,7 @@ function AdminCancelModal({ order, onClose }: { order: Order; onClose: () => voi
                         </button>
                         <button
                             onClick={onClose}
-                            style={{ flex: 1, padding: "12px", backgroundColor: "#fff", color: "#0A0A0A", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", border: "1px solid #0A0A0A", cursor: "pointer" }}
+                            style={{ flex: 1, padding: "12px", backgroundColor: "#fff", color: "#5B8C5A", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", border: "1px solid #5B8C5A", cursor: "pointer" }}
                         >
                             Keep Order
                         </button>
@@ -403,7 +403,7 @@ export default function AdminOrdersShow({ order, deliverySteps, admin }: Props) 
                     <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "20px 24px" }}>
                         <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(45,50,62,0.3)", marginBottom: "16px" }}>Ship To</p>
                         <div style={{ fontSize: "12px", lineHeight: 1.8, color: "rgba(45,50,62,0.7)" }}>
-                            <p style={{ fontWeight: 900, color: "#0A0A0A" }}>{order.shipping_full_name}</p>
+                            <p style={{ fontWeight: 900, color: "#5B8C5A" }}>{order.shipping_full_name}</p>
                             <p>{order.shipping_phone}</p>
                             <p>{order.shipping_address_line}</p>
                             <p>{order.shipping_city}{order.shipping_state_region ? `, ${order.shipping_state_region}` : ""}{order.shipping_postal_code ? ` ${order.shipping_postal_code}` : ""}</p>

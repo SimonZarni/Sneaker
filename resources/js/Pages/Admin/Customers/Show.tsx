@@ -87,7 +87,7 @@ export default function AdminCustomersShow({ customer, orders, admin }: Props) {
                     {/* Identity */}
                     <div style={{ border: "1px solid #f0f0f0", padding: "24px", backgroundColor: "#fff" }}>
                         {/* Avatar initial */}
-                        <div style={{ width: "56px", height: "56px", backgroundColor: "#0A0A0A", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
+                        <div style={{ width: "56px", height: "56px", backgroundColor: "#5B8C5A", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
                             <span style={{ fontSize: "22px", fontWeight: 900, color: "#fff", textTransform: "uppercase" }}>
                                 {customer.name.charAt(0)}
                             </span>
@@ -107,7 +107,7 @@ export default function AdminCustomersShow({ customer, orders, admin }: Props) {
                             ].map(row => (
                                 <div key={row.label}>
                                     <p style={{ fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(45,50,62,0.3)", marginBottom: "2px" }}>{row.label}</p>
-                                    <p style={{ fontSize: "11px", fontWeight: 600, color: "#0A0A0A", wordBreak: "break-all" as const }}>{row.value}</p>
+                                    <p style={{ fontSize: "11px", fontWeight: 600, color: "#5B8C5A", wordBreak: "break-all" as const }}>{row.value}</p>
                                 </div>
                             ))}
                         </div>
@@ -120,7 +120,7 @@ export default function AdminCustomersShow({ customer, orders, admin }: Props) {
                             { label: "Total Spent",  value: `$${customer.total_spent}` },
                         ].map(s => (
                             <div key={s.label}>
-                                <p style={{ fontSize: "22px", fontWeight: 900, lineHeight: 1, color: "#0A0A0A" }}>{s.value}</p>
+                                <p style={{ fontSize: "22px", fontWeight: 900, lineHeight: 1, color: "#5B8C5A" }}>{s.value}</p>
                                 <p style={{ fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(45,50,62,0.3)", marginTop: "4px" }}>{s.label}</p>
                             </div>
                         ))}
@@ -159,7 +159,7 @@ export default function AdminCustomersShow({ customer, orders, admin }: Props) {
                                         <PPill label={o.payment_status} />
                                         <Link
                                             href={route("admin.orders.show", o.id)}
-                                            style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#0A0A0A", textDecoration: "none", borderBottom: "1px solid #0A0A0A", paddingBottom: "1px", width: "fit-content" }}
+                                            style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#5B8C5A", textDecoration: "none", borderBottom: "1px solid #0A0A0A", paddingBottom: "1px", width: "fit-content" }}
                                         >
                                             View
                                         </Link>
