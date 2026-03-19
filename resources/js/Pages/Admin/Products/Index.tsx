@@ -66,7 +66,7 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
             headerRight={
                 <Link
                     href={route("admin.products.create")}
-                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", textDecoration: "none" }}
+                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", textDecoration: "none" }}
                 >
                     <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -89,7 +89,7 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
                 {statusTabs.map((tab) => {
                     const isActive = activeStatus === tab.value;
                     return (
-                        <button key={tab.value} onClick={() => apply({ status: tab.value })} style={{ padding: "20px", textAlign: "left", border: `1px solid ${isActive ? "#0A0A0A" : "#f0f0f0"}`, backgroundColor: isActive ? "#0A0A0A" : "#fff", color: isActive ? "#fff" : "#0A0A0A", cursor: "pointer", transition: "all 0.15s" }}>
+                        <button key={tab.value} onClick={() => apply({ status: tab.value })} style={{ padding: "20px", textAlign: "left", border: `1px solid ${isActive ? "#5B8C5A" : "#f0f0f0"}`, backgroundColor: isActive ? "#5B8C5A" : "#fff", color: isActive ? "#fff" : "#5B8C5A", cursor: "pointer", transition: "all 0.15s" }}>
                             <p style={{ fontSize: "28px", fontWeight: 900, letterSpacing: "-0.05em", fontVariantNumeric: "tabular-nums" }}>{tab.count}</p>
                             <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "4px", opacity: isActive ? 0.6 : 0.4 }}>{tab.label}</p>
                         </button>
@@ -107,7 +107,7 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
                         placeholder="Search product name..."
                         style={{ flex: 1, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: "12px 16px", fontSize: "12px", outline: "none" }}
                     />
-                    <button type="submit" style={{ padding: "12px 24px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer" }}>
+                    <button type="submit" style={{ padding: "12px 24px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer" }}>
                         Search
                     </button>
                 </form>
@@ -147,7 +147,7 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
                 {products.data.length === 0 && (
                     <div style={{ padding: "80px 20px", textAlign: "center" }}>
                         <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(45,50,62,0.2)", marginBottom: "16px" }}>No products found</p>
-                        <Link href={route("admin.products.create")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#0A0A0A", textDecoration: "none", borderBottom: "1px solid #0A0A0A", paddingBottom: "1px" }}>
+                        <Link href={route("admin.products.create")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#5B8C5A", textDecoration: "none", borderBottom: "1px solid #0A0A0A", paddingBottom: "1px" }}>
                             + Add your first product
                         </Link>
                     </div>
@@ -184,7 +184,7 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
                         <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", alignItems: "center" }}>
                             <Link
                                 href={route("admin.products.edit", product.id)}
-                                style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#0A0A0A", textDecoration: "none", padding: "7px 14px", border: "1px solid #e5e7eb", whiteSpace: "nowrap" }}
+                                style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#5B8C5A", textDecoration: "none", padding: "7px 14px", border: "1px solid #e5e7eb", whiteSpace: "nowrap" }}
                             >
                                 Edit
                             </Link>

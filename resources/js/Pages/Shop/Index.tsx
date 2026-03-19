@@ -66,19 +66,20 @@ export default function ShopIndex({ products, brands, categories, genders, filte
 
     return (
         <div style={{ minHeight: "100vh", backgroundColor: "#fff", fontFamily: "inherit" }}>
-            <Head title="Shop — WALKER SNEAKER" />
+            <Head title="Shop — Walker Sneaker Store" />
 
             {/* ── NAV ── */}
             <nav style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: 0, zIndex: 50 }}>
                 <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#0A0A0A", textDecoration: "none" }}>
-                        WALKER SNEAKER
+                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#5B8C5A", textDecoration: "none" }}>
+                        Walker Sneaker Store
                     </Link>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "32px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
-                        <Link href={route("shop.index")} style={{ color: "#0A0A0A", textDecoration: "none", borderBottom: "2px solid #0A0A0A", paddingBottom: "2px" }}>
+                        <Link href={route("shop.index")} style={{ color: "#5B8C5A", textDecoration: "none", borderBottom: "2px solid #5B8C5A", paddingBottom: "2px" }}>
                             Shop
                         </Link>
+                        <Link href={route("about")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>About Us</Link>
                         {auth.user ? (
                             <>
                                 <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Orders</Link>
@@ -90,9 +91,9 @@ export default function ShopIndex({ products, brands, categories, genders, filte
                         ) : (
                             <Link href="/login" style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Login</Link>
                         )}
-                        <button onClick={() => setIsCartOpen(true)} style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#0A0A0A" }}>
+                        <button onClick={() => setIsCartOpen(true)} style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#5B8C5A" }}>
                             Vault
-                            <span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "2px 6px", borderRadius: "9999px", fontSize: "8px" }}>
+                            <span style={{ backgroundColor: "#5B8C5A", color: "#fff", padding: "2px 6px", borderRadius: "9999px", fontSize: "8px" }}>
                                 {cartCount}
                             </span>
                         </button>
@@ -146,14 +147,14 @@ export default function ShopIndex({ products, brands, categories, genders, filte
                     </div>
 
                     {/* Search button */}
-                    <button onClick={() => apply({ search })} style={{ padding: "12px 24px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+                    <button onClick={() => apply({ search })} style={{ padding: "12px 24px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
                         Search
                     </button>
 
                     {/* Filter toggle */}
                     <button
                         onClick={() => setSidebarOpen((v) => !v)}
-                        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 20px", border: `1px solid ${sidebarOpen || activeFilterCount > 0 ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: sidebarOpen || activeFilterCount > 0 ? "#0A0A0A" : "#fff", color: sidebarOpen || activeFilterCount > 0 ? "#fff" : "#0A0A0A", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", cursor: "pointer", whiteSpace: "nowrap" }}
+                        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 20px", border: `1px solid ${sidebarOpen || activeFilterCount > 0 ? "#5B8C5A" : "#e5e7eb"}`, backgroundColor: sidebarOpen || activeFilterCount > 0 ? "#5B8C5A" : "#fff", color: sidebarOpen || activeFilterCount > 0 ? "#fff" : "#5B8C5A", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", cursor: "pointer", whiteSpace: "nowrap" }}
                     >
                         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
@@ -233,7 +234,7 @@ export default function ShopIndex({ products, brands, categories, genders, filte
                         <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(45,50,62,0.2)", marginBottom: "16px" }}>
                             No sneakers found
                         </p>
-                        <button onClick={clearAll} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#0A0A0A", background: "none", border: "none", borderBottom: "1px solid #0A0A0A", paddingBottom: "1px", cursor: "pointer" }}>
+                        <button onClick={clearAll} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#5B8C5A", background: "none", border: "none", borderBottom: "1px solid #0A0A0A", paddingBottom: "1px", cursor: "pointer" }}>
                             Clear filters
                         </button>
                     </div>
@@ -266,7 +267,7 @@ function FilterGroup({ label, items, active, onSelect }: {
             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                 <button
                     onClick={() => onSelect("")}
-                    style={{ textAlign: "left", padding: "7px 12px", fontSize: "11px", fontWeight: active === "" ? 900 : 600, border: "none", backgroundColor: active === "" ? "#0A0A0A" : "transparent", color: active === "" ? "#fff" : "rgba(45,50,62,0.6)", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em" }}
+                    style={{ textAlign: "left", padding: "7px 12px", fontSize: "11px", fontWeight: active === "" ? 900 : 600, border: "none", backgroundColor: active === "" ? "#5B8C5A" : "transparent", color: active === "" ? "#fff" : "rgba(45,50,62,0.6)", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em" }}
                 >
                     All
                 </button>
@@ -276,7 +277,7 @@ function FilterGroup({ label, items, active, onSelect }: {
                         <button
                             key={item.id}
                             onClick={() => onSelect(isActive ? "" : String(item.id))}
-                            style={{ textAlign: "left", padding: "7px 12px", fontSize: "11px", fontWeight: isActive ? 900 : 600, border: "none", backgroundColor: isActive ? "#0A0A0A" : "transparent", color: isActive ? "#fff" : "rgba(45,50,62,0.6)", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em" }}
+                            style={{ textAlign: "left", padding: "7px 12px", fontSize: "11px", fontWeight: isActive ? 900 : 600, border: "none", backgroundColor: isActive ? "#5B8C5A" : "transparent", color: isActive ? "#fff" : "rgba(45,50,62,0.6)", cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em" }}
                         >
                             {item.name}
                         </button>
@@ -290,7 +291,7 @@ function FilterGroup({ label, items, active, onSelect }: {
 // ── Filter Chip ───────────────────────────────────────────────────────────────
 function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 10px 4px 12px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 10px 4px 12px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>
             {label}
             <button onClick={onRemove} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.6)", padding: "0", display: "flex", alignItems: "center" }}>
                 <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor">
@@ -336,13 +337,13 @@ function ProductCard({ product, auth }: { product: Product; auth: any }) {
                 title={wishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
                 style={{ position: "absolute", top: "16px", right: "16px", zIndex: 10, background: "rgba(255,255,255,0.9)", border: "none", cursor: "pointer", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", transition: "transform 0.2s", transform: wishFlash ? "scale(1.3)" : "scale(1)" }}
             >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill={wishlisted ? "#0A0A0A" : "none"} stroke="#0A0A0A" strokeWidth="1.8">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={wishlisted ? "#5B8C5A" : "none"} stroke="#5B8C5A" strokeWidth="1.8">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                 </svg>
             </button>
 
             {/* Image */}
-            <div style={{ aspectRatio: "1/1", backgroundColor: "#F5F5F7", overflow: "hidden", marginBottom: "20px" }}>
+            <div style={{ aspectRatio: "1/1", backgroundColor: "#EEF3EE", overflow: "hidden", marginBottom: "20px" }}>
                 <img
                     src={product.main_image_url ?? "https://via.placeholder.com/600"}
                     alt={product.name}
@@ -362,7 +363,7 @@ function ProductCard({ product, auth }: { product: Product; auth: any }) {
                     <p style={{ fontSize: "15px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
                         ${parseFloat(product.base_price).toFixed(2)}
                     </p>
-                    <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: `2px solid ${hovered ? "#0A0A0A" : "transparent"}`, paddingBottom: "2px", transition: "border-color 0.2s", color: "#0A0A0A" }}>
+                    <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: `2px solid ${hovered ? "#5B8C5A" : "transparent"}`, paddingBottom: "2px", transition: "border-color 0.2s", color: "#5B8C5A" }}>
                         View →
                     </span>
                 </div>

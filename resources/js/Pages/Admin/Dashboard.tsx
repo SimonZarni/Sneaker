@@ -94,13 +94,13 @@ const DELIVERY_LEFT_BORDER: Record<string, string> = {
 export default function AdminDashboard({ orderStats, revenueStats, totalCustomers, totalProducts, lowStock, recentOrders, admin }: Props) {
     return (
         <AdminLayout adminName={admin.name} active="dashboard" pageTitle="Dashboard" pageLabel="Overview">
-            <Head title="Admin - WALKER SNEAKER" />
+            <Head title="Admin — Walker Sneaker Store" />
 
             {/* ── TOP STAT CARDS ── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
 
                 {/* Revenue — dark card */}
-                <div style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "28px", gridColumn: "span 1" }}>
+                <div style={{ backgroundColor: "#5B8C5A", color: "#fff", padding: "28px", gridColumn: "span 1" }}>
                     <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(255,255,255,0.3)", marginBottom: "12px" }}>
                         Total Revenue
                     </p>
@@ -232,7 +232,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                 style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 80px 100px", gap: "16px", alignItems: "center", padding: "14px 24px", backgroundColor: "#fffbeb" }}
                             >
                                 {/* Product name */}
-                                <p style={{ fontSize: "12px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "-0.01em", color: "#0A0A0A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                                <p style={{ fontSize: "12px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "-0.01em", color: "#5B8C5A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
                                     {v.product_name}
                                 </p>
 

@@ -23,7 +23,7 @@ const input: React.CSSProperties = {
     fontFamily: "inherit", width: "100%", boxSizing: "border-box",
 };
 const btnPrimary: React.CSSProperties = {
-    padding: "8px 16px", backgroundColor: "#0A0A0A", color: "#fff",
+    padding: "8px 16px", backgroundColor: "#5B8C5A", color: "#fff",
     fontSize: "9px", fontWeight: 900, textTransform: "uppercase",
     letterSpacing: "0.12em", border: "none", cursor: "pointer",
     fontFamily: "inherit", whiteSpace: "nowrap",
