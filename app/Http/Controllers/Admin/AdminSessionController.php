@@ -19,7 +19,7 @@ class AdminSessionController extends Controller
         }
 
         return Inertia::render('Admin/Login', [
-            'sessionExpired' => $request->session()->pull('session_expired'),
+            'sessionExpired' => $request->session()->pull('admin_session_expired'),
         ]);
     }
 
