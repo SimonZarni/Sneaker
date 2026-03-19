@@ -20,7 +20,7 @@ class SneakerSeeder extends Seeder
             'Nike' => 'https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg',
             'Adidas' => 'https://upload.wikimedia.org/wikipedia/commons/2/20/Adidas_Logo.svg',
             'Jordan' => 'https://upload.wikimedia.org/wikipedia/en/3/37/Jumpman_logo.svg',
-            'New Balance' => 'https://upload.wikimedia.org/wikipedia/commons/e/ea/New_Balance_logo.svg',
+            'New Balance' => 'https://www.newbalance.co.th/media/logo/websites/2/Newbalance-logo_1_.png',
         ];
 
         $brandModels = [];
