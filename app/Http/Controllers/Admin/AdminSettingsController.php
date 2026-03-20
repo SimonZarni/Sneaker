@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
+use App\Models\Setting;
 use App\Models\Category;
 use App\Models\Color;
 use App\Models\Gender;
@@ -20,11 +21,12 @@ class AdminSettingsController extends Controller
     public function index()
     {
         return Inertia::render('Admin/Settings', [
-            'brands'     => Brand::orderBy('name')->get(['id', 'name', 'logo_url']),
-            'categories' => Category::orderBy('name')->get(['id', 'name']),
-            'genders'    => Gender::orderBy('name')->get(['id', 'name']),
-            'colors'     => Color::orderBy('name')->get(['id', 'name', 'hex_code']),
-            'admin'      => ['name' => Auth::guard('admin')->user()->full_name],
+            'brands'      => Brand::orderBy('name')->get(['id', 'name', 'logo_url']),
+            'categories'  => Category::orderBy('name')->get(['id', 'name']),
+            'genders'     => Gender::orderBy('name')->get(['id', 'name']),
+            'colors'      => Color::orderBy('name')->get(['id', 'name', 'hex_code']),
+            'shippingFee' => (float) Setting::get('shipping_fee', '0.00'),
+            'admin'       => ['name' => Auth::guard('admin')->user()->full_name],
         ]);
     }
 
@@ -116,6 +118,19 @@ class AdminSettingsController extends Controller
             'hex_code' => 'nullable|string|max:10',
         ]);
         Color::findOrFail($id)->update(['name' => $request->name, 'hex_code' => $request->hex_code]);
+    }
+
+    // ── Shipping Fee ──────────────────────────────────────────────────────────
+
+    public function updateShippingFee(Request $request)
+    {
+        $request->validate([
+            'shipping_fee' => 'required|numeric|min:0|max:9999',
+        ]);
+
+        Setting::set('shipping_fee', number_format((float) $request->shipping_fee, 2, '.', ''));
+
+        return back()->with('success', 'Shipping fee updated successfully.');
     }
 
     // ── Destroy ───────────────────────────────────────────────────────────────

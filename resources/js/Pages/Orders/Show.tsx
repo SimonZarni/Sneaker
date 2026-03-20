@@ -17,6 +17,7 @@ interface Order {
     id: number;
     order_number: string;
     total_amount: string;
+    shipping_fee: string | null;
     order_status: string;
     payment_status: string;
     delivery_status: string;
@@ -292,17 +293,18 @@ export default function OrdersShow({ order }: Props) {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title={`${order.order_number} — SNEAKER.DRP`} />
+            <Head title={`${order.order_number} — Walker Sneaker Store`} />
 
             {/* ── NAV ── */}
             <nav className="fixed top-0 w-full z-40 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
                     <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
                         <Link href="/shop" className="hover:text-brand-slate transition-colors">The Archive</Link>
+                        <Link href={route("about")} className="hover:text-brand-slate transition-colors">About Us</Link>
                         <Link href="/orders" className="hover:text-brand-slate transition-colors">My Orders</Link>
                     </div>
                     <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
-                        <Link href="/">SNEAKER.DRP</Link>
+                        <Link href="/">Walker Sneaker Store</Link>
                     </h1>
                     <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
                         {auth?.user ? (
@@ -442,7 +444,12 @@ export default function OrdersShow({ order }: Props) {
                                     <span className="tabular-nums">{formatPrice(parseFloat(order.total_amount) - tax)}</span>
                                 </div>
                                 <div className="flex justify-between text-brand-slate/60">
-                                    <span>Shipping</span><span>Free</span>
+                                    <span>Shipping</span>
+                                    <span className="tabular-nums">
+                                        {order.shipping_fee && parseFloat(order.shipping_fee) > 0
+                                            ? formatPrice(order.shipping_fee)
+                                            : 'Free'}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between text-brand-slate/60">
                                     <span>Tax (7%)</span>

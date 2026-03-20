@@ -13,6 +13,7 @@ interface Props {
     categories: Category[];
     genders: Gender[];
     colors: Color[];
+    shippingFee: number;
     admin: { name: string };
 }
 
@@ -36,12 +37,62 @@ const btnGhost: React.CSSProperties = {
 };
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function AdminSettings({ brands, categories, genders, colors, admin }: Props) {
+export default function AdminSettings({ brands, categories, genders, colors, shippingFee, admin }: Props) {
     const { flash }: any = usePage().props;
+    const [feeValue, setFeeValue] = useState(String(shippingFee));
+    const [feeSaving, setFeeSaving] = useState(false);
+
+    const saveShippingFee = () => {
+        setFeeSaving(true);
+        router.patch(route('admin.settings.shippingFee'), { shipping_fee: feeValue }, {
+            preserveScroll: true,
+            onFinish: () => setFeeSaving(false),
+        });
+    };
 
     return (
         <AdminLayout adminName={admin.name} active="settings" pageTitle="Settings" pageLabel="Catalog">
             <Head title="Admin — Settings" />
+
+            {/* ── SHIPPING FEE ── */}
+            <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "28px 32px", marginBottom: "24px" }}>
+                <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", marginBottom: "20px", paddingBottom: "12px", borderBottom: "1px solid #f5f5f5" }}>
+                    Shipping Fee
+                </p>
+                <p style={{ fontSize: "10px", color: "rgba(45,50,62,0.5)", marginBottom: "16px", fontWeight: 600 }}>
+                    This flat rate is added to every order at checkout. Set to 0 for free shipping.
+                </p>
+                <div style={{ display: "flex", gap: "12px", alignItems: "flex-end", maxWidth: "320px" }}>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.5)", marginBottom: "6px", display: "block" }}>
+                            Fee Amount (USD)
+                        </label>
+                        <div style={{ position: "relative" as const }}>
+                            <span style={{ position: "absolute" as const, left: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", fontWeight: 700, color: "rgba(45,50,62,0.4)" }}>$</span>
+                            <input
+                                type="number" min="0" max="9999" step="0.01"
+                                value={feeValue}
+                                onChange={e => setFeeValue(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && saveShippingFee()}
+                                style={{ ...input, paddingLeft: "28px", width: "100%" }}
+                            />
+                        </div>
+                    </div>
+                    <button onClick={saveShippingFee} disabled={feeSaving} style={{ ...btnPrimary, opacity: feeSaving ? 0.5 : 1 }}>
+                        {feeSaving ? "Saving..." : "Save"}
+                    </button>
+                </div>
+                {shippingFee === 0 && (
+                    <p style={{ fontSize: "9px", fontWeight: 700, color: "#065f46", marginTop: "10px", textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
+                        ✓ Free shipping is currently active
+                    </p>
+                )}
+                {shippingFee > 0 && (
+                    <p style={{ fontSize: "9px", fontWeight: 700, color: "rgba(45,50,62,0.4)", marginTop: "10px", textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
+                        Currently: ${shippingFee.toFixed(2)} per order
+                    </p>
+                )}
+            </div>
 
             {flash?.success && (
                 <div style={{ backgroundColor: "#ecfdf5", border: "1px solid #a7f3d0", padding: "12px 20px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#065f46", marginBottom: "20px" }}>

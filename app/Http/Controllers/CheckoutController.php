@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\Setting;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
@@ -46,9 +47,12 @@ class CheckoutController extends Controller
             }
         });
 
+        $shippingFee = (float) Setting::get('shipping_fee', '0.00');
+
         return Inertia::render('Shop/Checkout', [
             'cart'           => $cart,
             'savedAddresses' => $savedAddresses,
+            'shippingFee'    => $shippingFee,
         ]);
     }
 
@@ -113,7 +117,7 @@ class CheckoutController extends Controller
                 ->with('error', 'Your cart is empty. Please add items before checking out.');
         }
 
-        $totalAmount = $cart->items->reduce(function ($carry, $item) {
+        $subtotal = $cart->items->reduce(function ($carry, $item) {
             if (!$item->productVariant || !$item->productVariant->product) {
                 return $carry;
             }
@@ -123,13 +127,16 @@ class CheckoutController extends Controller
             return $carry + ($price * $item->quantity);
         }, 0);
 
+        $shippingFee = (float) Setting::get('shipping_fee', '0.00');
+        $totalAmount = $subtotal + $shippingFee;
+
         // ── Determine payment statuses ────────────────────────────────────────
         // Card  → payment confirmed immediately
         // COD   → payment status stays as "COD" (collected on delivery)
         $paymentStatus = $isCard ? 'Confirmed' : 'COD';
 
         // ── DB Transaction ────────────────────────────────────────────────────
-        return DB::transaction(function () use ($validated, $user, $cart, $totalAmount, $isCard, $paymentStatus) {
+        return DB::transaction(function () use ($validated, $user, $cart, $subtotal, $totalAmount, $shippingFee, $isCard, $paymentStatus) {
 
             // A. Stock validation — acquire row-level write locks so two concurrent
             //    checkouts for the same variant cannot both read sufficient stock
@@ -199,6 +206,7 @@ class CheckoutController extends Controller
                 'address_id'            => $userAddress->id,
                 'order_number'          => $this->generateOrderNumber(),
                 'total_amount'          => $totalAmount,
+                'shipping_fee'          => $shippingFee,
                 'order_status'          => 'Confirmed',
                 'payment_status'        => $paymentStatus,
                 'delivery_status'       => 'Pending',

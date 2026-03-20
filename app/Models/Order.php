@@ -28,12 +28,14 @@ class Order extends Model
         'cancelled_at',
         'cancellation_reason',
         'cancellation_note',
+        'shipping_fee',
     ];
 
     protected $casts = [
         'placed_at'    => 'datetime',
         'cancelled_at' => 'datetime',
         'total_amount' => 'decimal:2',
+        'shipping_fee' => 'decimal:2',
     ];
 
     public function user(): BelongsTo

@@ -123,6 +123,7 @@ class OrderController extends Controller
             'id'                    => $order->id,
             'order_number'          => $order->order_number,
             'total_amount'          => $order->total_amount,
+            'shipping_fee'          => $order->shipping_fee,
             'order_status'          => $order->order_status,
             'delivery_status'       => $order->delivery_status,
             'payment_status'        => $order->payment_status,
