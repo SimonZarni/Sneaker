@@ -15,18 +15,21 @@ class AdminCustomerController extends Controller
     {
         $customers = User::withCount('orders')
             ->withSum('orders', 'total_amount')
+            ->withMax('orders', 'placed_at')   // replaces per-row Order:: query — eliminates N+1
             ->latest()
             ->paginate(25)
             ->through(fn($u) => [
-                'id'           => $u->id,
-                'name'         => $u->name,
-                'email'        => $u->email,
-                'phone'        => $u->phone,
-                'is_active'    => (bool) $u->is_active,
-                'order_count'  => $u->orders_count,
-                'total_spent'  => (float) ($u->orders_sum_total_amount ?? 0),
-                'joined_at'    => $u->created_at->toISOString(),
-                'last_order_at' => Order::where('user_id', $u->id)->latest()->value('placed_at')?->toISOString(),
+                'id'            => $u->id,
+                'name'          => $u->name,
+                'email'         => $u->email,
+                'phone'         => $u->phone,
+                'is_active'     => (bool) $u->is_active,
+                'order_count'   => $u->orders_count,
+                'total_spent'   => (float) ($u->orders_sum_total_amount ?? 0),
+                'joined_at'     => $u->created_at->toISOString(),
+                'last_order_at' => $u->orders_max_placed_at
+                                    ? \Illuminate\Support\Carbon::parse($u->orders_max_placed_at)->toISOString()
+                                    : null,
             ]);
 
         $stats = [

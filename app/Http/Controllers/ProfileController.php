@@ -95,6 +95,20 @@ class ProfileController extends Controller
         $request->validate(['password' => ['required', 'current_password']]);
 
         $user = $request->user();
+
+        // Block deletion if the user has any non-terminal orders.
+        // orders.user_id is onDelete('restrict') — deleting without this
+        // guard throws a raw FK constraint error from MySQL.
+        $activeOrderCount = Order::where('user_id', $user->id)
+            ->whereNotIn('order_status', ['Cancelled', 'Delivered'])
+            ->count();
+
+        if ($activeOrderCount > 0) {
+            return back()->withErrors([
+                'password' => "Your account cannot be deleted while you have {$activeOrderCount} active " . ($activeOrderCount === 1 ? 'order' : 'orders') . '. Please wait until all orders are delivered or cancelled.',
+            ]);
+        }
+
         Auth::logout();
         $user->delete();
 
@@ -159,7 +173,20 @@ class ProfileController extends Controller
             UserAddress::where('user_id', Auth::id())->update(['is_default' => false]);
         }
 
-        $address->update($validated);
+        // Explicitly list each field — never pass $validated directly.
+        // If the frontend omits is_default (editing just name/phone), $validated
+        // contains is_default=false and would silently strip the default flag.
+        $address->update([
+            'full_name'    => $validated['full_name'],
+            'phone'        => $validated['phone'],
+            'address_line' => $validated['address_line'],
+            'city'         => $validated['city'],
+            'state_region' => $validated['state_region'] ?? null,
+            'postal_code'  => $validated['postal_code']  ?? null,
+            'country'      => $validated['country'],
+            // Only write is_default=true when explicitly requested
+            ...(!empty($validated['is_default']) ? ['is_default' => true] : []),
+        ]);
 
         return back()->with('status', 'address-updated');
     }

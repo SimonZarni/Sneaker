@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Cart;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -74,12 +75,16 @@ class HandleInertiaRequests extends Middleware
                 })()
                 : null,
 
-            // 2. Global Navigation Data (New)
-            'navigation' => [
-                'brands' => \App\Models\Brand::select('id', 'name', 'logo_url')->get(),
+            // 2. Global Navigation Data — cached for 1 hour.
+            // Brands, categories, and genders rarely change, so hitting the DB
+            // on every page load for every visitor is wasteful. Cache is busted
+            // in AdminSettingsController whenever any of these are created,
+            // updated, or deleted.
+            'navigation' => Cache::remember('navigation', 3600, fn() => [
+                'brands'     => \App\Models\Brand::select('id', 'name', 'logo_url')->get(),
                 'categories' => \App\Models\Category::select('id', 'name')->get(),
-                'genders' => \App\Models\Gender::select('id', 'name')->get(),
-            ],
+                'genders'    => \App\Models\Gender::select('id', 'name')->get(),
+            ]),
         ]);
     }
 }

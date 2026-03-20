@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class AdminSettingsController extends Controller
@@ -42,6 +43,7 @@ class AdminSettingsController extends Controller
             default => abort(404),
         };
 
+        Cache::forget('navigation');
         return back()->with('success', ucfirst($type) . ' created successfully.');
     }
 
@@ -87,6 +89,7 @@ class AdminSettingsController extends Controller
             default    => abort(404),
         };
 
+        Cache::forget('navigation');
         return back()->with('success', ucfirst($type) . ' updated successfully.');
     }
 
@@ -144,6 +147,8 @@ class AdminSettingsController extends Controller
             'color'    => $this->destroyColor($id),
             default    => abort(404),
         };
+
+        Cache::forget('navigation');
 
         if ($error) {
             return back()->withErrors(['delete' => $error]);
