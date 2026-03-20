@@ -25,7 +25,7 @@ function effectivePrice(item: any): number {
     return parseFloat(product.base_price);
 }
 
-export default function Checkout({ cart, savedAddresses }: { cart: any; savedAddresses: Address[] }) {
+export default function Checkout({ cart, savedAddresses, shippingFee }: { cart: any; savedAddresses: Address[]; shippingFee: number }) {
     const { data, setData, post, processing, errors } = useForm({
         shipping_full_name:    '',
         shipping_phone:        '',
@@ -79,6 +79,7 @@ export default function Checkout({ cart, savedAddresses }: { cart: any; savedAdd
         (acc: number, item: any) => acc + effectivePrice(item) * item.quantity,
         0,
     );
+    const total = subtotal + shippingFee;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -302,8 +303,10 @@ export default function Checkout({ cart, savedAddresses }: { cart: any; savedAdd
                                 <span className="tabular-nums">${subtotal.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between text-[10px] font-black uppercase text-brand-slate/60 tracking-widest">
-                                <span>Vault Shipping</span>
-                                <span className="text-brand-charcoal">Complimentary</span>
+                                <span>Shipping</span>
+                                <span className={shippingFee > 0 ? "tabular-nums" : "text-brand-charcoal"}>
+                                    {shippingFee > 0 ? `$${shippingFee.toFixed(2)}` : "Complimentary"}
+                                </span>
                             </div>
                             <div className="flex justify-between text-[10px] font-black uppercase text-brand-slate/60 tracking-widest">
                                 <span>Payment</span>
@@ -311,7 +314,7 @@ export default function Checkout({ cart, savedAddresses }: { cart: any; savedAdd
                             </div>
                             <div className="flex justify-between items-center pt-6">
                                 <span className="text-[10px] font-black uppercase tracking-[0.3em]">Total Value</span>
-                                <span className="text-4xl font-black tracking-tightest leading-none tabular-nums">${subtotal.toFixed(2)}</span>
+                                <span className="text-4xl font-black tracking-tightest leading-none tabular-nums">${total.toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

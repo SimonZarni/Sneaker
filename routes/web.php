@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -77,6 +78,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/orders/{id}/cancel',   [AdminOrderController::class, 'cancel'])->name('orders.cancel');
 
         // Settings (brands, categories, genders, colors)
+        Route::patch('/settings/shipping-fee', [\App\Http\Controllers\Admin\AdminSettingsController::class, 'updateShippingFee'])->name('settings.shippingFee');
         Route::get('/settings',                          [\App\Http\Controllers\Admin\AdminSettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/{type}',                  [\App\Http\Controllers\Admin\AdminSettingsController::class, 'store'])->name('settings.store');
         Route::patch('/settings/{type}/{id}',            [\App\Http\Controllers\Admin\AdminSettingsController::class, 'update'])->name('settings.update');
