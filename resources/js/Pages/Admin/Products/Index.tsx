@@ -10,6 +10,8 @@ interface Product {
     category: string;
     gender: string;
     base_price: string;
+    sale_price: string | null;
+    is_on_sale: boolean;
     main_image_url: string | null;
     is_active: boolean;
     variants_count: number;

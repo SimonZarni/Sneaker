@@ -6,6 +6,9 @@ interface Product {
     id: number;
     name: string;
     base_price: string;
+    sale_price: string | null;
+    effective_price: string;
+    is_on_sale: boolean;
     main_image_url: string | null;
     brand: { id: number; name: string };
     category: { id: number; name: string };
@@ -66,13 +69,13 @@ export default function ShopIndex({ products, brands, categories, genders, filte
 
     return (
         <div style={{ minHeight: "100vh", backgroundColor: "#fff", fontFamily: "inherit" }}>
-            <Head title="Shop — SNEAKER.DRP" />
+            <Head title="Shop — Walker Sneaker Store" />
 
             {/* ── NAV ── */}
             <nav style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: 0, zIndex: 50 }}>
                 <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#0A0A0A", textDecoration: "none" }}>
-                        SNEAKER.DRP
+                        Walker Sneaker Store
                     </Link>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "32px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
@@ -331,6 +334,12 @@ function ProductCard({ product, auth }: { product: Product; auth: any }) {
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >
+            {/* Sale badge */}
+            {product.is_on_sale && (
+                <div style={{ position: "absolute", top: "16px", left: "16px", zIndex: 10, backgroundColor: "#0A0A0A", color: "#fff", fontSize: "7px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", padding: "3px 8px" }}>
+                    Sale
+                </div>
+            )}
             {/* Wishlist heart */}
             <button
                 onClick={handleWishlist}
@@ -360,9 +369,16 @@ function ProductCard({ product, auth }: { product: Product; auth: any }) {
                     {product.name}
                 </h3>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <p style={{ fontSize: "15px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
-                        ${parseFloat(product.base_price).toFixed(2)}
-                    </p>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                        <p style={{ fontSize: "15px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+                            ${parseFloat(product.effective_price).toFixed(2)}
+                        </p>
+                        {product.is_on_sale && (
+                            <p style={{ fontSize: "12px", fontWeight: 500, fontVariantNumeric: "tabular-nums", color: "rgba(45,50,62,0.35)", textDecoration: "line-through" }}>
+                                ${parseFloat(product.base_price).toFixed(2)}
+                            </p>
+                        )}
+                    </div>
                     <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: `2px solid ${hovered ? "#0A0A0A" : "transparent"}`, paddingBottom: "2px", transition: "border-color 0.2s", color: "#0A0A0A" }}>
                         View →
                     </span>

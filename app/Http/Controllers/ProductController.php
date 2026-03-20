@@ -37,14 +37,17 @@ class ProductController extends Controller
             : [];
 
         $products = $query->get()->map(fn($p) => [
-            'id'             => $p->id,
-            'name'           => $p->name,
-            'base_price'     => $p->base_price,
-            'main_image_url' => $p->main_image_url,
-            'brand'          => ['id' => $p->brand_id, 'name' => $p->brand?->name],
-            'category'       => ['id' => $p->category_id, 'name' => $p->category?->name],
-            'gender'         => ['id' => $p->gender_id, 'name' => $p->gender?->name],
-            'wishlisted'     => in_array($p->id, $wishlistedIds),
+            'id'              => $p->id,
+            'name'            => $p->name,
+            'base_price'      => $p->base_price,
+            'sale_price'      => $p->isOnSale() ? $p->sale_price : null,
+            'effective_price' => $p->effectivePrice(),
+            'is_on_sale'      => $p->isOnSale(),
+            'main_image_url'  => $p->main_image_url,
+            'brand'           => ['id' => $p->brand_id, 'name' => $p->brand?->name],
+            'category'        => ['id' => $p->category_id, 'name' => $p->category?->name],
+            'gender'          => ['id' => $p->gender_id, 'name' => $p->gender?->name],
+            'wishlisted'      => in_array($p->id, $wishlistedIds),
         ]);
 
         return Inertia::render('Shop/Index', [
@@ -131,8 +134,13 @@ class ProductController extends Controller
                 ])
         );
 
+        // Append sale info to the product for the PDP
+        $productData = $product->toArray();
+        $productData['is_on_sale']      = $product->isOnSale();
+        $productData['effective_price'] = $product->effectivePrice();
+
         return Inertia::render('Shop/Show', [
-            'product'         => $product,
+            'product'         => $productData,
             'wishlisted'      => $wishlisted,
             'related'         => $related,
             'reviews'         => $reviews,

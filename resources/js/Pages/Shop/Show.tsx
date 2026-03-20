@@ -19,6 +19,10 @@ interface Product {
     name: string;
     description: string;
     base_price: string;
+    sale_price: string | null;
+    effective_price: string;
+    is_on_sale: boolean;
+    sale_ends_at: string | null;
     main_image_url: string;
     brand: { name: string };
     category: { name: string };
@@ -166,13 +170,14 @@ export default function Show({
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title={`${product.brand.name} ${product.name} — SNEAKER.DRP`} />
+            <Head title={`${product.brand.name} ${product.name} — Walker Sneaker Store`} />
 
             {/* Nav */}
             <nav className="border-b border-brand-surface py-5 sticky top-0 bg-brand-white/90 backdrop-blur-md z-50">
                 <div className="mx-auto max-w-7xl px-4 flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
                     <Link href="/shop" className="hover:text-brand-slate transition-colors">← Collection</Link>
-                    <Link href="/" className="text-xl tracking-tightest">SNEAKER.DRP</Link>
+                    <Link href={route("about")} className="hover:text-brand-slate transition-colors">About Us</Link>
+                    <Link href="/" className="text-xl tracking-tightest">Walker Sneaker Store</Link>
                     <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2">
                         Vault <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">{cartCount}</span>
                     </button>
@@ -195,7 +200,21 @@ export default function Show({
                         </div>
                         <h2 className="text-5xl font-black uppercase tracking-tightest leading-[0.85] mb-6">{product.name}</h2>
                         <div className="flex items-center justify-between">
-                            <p className="text-2xl font-medium tracking-tighter">${product.base_price}</p>
+                            <div className="flex items-center gap-4 flex-wrap">
+                                <p className={`text-2xl font-bold tracking-tighter ${product.is_on_sale ? "text-brand-charcoal" : ""}`}>
+                                    ${parseFloat(product.effective_price).toFixed(2)}
+                                </p>
+                                {product.is_on_sale && (
+                                    <p className="text-lg font-medium tracking-tighter text-brand-slate/35 line-through">
+                                        ${parseFloat(product.base_price).toFixed(2)}
+                                    </p>
+                                )}
+                                {product.is_on_sale && (
+                                    <span className="bg-brand-charcoal text-white text-[8px] font-black uppercase tracking-widest px-2 py-1">
+                                        Sale
+                                    </span>
+                                )}
+                            </div>
                             <button onClick={handleWishlist} className="flex items-center gap-2 group">
                                 <HeartIcon filled={wishlisted} flash={wishFlash} />
                                 <span className="text-[9px] font-black uppercase tracking-widest text-brand-slate/40 group-hover:text-brand-charcoal">{wishlisted ? "Saved" : "Save"}</span>
@@ -291,7 +310,7 @@ function StarRow({ rating, size = 16 }: { rating: number; size?: number }) {
     return (
         <div className="flex gap-0.5 items-center">
             {[1,2,3,4,5].map(s => (
-                <svg key={s} width={size} height={size} viewBox="0 0 24 24" fill={s <= Math.floor(rating) ? "#0A0A0A" : "none"} stroke="#0A0A0A" strokeWidth="1.5" className={s <= Math.floor(rating) ? "opacity-100" : "opacity-20"}>
+                <svg key={s} width={size} height={size} viewBox="0 0 24 24" fill={s <= Math.floor(rating) ? "#5B8C5A" : "none"} stroke="#5B8C5A" strokeWidth="1.5" className={s <= Math.floor(rating) ? "opacity-100" : "opacity-20"}>
                     <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                 </svg>
             ))}
@@ -301,7 +320,7 @@ function StarRow({ rating, size = 16 }: { rating: number; size?: number }) {
 
 function HeartIcon({ filled, flash }: { filled: boolean; flash: boolean }) {
     return (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "#0A0A0A" : "none"} stroke="#0A0A0A" strokeWidth="1.5" className={`transition-transform duration-200 ${flash ? "scale-125" : "scale-100"}`}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill={filled ? "#5B8C5A" : "none"} stroke="#5B8C5A" strokeWidth="1.5" className={`transition-transform duration-200 ${flash ? "scale-125" : "scale-100"}`}>
             <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
         </svg>
     );

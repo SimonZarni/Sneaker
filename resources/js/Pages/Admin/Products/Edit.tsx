@@ -18,6 +18,8 @@ interface ExistingProduct {
     description: string | null;
     main_image_url: string | null;
     is_active: boolean;
+    sale_price: string;
+    sale_ends_at: string | null;
     variants: { color_id: number; image_url: string | null; variant_price: string | null; sizes: SizeEntry[] }[];
 }
 
@@ -53,6 +55,9 @@ export default function AdminProductsEdit({ product, brands, categories, genders
     const [description,   setDescription] = useState(product.description ?? "");
     const [mainImageUrl,  setMainImageUrl] = useState(product.main_image_url ?? "");
     const [isActive,      setIsActive]     = useState(product.is_active);
+    const [salePrice,     setSalePrice]    = useState(product.sale_price ?? '');
+    const [saleEndsAt,    setSaleEndsAt]   = useState(product.sale_ends_at ?? '');
+    const [discountPct,   setDiscountPct]  = useState('');
     const [processing,    setProcessing]   = useState(false);
     const [errors,        setErrors]       = useState<Record<string, string>>({});
 
@@ -101,6 +106,8 @@ export default function AdminProductsEdit({ product, brands, categories, genders
                 name, brand_id: brandId, category_id: categoryId, gender_id: genderId,
                 base_price: basePrice, description, main_image_url: mainImageUrl,
                 is_active: isActive,
+                sale_price: salePrice || null,
+                sale_ends_at: saleEndsAt || null,
                 variants: variants.map(({ _key, ...rest }) => rest),
             } as any,
             {
@@ -304,6 +311,80 @@ export default function AdminProductsEdit({ product, brands, categories, genders
                                         <input type="number" step="0.01" min="0" style={{ ...S.input, paddingLeft: "28px" }} value={basePrice} onChange={(e) => setBasePrice(e.target.value)} />
                                     </div>
                                     {errors.base_price && <p style={S.error}>{errors.base_price}</p>}
+                                </div>
+
+                                {/* ── SALE PRICING ── */}
+                                <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: "18px" }}>
+                                    <p style={{ ...S.sectionTitle, marginBottom: "14px", paddingBottom: "8px", fontSize: "9px" }}>Sale Pricing (Optional)</p>
+
+                                    {/* Discount % helper */}
+                                    <div style={{ marginBottom: "14px" }}>
+                                        <label style={S.label}>Quick Discount %</label>
+                                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                            <div style={{ position: "relative", flex: 1 }}>
+                                                <input
+                                                    type="number" min="0" max="99" step="1" placeholder="e.g. 20"
+                                                    style={{ ...S.input, paddingRight: "28px" }}
+                                                    value={discountPct}
+                                                    onChange={(e) => {
+                                                        const pct = parseFloat(e.target.value);
+                                                        setDiscountPct(e.target.value);
+                                                        if (!isNaN(pct) && pct > 0 && pct < 100 && basePrice) {
+                                                            const base = parseFloat(basePrice);
+                                                            if (!isNaN(base)) {
+                                                                setSalePrice((base * (1 - pct / 100)).toFixed(2));
+                                                            }
+                                                        }
+                                                    }}
+                                                />
+                                                <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "rgba(45,50,62,0.4)", fontWeight: 700 }}>%</span>
+                                            </div>
+                                            <button type="button" onClick={() => { setSalePrice(''); setDiscountPct(''); }}
+                                                style={{ padding: "11px 14px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: "1px solid #e5e7eb", backgroundColor: "#fff", color: "rgba(45,50,62,0.4)", cursor: "pointer", whiteSpace: "nowrap" as const }}>
+                                                Clear
+                                            </button>
+                                        </div>
+                                        <p style={{ fontSize: "9px", color: "rgba(45,50,62,0.35)", marginTop: "4px" }}>
+                                            Typing a % auto-fills the sale price below. You can still adjust it manually.
+                                        </p>
+                                    </div>
+
+                                    {/* Sale price */}
+                                    <div style={{ marginBottom: "14px" }}>
+                                        <label style={S.label}>Sale Price (USD)</label>
+                                        <div style={{ position: "relative" }}>
+                                            <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", fontWeight: 700, color: "rgba(45,50,62,0.4)" }}>$</span>
+                                            <input type="number" step="0.01" min="0" placeholder="Leave empty for no sale"
+                                                style={{ ...S.input, paddingLeft: "28px" }}
+                                                value={salePrice}
+                                                onChange={(e) => { setSalePrice(e.target.value); setDiscountPct(''); }}
+                                            />
+                                        </div>
+                                        {salePrice && basePrice && parseFloat(salePrice) >= parseFloat(basePrice) && (
+                                            <p style={{ fontSize: "9px", color: "#dc2626", fontWeight: 700, marginTop: "4px" }}>
+                                                Sale price should be less than the base price (${parseFloat(basePrice).toFixed(2)})
+                                            </p>
+                                        )}
+                                        {salePrice && basePrice && parseFloat(salePrice) < parseFloat(basePrice) && (
+                                            <p style={{ fontSize: "9px", color: "#0A0A0A", fontWeight: 700, marginTop: "4px" }}>
+                                                Saving ${(parseFloat(basePrice) - parseFloat(salePrice)).toFixed(2)} ({Math.round((1 - parseFloat(salePrice)/parseFloat(basePrice))*100)}% off)
+                                            </p>
+                                        )}
+                                        {errors.sale_price && <p style={S.error}>{errors.sale_price}</p>}
+                                    </div>
+
+                                    {/* Sale ends at */}
+                                    <div>
+                                        <label style={S.label}>Sale Ends At (optional)</label>
+                                        <input type="datetime-local"
+                                            style={S.input}
+                                            value={saleEndsAt}
+                                            onChange={(e) => setSaleEndsAt(e.target.value)}
+                                        />
+                                        <p style={{ fontSize: "9px", color: "rgba(45,50,62,0.35)", marginTop: "4px" }}>
+                                            Leave empty for no expiry — sale stays until you remove the price.
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <div>

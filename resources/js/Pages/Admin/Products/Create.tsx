@@ -39,6 +39,8 @@ export default function AdminProductsCreate({ brands, categories, genders, color
         category_id:    "",
         gender_id:      "",
         base_price:     "",
+        sale_price:     "",
+        sale_ends_at:   "",
         description:    "",
         main_image_url: "",
         is_active:      true,
@@ -46,6 +48,7 @@ export default function AdminProductsCreate({ brands, categories, genders, color
     });
 
     const [variants, setVariants] = useState<VariantRow[]>([]);
+    const [discountPct, setDiscountPct] = useState<string>("");
 
     const addVariant = () => setVariants((v) => [...v, newVariantRow()]);
 
@@ -240,6 +243,64 @@ export default function AdminProductsCreate({ brands, categories, genders, color
                                         />
                                     </div>
                                     {fieldError("base_price") && <p style={S.error}>{fieldError("base_price")}</p>}
+                                </div>
+
+                                {/* ── SALE PRICING ── */}
+                                <div style={{ borderTop: "1px solid #f0f0f0", paddingTop: "18px" }}>
+                                    <p style={{ ...S.sectionTitle, marginBottom: "14px", paddingBottom: "8px", fontSize: "9px" }}>Sale Pricing (Optional)</p>
+
+                                    <div style={{ marginBottom: "14px" }}>
+                                        <label style={S.label}>Quick Discount %</label>
+                                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                            <div style={{ position: "relative", flex: 1 }}>
+                                                <input type="number" min="0" max="99" step="1" placeholder="e.g. 20"
+                                                    style={{ ...S.input, paddingRight: "28px" }}
+                                                    value={discountPct}
+                                                    onChange={(e) => {
+                                                        const pct = parseFloat(e.target.value);
+                                                        setDiscountPct(e.target.value);
+                                                        if (!isNaN(pct) && pct > 0 && pct < 100 && data.base_price) {
+                                                            const base = parseFloat(data.base_price);
+                                                            if (!isNaN(base)) setData("sale_price", (base * (1 - pct / 100)).toFixed(2));
+                                                        }
+                                                    }}
+                                                />
+                                                <span style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "12px", color: "rgba(45,50,62,0.4)", fontWeight: 700 }}>%</span>
+                                            </div>
+                                            <button type="button" onClick={() => { setData("sale_price", ""); setDiscountPct(""); }}
+                                                style={{ padding: "11px 14px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: "1px solid #e5e7eb", backgroundColor: "#fff", color: "rgba(45,50,62,0.4)", cursor: "pointer", whiteSpace: "nowrap" as const }}>
+                                                Clear
+                                            </button>
+                                        </div>
+                                        <p style={{ fontSize: "9px", color: "rgba(45,50,62,0.35)", marginTop: "4px" }}>Typing a % auto-fills the sale price. You can still adjust it manually.</p>
+                                    </div>
+
+                                    <div style={{ marginBottom: "14px" }}>
+                                        <label style={S.label}>Sale Price (USD)</label>
+                                        <div style={{ position: "relative" }}>
+                                            <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", fontWeight: 700, color: "rgba(45,50,62,0.4)" }}>$</span>
+                                            <input type="number" step="0.01" min="0" placeholder="Leave empty for no sale"
+                                                style={{ ...S.input, paddingLeft: "28px" }}
+                                                value={data.sale_price}
+                                                onChange={(e) => { setData("sale_price", e.target.value); setDiscountPct(""); }}
+                                            />
+                                        </div>
+                                        {data.sale_price && data.base_price && parseFloat(data.sale_price) < parseFloat(data.base_price) && (
+                                            <p style={{ fontSize: "9px", color: "#0A0A0A", fontWeight: 700, marginTop: "4px" }}>
+                                                Saving ${(parseFloat(data.base_price) - parseFloat(data.sale_price)).toFixed(2)} ({Math.round((1 - parseFloat(data.sale_price)/parseFloat(data.base_price))*100)}% off)
+                                            </p>
+                                        )}
+                                        {fieldError("sale_price") && <p style={S.error}>{fieldError("sale_price")}</p>}
+                                    </div>
+
+                                    <div>
+                                        <label style={S.label}>Sale Ends At (optional)</label>
+                                        <input type="datetime-local" style={S.input}
+                                            value={data.sale_ends_at}
+                                            onChange={(e) => setData("sale_ends_at", e.target.value)}
+                                        />
+                                        <p style={{ fontSize: "9px", color: "rgba(45,50,62,0.35)", marginTop: "4px" }}>Leave empty — sale stays until you remove the price.</p>
+                                    </div>
                                 </div>
 
                                 <div>
