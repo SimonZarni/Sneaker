@@ -12,6 +12,35 @@ interface Order {
     placed_at: string;
 }
 
+interface DailyRevenue {
+    date: string;
+    label: string;
+    revenue: number;
+    orders: number;
+}
+
+interface MonthlyRevenue {
+    key: string;
+    label: string;
+    revenue: number;
+    orders: number;
+}
+
+interface WeekStats {
+    this_week: number;
+    last_week: number;
+    change_pct: number;
+    is_up: boolean;
+}
+
+interface TopProduct {
+    product_id: number;
+    product_name: string;
+    brand_name: string;
+    total_units: number;
+    total_revenue: number;
+}
+
 interface LowStockVariant {
     id: number;
     product_id: number;
@@ -27,6 +56,10 @@ interface Props {
     revenueStats: { total: number; cod: number; card: number };
     totalCustomers: number;
     totalProducts: number;
+    dailyRevenue: DailyRevenue[];
+    weekStats: WeekStats;
+    monthlyRevenue: MonthlyRevenue[];
+    topProducts: TopProduct[];
     recentOrders: Order[];
     lowStock: LowStockVariant[];
     admin: { name: string };
@@ -91,7 +124,7 @@ const DELIVERY_LEFT_BORDER: Record<string, string> = {
     Pending: "#f59e0b", Processing: "#3b82f6", Shipped: "#8b5cf6", Delivered: "#10b981",
 };
 
-export default function AdminDashboard({ orderStats, revenueStats, totalCustomers, totalProducts, lowStock, recentOrders, admin }: Props) {
+export default function AdminDashboard({ orderStats, revenueStats, totalCustomers, totalProducts, dailyRevenue, weekStats, monthlyRevenue, topProducts, lowStock, recentOrders, admin }: Props) {
     return (
         <AdminLayout adminName={admin.name} active="dashboard" pageTitle="Dashboard" pageLabel="Overview">
             <Head title="Admin — Walker Sneaker Store" />
@@ -191,6 +224,172 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
             </div>
 
 
+
+            {/* ── WEEK vs LAST WEEK ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+                {/* This week */}
+                <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "28px" }}>
+                    <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.3em", color: "rgba(45,50,62,0.4)", marginBottom: "8px" }}>
+                        This Week
+                    </p>
+                    <p style={{ fontSize: "28px", fontWeight: 900, letterSpacing: "-0.05em", fontVariantNumeric: "tabular-nums", marginBottom: "10px" }}>
+                        {fmt(weekStats.this_week)}
+                    </p>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{
+                            display: "inline-flex", alignItems: "center", gap: "3px",
+                            padding: "3px 8px", fontSize: "9px", fontWeight: 900,
+                            backgroundColor: weekStats.is_up ? "#ecfdf5" : "#fef2f2",
+                            color: weekStats.is_up ? "#065f46" : "#dc2626",
+                            border: `1px solid ${weekStats.is_up ? "#a7f3d0" : "#fecaca"}`,
+                        }}>
+                            {weekStats.is_up ? "↑" : "↓"} {Math.abs(weekStats.change_pct)}%
+                        </span>
+                        <span style={{ fontSize: "9px", fontWeight: 700, color: "rgba(45,50,62,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
+                            vs last week
+                        </span>
+                    </div>
+                </div>
+
+                {/* Last week */}
+                <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "28px" }}>
+                    <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.3em", color: "rgba(45,50,62,0.4)", marginBottom: "8px" }}>
+                        Last Week
+                    </p>
+                    <p style={{ fontSize: "28px", fontWeight: 900, letterSpacing: "-0.05em", fontVariantNumeric: "tabular-nums", marginBottom: "10px" }}>
+                        {fmt(weekStats.last_week)}
+                    </p>
+                    <p style={{ fontSize: "9px", fontWeight: 700, color: "rgba(45,50,62,0.3)", textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
+                        Previous 7 days
+                    </p>
+                </div>
+            </div>
+
+            {/* ── 30-DAY REVENUE CHART ── */}
+            <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "28px 32px", marginBottom: "24px" }}>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "24px" }}>
+                    <div>
+                        <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.3em", color: "rgba(45,50,62,0.3)", marginBottom: "2px" }}>
+                            Last 30 Days
+                        </p>
+                        <h3 style={{ fontSize: "15px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "-0.02em" }}>
+                            Daily Revenue
+                        </h3>
+                    </div>
+                    <p style={{ fontSize: "9px", fontWeight: 700, color: "rgba(45,50,62,0.35)", textTransform: "uppercase" as const, letterSpacing: "0.1em" }}>
+                        Confirmed orders only
+                    </p>
+                </div>
+
+                {/* Bar chart */}
+                {(() => {
+                    const maxRevenue = Math.max(...dailyRevenue.map(d => d.revenue), 1);
+                    const chartHeight = 120;
+                    return (
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: "3px", height: `${chartHeight + 28}px`, paddingBottom: "28px", position: "relative" as const }}>
+                            {dailyRevenue.map((day, i) => {
+                                const barH = day.revenue > 0 ? Math.max((day.revenue / maxRevenue) * chartHeight, 4) : 2;
+                                const isToday = i === dailyRevenue.length - 1;
+                                return (
+                                    <div key={day.date} style={{ flex: 1, display: "flex", flexDirection: "column" as const, alignItems: "center", gap: "4px", position: "relative" as const, height: "100%" }}>
+                                        <div style={{ flex: 1, display: "flex", alignItems: "flex-end", width: "100%" }}>
+                                            <div
+                                                title={`${day.label}: ${fmt(day.revenue)} (${day.orders} order${day.orders !== 1 ? "s" : ""})`}
+                                                style={{
+                                                    width: "100%",
+                                                    height: `${barH}px`,
+                                                    backgroundColor: day.revenue === 0 ? "#f5f5f5" : isToday ? "#0A0A0A" : "#2D323E",
+                                                    opacity: day.revenue === 0 ? 1 : isToday ? 1 : 0.6 + (i / dailyRevenue.length) * 0.4,
+                                                    cursor: "default",
+                                                    transition: "opacity 0.2s",
+                                                }}
+                                            />
+                                        </div>
+                                        {/* Show label every 5 days + first + last */}
+                                        {(i === 0 || i === dailyRevenue.length - 1 || i % 5 === 0) && (
+                                            <span style={{ fontSize: "7px", fontWeight: 700, color: "rgba(45,50,62,0.3)", textTransform: "uppercase" as const, whiteSpace: "nowrap" as const, position: "absolute" as const, bottom: 0, transform: "translateX(-50%)", left: "50%" }}>
+                                                {day.label}
+                                            </span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    );
+                })()}
+
+                {/* Summary row */}
+                <div style={{ display: "flex", gap: "32px", paddingTop: "16px", borderTop: "1px solid #f5f5f5", marginTop: "8px" }}>
+                    <div>
+                        <p style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.35)", marginBottom: "3px" }}>Total</p>
+                        <p style={{ fontSize: "14px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+                            {fmt(dailyRevenue.reduce((s, d) => s + d.revenue, 0))}
+                        </p>
+                    </div>
+                    <div>
+                        <p style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.35)", marginBottom: "3px" }}>Orders</p>
+                        <p style={{ fontSize: "14px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+                            {dailyRevenue.reduce((s, d) => s + d.orders, 0)}
+                        </p>
+                    </div>
+                    <div>
+                        <p style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.35)", marginBottom: "3px" }}>Peak Day</p>
+                        <p style={{ fontSize: "14px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+                            {fmt(Math.max(...dailyRevenue.map(d => d.revenue)))}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── MONTHLY REVENUE ── */}
+            <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "28px 32px", marginBottom: "24px" }}>
+                <div style={{ marginBottom: "24px" }}>
+                    <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.3em", color: "rgba(45,50,62,0.3)", marginBottom: "2px" }}>
+                        6-Month Overview
+                    </p>
+                    <h3 style={{ fontSize: "15px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "-0.02em" }}>
+                        Monthly Revenue
+                    </h3>
+                </div>
+
+                {/* Month bars + table */}
+                {(() => {
+                    const maxRevenue = Math.max(...monthlyRevenue.map(m => m.revenue), 1);
+                    return (
+                        <div style={{ display: "flex", flexDirection: "column" as const, gap: "1px", backgroundColor: "#f5f5f5" }}>
+                            {/* Header */}
+                            <div style={{ display: "grid", gridTemplateColumns: "120px 1fr 100px 80px", gap: "16px", alignItems: "center", padding: "8px 16px", backgroundColor: "#fafafa" }}>
+                                {["Month", "", "Revenue", "Orders"].map(h => (
+                                    <p key={h} style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.25)" }}>{h}</p>
+                                ))}
+                            </div>
+                            {monthlyRevenue.map((m, i) => {
+                                const isCurrentMonth = i === monthlyRevenue.length - 1;
+                                const barW = m.revenue > 0 ? Math.max((m.revenue / maxRevenue) * 100, 2) : 0;
+                                return (
+                                    <div key={m.key} style={{ display: "grid", gridTemplateColumns: "120px 1fr 100px 80px", gap: "16px", alignItems: "center", padding: "14px 16px", backgroundColor: "#fff" }}>
+                                        <p style={{ fontSize: "11px", fontWeight: isCurrentMonth ? 900 : 700, color: isCurrentMonth ? "#0A0A0A" : "rgba(45,50,62,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+                                            {m.label}
+                                            {isCurrentMonth && <span style={{ fontSize: "7px", fontWeight: 900, color: "rgba(45,50,62,0.3)", marginLeft: "6px", letterSpacing: "0.1em" }}>MTD</span>}
+                                        </p>
+                                        {/* Bar */}
+                                        <div style={{ height: "6px", backgroundColor: "#f5f5f5", overflow: "hidden" }}>
+                                            <div style={{ height: "100%", width: `${barW}%`, backgroundColor: isCurrentMonth ? "#0A0A0A" : "#d1d5db", transition: "width 0.6s ease" }} />
+                                        </div>
+                                        <p style={{ fontSize: "13px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+                                            {fmt(m.revenue)}
+                                        </p>
+                                        <p style={{ fontSize: "12px", fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "rgba(45,50,62,0.5)" }}>
+                                            {m.orders}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    );
+                })()}
+            </div>
+
             {/* ── LOW STOCK ALERT ── */}
             {lowStock.length > 0 && (
                 <div style={{ backgroundColor: "#fffbeb", border: "1px solid #fde68a", marginBottom: "24px" }}>
@@ -272,6 +471,87 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                     </div>
                 </div>
             )}
+
+
+            {/* ── TOP SELLING PRODUCTS ── */}
+            <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", marginBottom: "24px" }}>
+                {/* Header */}
+                <div style={{ padding: "20px 32px", borderBottom: "1px solid #f5f5f5", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div>
+                        <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.3em", color: "rgba(45,50,62,0.3)", marginBottom: "2px" }}>
+                            Sales Performance
+                        </p>
+                        <h3 style={{ fontSize: "15px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "-0.02em" }}>
+                            Top Selling Products
+                        </h3>
+                    </div>
+                    <Link href={route("admin.products.index")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "rgba(45,50,62,0.4)", textDecoration: "none", borderBottom: "1px solid currentColor", paddingBottom: "1px" }}>
+                        All Products →
+                    </Link>
+                </div>
+
+                {topProducts.length === 0 ? (
+                    <div style={{ padding: "48px 32px", textAlign: "center", fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", color: "rgba(45,50,62,0.2)" }}>
+                        No sales data yet
+                    </div>
+                ) : (
+                    <>
+                        {/* Column headers */}
+                        <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 100px 100px 120px", gap: "16px", padding: "10px 32px", borderBottom: "1px solid #fafafa", backgroundColor: "#fafafa" }}>
+                            {["#", "Product", "Brand", "Units Sold", "Revenue"].map(h => (
+                                <p key={h} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.25)" }}>{h}</p>
+                            ))}
+                        </div>
+
+                        {/* Rows */}
+                        {topProducts.map((p, i) => {
+                            const maxUnits = topProducts[0].total_units;
+                            const barWidth = maxUnits > 0 ? (p.total_units / maxUnits) * 100 : 0;
+                            return (
+                                <Link
+                                    key={p.product_id}
+                                    href={route("admin.products.edit", p.product_id)}
+                                    style={{ display: "grid", gridTemplateColumns: "32px 1fr 100px 100px 120px", gap: "16px", alignItems: "center", padding: "14px 32px", borderBottom: "1px solid #fafafa", textDecoration: "none", color: "inherit", backgroundColor: "transparent" }}
+                                >
+                                    {/* Rank */}
+                                    <span style={{
+                                        fontSize: "11px", fontWeight: 900, fontVariantNumeric: "tabular-nums",
+                                        color: i === 0 ? "#0A0A0A" : i === 1 ? "rgba(45,50,62,0.5)" : "rgba(45,50,62,0.3)",
+                                    }}>
+                                        {i + 1}
+                                    </span>
+
+                                    {/* Product name + bar */}
+                                    <div>
+                                        <p style={{ fontSize: "12px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "-0.01em", marginBottom: "6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                                            {p.product_name}
+                                        </p>
+                                        <div style={{ height: "3px", backgroundColor: "#f5f5f5", overflow: "hidden" }}>
+                                            <div style={{ height: "100%", width: `${barWidth}%`, backgroundColor: i === 0 ? "#0A0A0A" : "#d1d5db", transition: "width 0.6s ease" }} />
+                                        </div>
+                                    </div>
+
+                                    {/* Brand */}
+                                    <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase" as const, color: "rgba(45,50,62,0.4)", letterSpacing: "0.05em" }}>
+                                        {p.brand_name}
+                                    </p>
+
+                                    {/* Units sold */}
+                                    <p style={{ fontSize: "13px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+                                        {p.total_units.toLocaleString()}
+                                        <span style={{ fontSize: "9px", fontWeight: 700, color: "rgba(45,50,62,0.3)", marginLeft: "4px" }}>units</span>
+                                    </p>
+
+                                    {/* Revenue */}
+                                    <p style={{ fontSize: "13px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
+                                        {fmt(p.total_revenue)}
+                                    </p>
+                                </Link>
+                            );
+                        })}
+                    </>
+                )}
+            </div>
 
             {/* ── RECENT ORDERS ── */}
             <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0" }}>

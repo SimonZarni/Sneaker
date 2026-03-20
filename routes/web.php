@@ -82,6 +82,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/settings/{type}/{id}',            [\App\Http\Controllers\Admin\AdminSettingsController::class, 'update'])->name('settings.update');
         Route::delete('/settings/{type}/{id}',           [\App\Http\Controllers\Admin\AdminSettingsController::class, 'destroy'])->name('settings.destroy');
 
+        // Inventory
+        Route::get('/inventory',              [\App\Http\Controllers\Admin\AdminInventoryController::class, 'index'])->name('inventory.index');
+        Route::patch('/inventory/{id}/stock', [\App\Http\Controllers\Admin\AdminInventoryController::class, 'updateStock'])->name('inventory.updateStock');
+
         // Products
         Route::get('/products',              [AdminProductController::class, 'index'])->name('products.index');
         Route::get('/products/create',       [AdminProductController::class, 'create'])->name('products.create');

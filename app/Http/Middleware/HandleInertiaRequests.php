@@ -43,8 +43,8 @@ class HandleInertiaRequests extends Middleware
             ],
 
             // 1. Cart — only include items whose variant and product still exist and are active.
-            //    This prevents a null relationship crash on any page load if a product is
-            //    deleted or deactivated while it is sitting in a user's cart.
+            //    Injects effective_price and is_on_sale onto each product so the frontend
+            //    always displays and calculates the correct sale price without extra logic.
             'cart' => Auth::check()
                 ? (function () {
                     $cart = \App\Models\Cart::with([
@@ -57,6 +57,19 @@ class HandleInertiaRequests extends Middleware
                         'items.productVariant.size',
                         'items.productVariant.color',
                     ])->where('user_id', Auth::id())->first();
+
+                    if (!$cart) return null;
+
+                    // Inject computed sale fields onto each product so they
+                    // serialise through to the React frontend automatically.
+                    $cart->items->each(function ($item) {
+                        $product = $item->productVariant?->product;
+                        if ($product) {
+                            $product->setAttribute('is_on_sale',     $product->isOnSale());
+                            $product->setAttribute('effective_price', $product->effectivePrice());
+                        }
+                    });
+
                     return $cart;
                 })()
                 : null,
