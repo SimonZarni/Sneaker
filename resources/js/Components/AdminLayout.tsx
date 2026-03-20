@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "@inertiajs/react";
 
-type ActivePage = "dashboard" | "orders" | "products" | "customers" | "reviews" | "settings";
+type ActivePage = "dashboard" | "orders" | "products" | "inventory" | "customers" | "reviews" | "settings";
 
 export default function AdminLayout({
     children,
@@ -50,6 +50,16 @@ export default function AdminLayout({
             ),
         },
         {
+            key: "inventory",
+            label: "Inventory",
+            href: route("admin.inventory.index"),
+            icon: (
+                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ opacity: 0.6, flexShrink: 0 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+            ),
+        },
+        {
             key: "customers",
             label: "Customers",
             href: route("admin.customers.index"),
@@ -71,7 +81,7 @@ export default function AdminLayout({
         },
         {
             key: "settings",
-            label: "Settings",
+            label: "Catalogue",
             href: route("admin.settings.index"),
             icon: (
                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ opacity: 0.6, flexShrink: 0 }}>
@@ -83,7 +93,7 @@ export default function AdminLayout({
     ];
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#F8F8F8", fontFamily: "inherit" }}>
+        <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#F4F7F4", fontFamily: "inherit" }}>
 
             {/* ── SIDEBAR ── */}
             <aside style={{
@@ -96,7 +106,7 @@ export default function AdminLayout({
                         Admin Panel
                     </p>
                     <h1 style={{ fontSize: "18px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em" }}>
-                        SNEAKER.DRP
+                        Walker Sneaker Store
                     </h1>
                 </div>
 

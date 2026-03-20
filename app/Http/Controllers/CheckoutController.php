@@ -37,6 +37,15 @@ class CheckoutController extends Controller
             ->orderBy('is_default', 'desc')
             ->get();
 
+        // Inject computed sale fields so Checkout.tsx effectivePrice() works correctly
+        $cart->items->each(function ($item) {
+            $product = $item->productVariant?->product;
+            if ($product) {
+                $product->setAttribute('is_on_sale',      $product->isOnSale());
+                $product->setAttribute('effective_price',  $product->effectivePrice());
+            }
+        });
+
         return Inertia::render('Shop/Checkout', [
             'cart'           => $cart,
             'savedAddresses' => $savedAddresses,
@@ -108,7 +117,9 @@ class CheckoutController extends Controller
             if (!$item->productVariant || !$item->productVariant->product) {
                 return $carry;
             }
-            $price = $item->productVariant->variant_price ?? $item->productVariant->product->base_price;
+            $product = $item->productVariant->product;
+            $price   = $item->productVariant->variant_price
+                ?? ($product->isOnSale() ? $product->sale_price : $product->base_price);
             return $carry + ($price * $item->quantity);
         }, 0);
 
@@ -205,7 +216,9 @@ class CheckoutController extends Controller
             foreach ($cart->items as $item) {
                 if (!$item->productVariant) continue;
 
-                $unitPrice = $item->productVariant->variant_price ?? $item->productVariant->product->base_price;
+                $product   = $item->productVariant->product;
+                $unitPrice = $item->productVariant->variant_price
+                    ?? ($product->isOnSale() ? $product->sale_price : $product->base_price);
 
                 OrderItem::create([
                     'order_id'           => $order->id,

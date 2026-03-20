@@ -86,7 +86,9 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
         if (!item.product_variant?.product) return acc;
         const price = item.product_variant.variant_price != null
             ? parseFloat(item.product_variant.variant_price)
-            : parseFloat(item.product_variant.product.base_price);
+            : item.product_variant.product.is_on_sale
+                ? parseFloat(item.product_variant.product.effective_price)
+                : parseFloat(item.product_variant.product.base_price);
         return acc + price * item.quantity;
     }, 0);
 
@@ -218,8 +220,18 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
 
                                                 <div className="text-right">
                                                     <span className="text-sm font-black tracking-tighter">
-                                                        ${(parseFloat(item.product_variant.variant_price ?? item.product_variant.product.base_price) * item.quantity).toFixed(2)}
+                                                        ${((item.product_variant.variant_price != null
+                                                            ? parseFloat(item.product_variant.variant_price)
+                                                            : item.product_variant.product.is_on_sale
+                                                                ? parseFloat(item.product_variant.product.effective_price)
+                                                                : parseFloat(item.product_variant.product.base_price)
+                                                        ) * item.quantity).toFixed(2)}
                                                     </span>
+                                                    {/* {item.product_variant.variant_price == null && item.product_variant.product.is_on_sale && (
+                                                        <p className="text-[9px] font-medium text-brand-slate/35 line-through">
+                                                            ${(parseFloat(item.product_variant.product.base_price) * item.quantity).toFixed(2)}
+                                                        </p>
+                                                    )} */}
                                                     {atStockCap && (
                                                         <p className="text-[8px] font-black uppercase tracking-widest text-brand-slate/40 mt-0.5">
                                                             Max stock

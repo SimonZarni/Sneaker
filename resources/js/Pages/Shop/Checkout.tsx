@@ -13,11 +13,16 @@ interface Address {
     is_default: boolean;
 }
 
-/** Resolve effective price: variant_price when set, otherwise base_price */
+/** Resolve effective price: variant_price → sale_price → base_price */
 function effectivePrice(item: any): number {
-    return item.product_variant.variant_price != null
-        ? parseFloat(item.product_variant.variant_price)
-        : parseFloat(item.product_variant.product.base_price);
+    if (item.product_variant.variant_price != null) {
+        return parseFloat(item.product_variant.variant_price);
+    }
+    const product = item.product_variant.product;
+    if (product.is_on_sale) {
+        return parseFloat(product.effective_price);
+    }
+    return parseFloat(product.base_price);
 }
 
 export default function Checkout({ cart, savedAddresses }: { cart: any; savedAddresses: Address[] }) {
