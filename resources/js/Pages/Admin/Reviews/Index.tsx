@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import AdminLayout from "@/Components/AdminLayout";
+import Pagination from "@/Components/Pagination";
 
 interface Review {
     id: number;
@@ -13,10 +14,21 @@ interface Review {
     created_at: string;
 }
 
+interface PaginatedReviews {
+    data: Review[];
+    current_page: number;
+    last_page: number;
+    from: number | null;
+    to: number | null;
+    total: number;
+    links: any[];
+}
+
 interface Props {
-    reviews: Review[];
+    reviews: PaginatedReviews;
     stats: { total: number };
     admin: { name: string };
+    filters?: { search?: string };
 }
 
 function StarRow({ rating }: { rating: number }) {
@@ -35,14 +47,20 @@ function StarRow({ rating }: { rating: number }) {
     );
 }
 
-export default function AdminReviewsIndex({ reviews, stats, admin }: Props) {
-    const [search, setSearch] = useState("");
+export default function AdminReviewsIndex({ reviews, stats, admin, filters }: Props) {
+    const [search, setSearch] = useState(filters?.search ?? "");
 
-    const filtered = reviews.filter(r =>
-        r.product_name.toLowerCase().includes(search.toLowerCase()) ||
-        r.user_name.toLowerCase().includes(search.toLowerCase()) ||
-        (r.title ?? "").toLowerCase().includes(search.toLowerCase())
-    );
+    const applySearch = () => {
+        router.get(route("admin.reviews.index"), { search }, {
+            preserveState: true,
+            replace: true,
+        });
+    };
+
+    const clearSearch = () => {
+        setSearch("");
+        router.get(route("admin.reviews.index"), {}, { preserveState: false, replace: true });
+    };
 
     const handleDelete = (id: number) => {
         if (!confirm("Delete this review? This cannot be undone.")) return;
@@ -64,30 +82,48 @@ export default function AdminReviewsIndex({ reviews, stats, admin }: Props) {
         >
             <Head title="Reviews — Admin" />
 
-            {/* Search */}
-            <div style={{ marginBottom: "20px" }}>
+            {/* Search — server-side since we paginate */}
+            <div style={{ marginBottom: "20px", display: "flex", gap: "8px", alignItems: "center" }}>
                 <input
                     type="text"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") applySearch(); }}
                     placeholder="Search by product, user, or title..."
                     style={{ width: "100%", maxWidth: "400px", border: "1px solid #e5e7eb", padding: "8px 14px", fontSize: "11px", fontWeight: 500, outline: "none", fontFamily: "inherit" }}
                 />
+                <button
+                    onClick={applySearch}
+                    style={{ padding: "8px 18px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer" }}
+                >
+                    Search
+                </button>
+                {filters?.search && (
+                    <button
+                        onClick={clearSearch}
+                        style={{ padding: "8px 14px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "1px solid #fecaca", backgroundColor: "#fef2f2", color: "#dc2626", cursor: "pointer" }}
+                    >
+                        Clear
+                    </button>
+                )}
             </div>
 
             {/* List */}
-            {filtered.length === 0 ? (
+            {reviews.data.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "60px 0", color: "rgba(45,50,62,0.2)" }}>
                     <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em" }}>
-                        {search ? "No reviews match your search" : "No reviews yet"}
+                        {filters?.search ? "No reviews match your search" : "No reviews yet"}
                     </p>
                 </div>
             ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "1px", backgroundColor: "#f0f0f0", border: "1px solid #f0f0f0" }}>
-                    {filtered.map(review => (
-                        <ReviewRow key={review.id} review={review} onDelete={() => handleDelete(review.id)} />
-                    ))}
-                </div>
+                <>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1px", backgroundColor: "#f0f0f0", border: "1px solid #f0f0f0" }}>
+                        {reviews.data.map(review => (
+                            <ReviewRow key={review.id} review={review} onDelete={() => handleDelete(review.id)} />
+                        ))}
+                    </div>
+                    <Pagination data={reviews} preserveFilters={{ search }} />
+                </>
             )}
         </AdminLayout>
     );
@@ -98,7 +134,6 @@ function ReviewRow({ review, onDelete }: { review: Review; onDelete: () => void 
 
     return (
         <div style={{ backgroundColor: "#fff", padding: "18px 24px", display: "flex", alignItems: "flex-start", gap: "20px" }}>
-            {/* Left: stars + meta */}
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px", flexWrap: "wrap" as const }}>
                     <StarRow rating={review.rating} />
@@ -106,16 +141,13 @@ function ReviewRow({ review, onDelete }: { review: Review; onDelete: () => void 
                         {review.user_name}
                     </span>
                     <span style={{ fontSize: "8px", color: "rgba(45,50,62,0.25)", fontWeight: 600 }}>
-                        {new Date(review.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        {new Date(review.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
                     </span>
                 </div>
 
                 <p style={{ fontSize: "9px", fontWeight: 700, color: "rgba(45,50,62,0.4)", marginBottom: "6px" }}>
                     on{" "}
-                    <Link
-                        href={route("shop.show", review.product_id)}
-                        style={{ color: "#0A0A0A", textDecoration: "none", borderBottom: "1px solid #0A0A0A" }}
-                    >
+                    <Link href={route("shop.show", review.product_id)} style={{ color: "#0A0A0A", textDecoration: "none", borderBottom: "1px solid #0A0A0A" }}>
                         {review.product_name}
                     </Link>
                 </p>
@@ -130,10 +162,7 @@ function ReviewRow({ review, onDelete }: { review: Review; onDelete: () => void 
                     <p style={{ fontSize: "11px", color: "rgba(45,50,62,0.6)", lineHeight: 1.7, fontWeight: 500 }}>
                         {expanded || review.body.length <= 160 ? review.body : review.body.slice(0, 160) + "..."}
                         {review.body.length > 160 && (
-                            <button
-                                onClick={() => setExpanded(v => !v)}
-                                style={{ marginLeft: "6px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", background: "none", border: "none", borderBottom: "1px solid #0A0A0A", cursor: "pointer", color: "#0A0A0A", padding: 0 }}
-                            >
+                            <button onClick={() => setExpanded(v => !v)} style={{ marginLeft: "6px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", background: "none", border: "none", borderBottom: "1px solid #0A0A0A", cursor: "pointer", color: "#0A0A0A", padding: 0 }}>
                                 {expanded ? "Less" : "More"}
                             </button>
                         )}
@@ -141,11 +170,7 @@ function ReviewRow({ review, onDelete }: { review: Review; onDelete: () => void 
                 )}
             </div>
 
-            {/* Right: delete */}
-            <button
-                onClick={onDelete}
-                style={{ padding: "6px 16px", backgroundColor: "#fef2f2", color: "#dc2626", fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: "1px solid #fecaca", cursor: "pointer", flexShrink: 0 }}
-            >
+            <button onClick={onDelete} style={{ padding: "6px 16px", backgroundColor: "#fef2f2", color: "#dc2626", fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: "1px solid #fecaca", cursor: "pointer", flexShrink: 0 }}>
                 ✕ Delete
             </button>
         </div>

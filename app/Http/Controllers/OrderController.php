@@ -14,18 +14,20 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::with(['items'])
+        $orders = Order::with(['items', 'payment'])
             ->where('user_id', Auth::id())
             ->latest('placed_at')
-            ->get()
-            ->map(fn($order) => [
+            ->paginate(10)
+            ->through(fn($order) => [
                 'id'              => $order->id,
                 'order_number'    => $order->order_number,
                 'total_amount'    => $order->total_amount,
                 'delivery_status' => $order->delivery_status,
                 'payment_status'  => $order->payment_status,
+                'payment_method'  => $order->payment?->payment_method,
                 'placed_at'       => $order->placed_at?->toISOString(),
                 'item_count'      => $order->items->sum('quantity'),
+                'preview_name'    => $order->items->first()?->product_name ?? 'Order',
             ]);
 
         return Inertia::render('Orders/Index', ['orders' => $orders]);

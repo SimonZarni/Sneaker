@@ -46,13 +46,22 @@ class AdminInventoryController extends Controller
                 'variant_price'  => $v->variant_price,
             ]);
 
-        // Summary stats
-        $allVariants = ProductVariant::whereHas('product', fn($q) => $q->where('is_active', true));
+        // Single aggregate query replaces 4 separate count() calls.
+        // Each clone was running a full whereHas subquery — now one pass.
+        $statsRow = ProductVariant::whereHas('product', fn($q) => $q->where('is_active', true))
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(stock_quantity = 0) as out_of_stock,
+                SUM(stock_quantity > 0 AND stock_quantity <= 5) as low,
+                SUM(stock_quantity > 5) as healthy
+            ")
+            ->first();
+
         $stats = [
-            'total'   => $allVariants->count(),
-            'out'     => (clone $allVariants)->where('stock_quantity', 0)->count(),
-            'low'     => (clone $allVariants)->where('stock_quantity', '>', 0)->where('stock_quantity', '<=', 5)->count(),
-            'healthy' => (clone $allVariants)->where('stock_quantity', '>', 5)->count(),
+            'total'   => (int) ($statsRow->total         ?? 0),
+            'out'     => (int) ($statsRow->out_of_stock  ?? 0),
+            'low'     => (int) ($statsRow->low           ?? 0),
+            'healthy' => (int) ($statsRow->healthy       ?? 0),
         ];
 
         return Inertia::render('Admin/Inventory/Index', [

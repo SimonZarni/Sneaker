@@ -44,7 +44,13 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
+        // Only forget user-specific session keys — do NOT call session()->invalidate()
+        // as that destroys the entire session including the admin guard auth token,
+        // which would log out any simultaneously logged-in admin.
+        $request->session()->forget([
+            'url.intended',
+            'status',
+        ]);
         $request->session()->regenerateToken();
 
         return redirect('/');
