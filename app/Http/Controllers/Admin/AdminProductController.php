@@ -66,11 +66,13 @@ class AdminProductController extends Controller
             'products' => $products,
             'brands'   => Brand::orderBy('name')->get(['id', 'name']),
             'filters'  => $request->only(['search', 'brand', 'status']),
-            'stats'    => [
-                'total'    => Product::count(),
-                'active'   => Product::where('is_active', true)->count(),
-                'inactive' => Product::where('is_active', false)->count(),
-            ],
+            'stats'    => (function () {
+                // Single query replaces 3 separate Product::count() calls
+                $row = Product::selectRaw('COUNT(*) as total, SUM(is_active) as active')->first();
+                $total    = (int) ($row->total  ?? 0);
+                $active   = (int) ($row->active ?? 0);
+                return ['total' => $total, 'active' => $active, 'inactive' => $total - $active];
+            })(),
             'admin' => ['name' => Auth::guard('admin')->user()->full_name],
         ]);
     }

@@ -55,7 +55,15 @@ class AdminSessionController extends Controller
     public function destroy(Request $request)
     {
         Auth::guard('admin')->logout();
-        $request->session()->forget('admin_last_activity');
+
+        // Only forget admin-specific session keys — do NOT call session()->invalidate()
+        // as that destroys the entire session including the user's web guard auth,
+        // which would log out any simultaneously logged-in user.
+        $request->session()->forget([
+            'admin_last_activity',
+            'admin_session_expired',
+        ]);
+        $request->session()->regenerateToken();
 
         return redirect()->route('admin.login');
     }

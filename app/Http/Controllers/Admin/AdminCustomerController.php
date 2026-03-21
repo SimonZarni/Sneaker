@@ -50,31 +50,36 @@ class AdminCustomerController extends Controller
     {
         $user = User::findOrFail($id);
 
+        // Compute stats directly from DB — not from a loaded collection
+        $statsRow = Order::where('user_id', $id)
+            ->selectRaw('COUNT(*) as order_count, SUM(total_amount) as total_spent')
+            ->first();
+
         $orders = Order::with('items')
             ->where('user_id', $id)
             ->latest('placed_at')
             ->get()
             ->map(fn($o) => [
-                'id'             => $o->id,
-                'order_number'   => $o->order_number,
-                'total_amount'   => $o->total_amount,
-                'order_status'   => $o->order_status,
-                'payment_status' => $o->payment_status,
+                'id'              => $o->id,
+                'order_number'    => $o->order_number,
+                'total_amount'    => $o->total_amount,
+                'order_status'    => $o->order_status,
+                'payment_status'  => $o->payment_status,
                 'delivery_status' => $o->delivery_status,
-                'item_count'     => $o->items->sum('quantity'),
-                'placed_at'      => $o->placed_at?->toISOString(),
+                'item_count'      => $o->items->sum('quantity'),
+                'placed_at'       => $o->placed_at?->toISOString(),
             ]);
 
         return Inertia::render('Admin/Customers/Show', [
             'customer' => [
-                'id'         => $user->id,
-                'name'       => $user->name,
-                'email'      => $user->email,
-                'phone'      => $user->phone,
-                'is_active'  => (bool) $user->is_active,
-                'joined_at'  => $user->created_at->toISOString(),
-                'order_count' => $orders->count(),
-                'total_spent' => (float) $orders->sum('total_amount'),
+                'id'          => $user->id,
+                'name'        => $user->name,
+                'email'       => $user->email,
+                'phone'       => $user->phone,
+                'is_active'   => (bool) $user->is_active,
+                'joined_at'   => $user->created_at->toISOString(),
+                'order_count' => (int)   ($statsRow->order_count  ?? 0),
+                'total_spent' => (float) ($statsRow->total_spent  ?? 0),
             ],
             'orders' => $orders,
             'admin'  => ['name' => Auth::guard('admin')->user()->full_name],

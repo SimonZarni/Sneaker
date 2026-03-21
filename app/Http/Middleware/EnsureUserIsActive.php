@@ -13,8 +13,7 @@ class EnsureUserIsActive
         if (Auth::check() && ! Auth::user()->is_active) {
             Auth::logout();
 
-            // Use forget instead of invalidate to avoid wiping the admin session
-            $request->session()->forget(['_token_web']);
+            $request->session()->invalidate();
             $request->session()->regenerateToken();
 
             return redirect()->route('login')

@@ -16,29 +16,49 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
-        // ── Order stats ───────────────────────────────────────────────────────
-        $orderStats = [
-            'total'      => Order::count(),
-            'pending'    => Order::where('delivery_status', 'Pending')->count(),
-            'processing' => Order::where('delivery_status', 'Processing')->count(),
-            'shipped'    => Order::where('delivery_status', 'Shipped')->count(),
-            'delivered'  => Order::where('delivery_status', 'Delivered')->count(),
-        ];
+        // ── Cached stats (5 min TTL) ──────────────────────────────────────────
+        // Dashboard counts and revenue figures don't need to be real-time.
+        // Caching for 5 minutes saves 8+ queries on every admin page load.
+        $cached = \Illuminate\Support\Facades\Cache::remember('dashboard.stats', 300, function () {
 
-        // ── Revenue stats ─────────────────────────────────────────────────────
-        $revenueStats = [
-            'total' => (float) Order::where('order_status', 'Confirmed')->sum('total_amount'),
-            'cod'   => (float) Order::where('payment_status', 'COD')
-                                    ->where('order_status', '!=', 'Cancelled')
-                                    ->sum('total_amount'),
-            'card'  => (float) Order::where('payment_status', 'Confirmed')
-                                    ->where('order_status', '!=', 'Cancelled')
-                                    ->sum('total_amount'),
-        ];
+            // Single query for all order delivery counts
+            $orderRow = \App\Models\Order::selectRaw("
+                COUNT(*) as total,
+                SUM(delivery_status = 'Pending') as pending,
+                SUM(delivery_status = 'Processing') as processing,
+                SUM(delivery_status = 'Shipped') as shipped,
+                SUM(delivery_status = 'Delivered') as delivered
+            ")->first();
 
-        // ── Other counts ──────────────────────────────────────────────────────
-        $totalCustomers = User::count();
-        $totalProducts  = Product::where('is_active', true)->count();
+            // Single query for all revenue figures
+            $revenueRow = \App\Models\Order::selectRaw("
+                SUM(CASE WHEN order_status = 'Confirmed' THEN total_amount ELSE 0 END) as total,
+                SUM(CASE WHEN payment_status = 'COD' AND order_status != 'Cancelled' THEN total_amount ELSE 0 END) as cod,
+                SUM(CASE WHEN payment_status = 'Confirmed' AND order_status != 'Cancelled' THEN total_amount ELSE 0 END) as card
+            ")->first();
+
+            return [
+                'orderStats' => [
+                    'total'      => (int) ($orderRow->total      ?? 0),
+                    'pending'    => (int) ($orderRow->pending    ?? 0),
+                    'processing' => (int) ($orderRow->processing ?? 0),
+                    'shipped'    => (int) ($orderRow->shipped    ?? 0),
+                    'delivered'  => (int) ($orderRow->delivered  ?? 0),
+                ],
+                'revenueStats' => [
+                    'total' => (float) ($revenueRow->total ?? 0),
+                    'cod'   => (float) ($revenueRow->cod   ?? 0),
+                    'card'  => (float) ($revenueRow->card  ?? 0),
+                ],
+                'totalCustomers' => \App\Models\User::count(),
+                'totalProducts'  => \App\Models\Product::where('is_active', true)->count(),
+            ];
+        });
+
+        $orderStats     = $cached['orderStats'];
+        $revenueStats   = $cached['revenueStats'];
+        $totalCustomers = $cached['totalCustomers'];
+        $totalProducts  = $cached['totalProducts'];
 
         // ── Low stock variants (≤ 5) ──────────────────────────────────────────
         $lowStock = ProductVariant::with(['product:id,name,is_active', 'color:id,name,hex_code', 'size:id,size_value'])

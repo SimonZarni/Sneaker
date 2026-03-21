@@ -24,14 +24,24 @@ class ProfileController extends Controller
         $user = $request->user();
 
         // ── Order Stats ───────────────────────────────────────────────────────
-        $orders = Order::where('user_id', $user->id)->get();
+        // Single query with conditional aggregates — never loads orders into memory.
+        // Previously: Order::get() loaded ALL orders then filtered in PHP.
+        $statsRow = Order::where('user_id', $user->id)
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(delivery_status IN ('Pending','Processing')) as pending,
+                SUM(delivery_status = 'Shipped') as shipped,
+                SUM(delivery_status = 'Delivered') as delivered,
+                SUM(CASE WHEN order_status = 'Confirmed' THEN total_amount ELSE 0 END) as spent
+            ")
+            ->first();
 
         $orderStats = [
-            'total'     => $orders->count(),
-            'pending'   => $orders->whereIn('delivery_status', ['Pending', 'Processing'])->count(),
-            'shipped'   => $orders->where('delivery_status', 'Shipped')->count(),
-            'delivered' => $orders->where('delivery_status', 'Delivered')->count(),
-            'spent'     => (float) $orders->where('order_status', 'Confirmed')->sum('total_amount'),
+            'total'     => (int)   ($statsRow->total     ?? 0),
+            'pending'   => (int)   ($statsRow->pending   ?? 0),
+            'shipped'   => (int)   ($statsRow->shipped   ?? 0),
+            'delivered' => (int)   ($statsRow->delivered ?? 0),
+            'spent'     => (float) ($statsRow->spent     ?? 0),
         ];
 
         // ── Recent Orders (last 5) ────────────────────────────────────────────
