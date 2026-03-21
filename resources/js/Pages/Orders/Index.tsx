@@ -45,9 +45,9 @@ function StatusPill({ label, type }: { label: string; type: "order" | "payment" 
 }
 
 function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString("en-US", {
-        year: "numeric", month: "short", day: "numeric",
-    });
+    // Parse with timeZone:"UTC" so the displayed date matches the stored date.
+    // Without this, e.g. 2026-03-14 21:51:30 UTC shows as Mar 15 in UTC+7.
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }
 
 function formatPrice(val: string | number) {
