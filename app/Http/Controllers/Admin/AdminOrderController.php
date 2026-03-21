@@ -16,6 +16,11 @@ class AdminOrderController extends Controller
 
     public function index(Request $request)
     {
+        $request->validate([
+            'date_from' => 'nullable|date',
+            'date_to'   => 'nullable|date|after_or_equal:date_from',
+        ]);
+
         $query = Order::with(['user', 'items', 'payment'])->latest('placed_at');
 
         if ($status = $request->input('status')) {
@@ -29,6 +34,12 @@ class AdminOrderController extends Controller
                 $q->where('order_number', 'like', "%{$search}%")
                   ->orWhere('shipping_full_name', 'like', "%{$search}%");
             });
+        }
+        if ($dateFrom = $request->input('date_from')) {
+            $query->whereDate('placed_at', '>=', $dateFrom);
+        }
+        if ($dateTo = $request->input('date_to')) {
+            $query->whereDate('placed_at', '<=', $dateTo);
         }
 
         $orders = $query->paginate(20)->through(fn($order) => [
@@ -56,7 +67,7 @@ class AdminOrderController extends Controller
         return Inertia::render('Admin/Orders/Index', [
             'orders'  => $orders,
             'stats'   => $stats,
-            'filters' => $request->only(['status', 'payment', 'search']),
+            'filters' => $request->only(['status', 'payment', 'search', 'date_from', 'date_to']),
             'admin'   => ['name' => Auth::guard('admin')->user()->full_name],
         ]);
     }
