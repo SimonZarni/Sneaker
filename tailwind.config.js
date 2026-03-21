@@ -12,10 +12,10 @@ export default {
         extend: {
             colors: {
                 brand: {
-                    charcoal: '#0A0A0A',
+                    charcoal: '#5B8C5A',   // Sage green — primary
                     white: '#FFFFFF',
-                    surface: '#F5F5F7',
-                    slate: '#2D323E',
+                    surface: '#EEF3EE',    // Light green-tinted surface
+                    slate: '#2D4A31',      // Deep green — hover/secondary
                 },
             },
             fontFamily: {

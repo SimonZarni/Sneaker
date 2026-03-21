@@ -10,7 +10,7 @@ export default function About() {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="About Us — SNEAKER.DRP" />
+            <Head title="About Us — Walker Sneaker" />
 
             {/* ── NAV ── */}
             <nav className="fixed top-0 w-full z-50 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md">
@@ -25,7 +25,7 @@ export default function About() {
                     </div>
 
                     <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
-                        <Link href={route("home")}>SNEAKER.DRP</Link>
+                        <Link href={route("home")}>Walker Sneaker</Link>
                     </h1>
 
                     <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
@@ -67,7 +67,7 @@ export default function About() {
                         Built for Sneaker Culture.
                     </h2>
                     <p className="mt-10 text-base font-medium leading-loose text-white/60 max-w-xl">
-                        SNEAKER.DRP is a modern footwear retailer offering a wide range of popular sneaker brands
+                        Walker Sneaker is a modern footwear retailer offering a wide range of popular sneaker brands
                         and stylish urban footwear. We focus on delivering high-quality, trendy products that appeal to
                         sneaker enthusiasts and everyday customers alike.
                     </p>

@@ -87,9 +87,9 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
                             key={tab.value}
                             onClick={() => apply({ status: tab.value })}
                             style={{
-                                padding: "20px", textAlign: "left", border: `1px solid ${isActive ? "#0A0A0A" : "#f0f0f0"}`,
-                                backgroundColor: isActive ? "#0A0A0A" : "#fff",
-                                color: isActive ? "#fff" : "#0A0A0A",
+                                padding: "20px", textAlign: "left", border: `1px solid ${isActive ? "#5B8C5A" : "#f0f0f0"}`,
+                                backgroundColor: isActive ? "#5B8C5A" : "#fff",
+                                color: isActive ? "#fff" : "#5B8C5A",
                                 cursor: "pointer", transition: "all 0.15s",
                             }}
                         >
@@ -110,7 +110,7 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
                         placeholder="Search order number or customer name..."
                         style={{ flex: 1, border: "1px solid #e5e7eb", backgroundColor: "#fff", padding: "12px 16px", fontSize: "12px", outline: "none" }}
                     />
-                    <button type="submit" style={{ padding: "12px 24px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer" }}>
+                    <button type="submit" style={{ padding: "12px 24px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer" }}>
                         Search
                     </button>
                 </form>
@@ -119,7 +119,7 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
                     {paymentTabs.map((p) => {
                         const isActive = activePayment === p.value;
                         return (
-                            <button key={p.value} onClick={() => apply({ payment: p.value })} style={{ padding: "12px 16px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: `1px solid ${isActive ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: isActive ? "#0A0A0A" : "#fff", color: isActive ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer" }}>
+                            <button key={p.value} onClick={() => apply({ payment: p.value })} style={{ padding: "12px 16px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: `1px solid ${isActive ? "#5B8C5A" : "#e5e7eb"}`, backgroundColor: isActive ? "#5B8C5A" : "#fff", color: isActive ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer" }}>
                                 {p.label}
                             </button>
                         );

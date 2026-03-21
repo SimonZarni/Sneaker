@@ -74,9 +74,9 @@ export default function AdminCustomersIndex({ customers, stats, admin }: Props) 
         textTransform: "uppercase" as const,
         letterSpacing: "0.15em",
         border: "none",
-        borderBottom: statusTab === t ? "2px solid #0A0A0A" : "2px solid transparent",
+        borderBottom: statusTab === t ? "2px solid #5B8C5A" : "2px solid transparent",
         backgroundColor: "transparent",
-        color: statusTab === t ? "#0A0A0A" : "rgba(45,50,62,0.3)",
+        color: statusTab === t ? "#5B8C5A" : "rgba(45,50,62,0.3)",
         cursor: "pointer",
     });
 
@@ -89,10 +89,10 @@ export default function AdminCustomersIndex({ customers, stats, admin }: Props) 
             headerRight={
                 <div style={{ display: "flex", gap: "28px" }}>
                     {[
-                        { label: "Total",    value: stats.total,    color: "#0A0A0A" },
+                        { label: "Total",    value: stats.total,    color: "#5B8C5A" },
                         { label: "Active",   value: stats.active,   color: "#16a34a" },
                         { label: "Inactive", value: stats.inactive, color: "#dc2626" },
-                        { label: "Revenue",  value: `$${stats.revenue.toFixed(2)}`, color: "#0A0A0A" },
+                        { label: "Revenue",  value: `$${stats.revenue.toFixed(2)}`, color: "#5B8C5A" },
                     ].map(s => (
                         <div key={s.label} style={{ textAlign: "right" }}>
                             <p style={{ fontSize: "20px", fontWeight: 900, color: s.color, lineHeight: 1 }}>{s.value}</p>
@@ -119,7 +119,7 @@ export default function AdminCustomersIndex({ customers, stats, admin }: Props) 
                         <button
                             key={val}
                             onClick={() => setSortBy(val)}
-                            style={{ padding: "5px 12px", fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "1px solid", borderColor: sortBy === val ? "#0A0A0A" : "#e5e7eb", backgroundColor: sortBy === val ? "#0A0A0A" : "#fff", color: sortBy === val ? "#fff" : "rgba(45,50,62,0.4)", cursor: "pointer" }}
+                            style={{ padding: "5px 12px", fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "1px solid", borderColor: sortBy === val ? "#5B8C5A" : "#e5e7eb", backgroundColor: sortBy === val ? "#5B8C5A" : "#fff", color: sortBy === val ? "#fff" : "rgba(45,50,62,0.4)", cursor: "pointer" }}
                         >
                             {label}
                         </button>
@@ -159,8 +159,8 @@ export default function AdminCustomersIndex({ customers, stats, admin }: Props) 
                                 <div>
                                     <Link
                                         href={route("admin.customers.show", c.id)}
-                                        style={{ fontSize: "12px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em", color: "#0A0A0A", textDecoration: "none", borderBottom: "1px solid transparent" }}
-                                        onMouseOver={e => (e.currentTarget.style.borderBottomColor = "#0A0A0A")}
+                                        style={{ fontSize: "12px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em", color: "#5B8C5A", textDecoration: "none", borderBottom: "1px solid transparent" }}
+                                        onMouseOver={e => (e.currentTarget.style.borderBottomColor = "#5B8C5A")}
                                         onMouseOut={e  => (e.currentTarget.style.borderBottomColor = "transparent")}
                                     >
                                         {c.name}
@@ -174,7 +174,7 @@ export default function AdminCustomersIndex({ customers, stats, admin }: Props) 
                                 <p style={{ fontSize: "10px", fontWeight: 500, color: "rgba(45,50,62,0.55)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{c.email}</p>
 
                                 {/* Orders */}
-                                <p style={{ fontSize: "13px", fontWeight: 900, color: "#0A0A0A" }}>{c.order_count}</p>
+                                <p style={{ fontSize: "13px", fontWeight: 900, color: "#5B8C5A" }}>{c.order_count}</p>
 
                                 {/* Spent */}
                                 <p style={{ fontSize: "12px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>${c.total_spent.toFixed(2)}</p>
@@ -198,7 +198,7 @@ export default function AdminCustomersIndex({ customers, stats, admin }: Props) 
                                 <div style={{ display: "flex", gap: "8px" }}>
                                     <Link
                                         href={route("admin.customers.show", c.id)}
-                                        style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#0A0A0A", textDecoration: "none", borderBottom: "1px solid #0A0A0A", paddingBottom: "1px" }}
+                                        style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#5B8C5A", textDecoration: "none", borderBottom: "1px solid #5B8C5A", paddingBottom: "1px" }}
                                     >
                                         View
                                     </Link>

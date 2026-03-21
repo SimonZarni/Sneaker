@@ -68,7 +68,7 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
 };
 
 function Pill({ label }: { label: string }) {
-    const s = STATUS_COLORS[label] ?? { bg: "#f5f5f7", color: "#6b7280" };
+    const s = STATUS_COLORS[label] ?? { bg: "#EEF3EE", color: "#6b7280" };
     return (
         <span style={{ backgroundColor: s.bg, color: s.color, fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", padding: "3px 8px" }}>
             {label}
@@ -169,7 +169,7 @@ function AddressForm({
             <div style={{ marginTop: "20px", display: "flex", gap: "12px" }}>
                 <button
                     onClick={() => onSubmit(d)}
-                    style={{ padding: "10px 24px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer" }}
+                    style={{ padding: "10px 24px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer" }}
                 >
                     {submitLabel}
                 </button>
@@ -242,9 +242,9 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
         textTransform: "uppercase",
         letterSpacing: "0.15em",
         border: "none",
-        borderBottom: tab === t ? "2px solid #0A0A0A" : "2px solid transparent",
+        borderBottom: tab === t ? "2px solid #5B8C5A" : "2px solid transparent",
         backgroundColor: "transparent",
-        color: tab === t ? "#0A0A0A" : "rgba(45,50,62,0.35)",
+        color: tab === t ? "#5B8C5A" : "rgba(45,50,62,0.35)",
         cursor: "pointer",
         transition: "color 0.15s",
     });
@@ -261,19 +261,19 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
     };
 
     return (
-        <div style={{ minHeight: "100vh", backgroundColor: "#fff", color: "#0A0A0A" }}>
-            <Head title="My Account — SNEAKER.DRP" />
+        <div style={{ minHeight: "100vh", backgroundColor: "#fff", color: "#5B8C5A" }}>
+            <Head title="My Account — Walker Sneaker" />
 
             {/* ── NAV ── */}
             <nav style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: 0, zIndex: 50 }}>
                 <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 32px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#0A0A0A", textDecoration: "none" }}>
-                        SNEAKER.DRP
+                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#5B8C5A", textDecoration: "none" }}>
+                        Walker Sneaker
                     </Link>
                     <div style={{ display: "flex", alignItems: "center", gap: "28px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
                         <Link href={route("shop.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Shop</Link>
                         <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Orders</Link>
-                        <span style={{ color: "#0A0A0A", borderBottom: "2px solid #0A0A0A", paddingBottom: "2px" }}>Account</span>
+                        <span style={{ color: "#5B8C5A", borderBottom: "2px solid #5B8C5A", paddingBottom: "2px" }}>Account</span>
                         <Link
                             href="/logout" method="post" as="button"
                             style={{ color: "rgba(45,50,62,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}
@@ -285,7 +285,7 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
             </nav>
 
             {/* ── HERO HEADER ── */}
-            <div style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "48px 32px" }}>
+            <div style={{ backgroundColor: "#5B8C5A", color: "#fff", padding: "48px 32px" }}>
                 <div style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "24px" }}>
                     <div>
                         <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.4em", color: "rgba(255,255,255,0.3)", marginBottom: "8px" }}>
@@ -338,7 +338,7 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                                     { label: "In Progress", value: orderStats.pending,   color: "#d97706" },
                                     { label: "Shipped",     value: orderStats.shipped,   color: "#2563eb" },
                                     { label: "Delivered",   value: orderStats.delivered, color: "#16a34a" },
-                                    { label: "Total Spent", value: fmt(orderStats.spent), color: "#0A0A0A" },
+                                    { label: "Total Spent", value: fmt(orderStats.spent), color: "#5B8C5A" },
                                 ].map(s => (
                                     <div key={s.label} style={{ backgroundColor: "#fff", padding: "28px 24px" }}>
                                         <p style={{ fontSize: "32px", fontWeight: 900, color: s.color, lineHeight: 1, marginBottom: "8px" }}>{s.value}</p>
@@ -353,7 +353,7 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                             {recentOrders.length === 0 ? (
                                 <div style={{ textAlign: "center", padding: "40px", backgroundColor: "#fafafa", border: "1px solid #f0f0f0" }}>
                                     <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(45,50,62,0.2)" }}>No orders yet</p>
-                                    <Link href={route("shop.index")} style={{ display: "inline-block", marginTop: "16px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#0A0A0A", borderBottom: "1px solid #0A0A0A", textDecoration: "none", paddingBottom: "1px" }}>
+                                    <Link href={route("shop.index")} style={{ display: "inline-block", marginTop: "16px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#5B8C5A", borderBottom: "1px solid #5B8C5A", textDecoration: "none", paddingBottom: "1px" }}>
                                         Browse the Collection →
                                     </Link>
                                 </div>
@@ -383,7 +383,7 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                             )}
                             {recentOrders.length > 0 && (
                                 <div style={{ marginTop: "16px" }}>
-                                    <button onClick={() => setTab("orders")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", background: "none", border: "none", borderBottom: "1px solid #0A0A0A", cursor: "pointer", paddingBottom: "1px" }}>
+                                    <button onClick={() => setTab("orders")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", background: "none", border: "none", borderBottom: "1px solid #5B8C5A", cursor: "pointer", paddingBottom: "1px" }}>
                                         View All Orders →
                                     </button>
                                 </div>
@@ -395,15 +395,15 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                             {addresses.find(a => a.is_default) ? (() => {
                                 const a = addresses.find(a => a.is_default)!;
                                 return (
-                                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 24px", border: "1px solid #0A0A0A", maxWidth: "400px" }}>
+                                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "20px 24px", border: "1px solid #5B8C5A", maxWidth: "400px" }}>
                                         <div style={{ fontSize: "11px", fontWeight: 600, lineHeight: 1.8, color: "rgba(45,50,62,0.7)" }}>
-                                            <p style={{ fontWeight: 900, color: "#0A0A0A" }}>{a.full_name}</p>
+                                            <p style={{ fontWeight: 900, color: "#5B8C5A" }}>{a.full_name}</p>
                                             <p>{a.phone}</p>
                                             <p>{a.address_line}</p>
                                             <p>{a.city}{a.state_region ? `, ${a.state_region}` : ""}{a.postal_code ? ` ${a.postal_code}` : ""}</p>
                                             <p>{a.country}</p>
                                         </div>
-                                        <button onClick={() => setTab("addresses")} style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", background: "none", border: "none", borderBottom: "1px solid #0A0A0A", cursor: "pointer", paddingBottom: "1px", whiteSpace: "nowrap", marginLeft: "24px" }}>
+                                        <button onClick={() => setTab("addresses")} style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", background: "none", border: "none", borderBottom: "1px solid #5B8C5A", cursor: "pointer", paddingBottom: "1px", whiteSpace: "nowrap", marginLeft: "24px" }}>
                                             Manage →
                                         </button>
                                     </div>
@@ -423,7 +423,7 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                         {recentOrders.length === 0 ? (
                             <div style={{ textAlign: "center", padding: "60px", backgroundColor: "#fafafa", border: "1px solid #f0f0f0" }}>
                                 <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(45,50,62,0.2)", marginBottom: "16px" }}>No orders yet</p>
-                                <Link href={route("shop.index")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#0A0A0A", borderBottom: "1px solid #0A0A0A", textDecoration: "none", paddingBottom: "1px" }}>
+                                <Link href={route("shop.index")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#5B8C5A", borderBottom: "1px solid #5B8C5A", textDecoration: "none", paddingBottom: "1px" }}>
                                     Start Shopping →
                                 </Link>
                             </div>
@@ -448,7 +448,7 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                                     ))}
                                 </div>
                                 <div style={{ marginTop: "16px" }}>
-                                    <Link href={route("orders.index")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#0A0A0A", borderBottom: "1px solid #0A0A0A", textDecoration: "none", paddingBottom: "1px" }}>
+                                    <Link href={route("orders.index")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#5B8C5A", borderBottom: "1px solid #5B8C5A", textDecoration: "none", paddingBottom: "1px" }}>
                                         View Full Order History →
                                     </Link>
                                 </div>
@@ -480,21 +480,21 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                                             submitLabel="Update Address"
                                         />
                                     ) : (
-                                        <div style={{ border: `1px solid ${addr.is_default ? "#0A0A0A" : "#e5e7eb"}`, padding: "20px", position: "relative" }}>
+                                        <div style={{ border: `1px solid ${addr.is_default ? "#5B8C5A" : "#e5e7eb"}`, padding: "20px", position: "relative" }}>
                                             {addr.is_default && (
-                                                <span style={{ position: "absolute", top: "12px", right: "12px", fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", backgroundColor: "#0A0A0A", color: "#fff", padding: "3px 8px" }}>
+                                                <span style={{ position: "absolute", top: "12px", right: "12px", fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", backgroundColor: "#5B8C5A", color: "#fff", padding: "3px 8px" }}>
                                                     Default
                                                 </span>
                                             )}
                                             <div style={{ fontSize: "11px", fontWeight: 600, lineHeight: 1.8, color: "rgba(45,50,62,0.7)", marginBottom: "16px" }}>
-                                                <p style={{ fontWeight: 900, color: "#0A0A0A", fontSize: "12px" }}>{addr.full_name}</p>
+                                                <p style={{ fontWeight: 900, color: "#5B8C5A", fontSize: "12px" }}>{addr.full_name}</p>
                                                 <p>{addr.phone}</p>
                                                 <p>{addr.address_line}</p>
                                                 <p>{addr.city}{addr.state_region ? `, ${addr.state_region}` : ""}{addr.postal_code ? ` ${addr.postal_code}` : ""}</p>
                                                 <p>{addr.country}</p>
                                             </div>
                                             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                                                <button onClick={() => setEditingId(addr.id)} style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", background: "none", border: "none", borderBottom: "1px solid #0A0A0A", cursor: "pointer", paddingBottom: "1px" }}>
+                                                <button onClick={() => setEditingId(addr.id)} style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", background: "none", border: "none", borderBottom: "1px solid #5B8C5A", cursor: "pointer", paddingBottom: "1px" }}>
                                                     Edit
                                                 </button>
                                                 {!addr.is_default && (
@@ -568,7 +568,7 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                                 <button
                                     onClick={() => patch(route("profile.update"))}
                                     disabled={processing}
-                                    style={{ padding: "12px 28px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: processing ? "not-allowed" : "pointer", alignSelf: "flex-start", opacity: processing ? 0.6 : 1 }}
+                                    style={{ padding: "12px 28px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: processing ? "not-allowed" : "pointer", alignSelf: "flex-start", opacity: processing ? 0.6 : 1 }}
                                 >
                                     Save Changes
                                 </button>
@@ -599,7 +599,7 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                                 <button
                                     onClick={() => pwForm.put(route("password.update"), { onSuccess: () => pwForm.reset() })}
                                     disabled={pwForm.processing}
-                                    style={{ padding: "12px 28px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: pwForm.processing ? "not-allowed" : "pointer", alignSelf: "flex-start", opacity: pwForm.processing ? 0.6 : 1 }}
+                                    style={{ padding: "12px 28px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: pwForm.processing ? "not-allowed" : "pointer", alignSelf: "flex-start", opacity: pwForm.processing ? 0.6 : 1 }}
                                 >
                                     Update Password
                                 </button>

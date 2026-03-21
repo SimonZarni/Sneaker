@@ -46,8 +46,8 @@ export default function Pagination({ data, preserveFilters = {} }: Props) {
 
     const btnActive: React.CSSProperties = {
         ...btnBase,
-        backgroundColor: "#0A0A0A", color: "#fff",
-        borderColor: "#0A0A0A",
+        backgroundColor: "#5B8C5A", color: "#fff",
+        borderColor: "#5B8C5A",
     };
 
     const btnDisabled: React.CSSProperties = {

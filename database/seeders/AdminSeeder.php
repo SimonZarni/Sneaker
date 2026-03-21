@@ -12,15 +12,15 @@ class AdminSeeder extends Seeder
      * Run this seeder to create the default admin account.
      * After seeding, log in at /admin/login with these credentials.
      *
-     * Email:    admin@sneaker.drp
+     * Email:    admin@walker.store
      * Password: admin123
      */
     public function run(): void
     {
         Admin::updateOrCreate(
-            ['email' => 'admin@sneaker.drp'],
+            ['email' => 'admin@walker.store'],
             [
-                'full_name' => 'Store Admin',
+                'full_name' => 'Admin',
                 'password'  => Hash::make('admin123'),
             ]
         );

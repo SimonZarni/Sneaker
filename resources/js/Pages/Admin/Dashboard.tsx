@@ -127,13 +127,13 @@ const DELIVERY_LEFT_BORDER: Record<string, string> = {
 export default function AdminDashboard({ orderStats, revenueStats, totalCustomers, totalProducts, dailyRevenue, weekStats, monthlyRevenue, topProducts, lowStock, recentOrders, admin }: Props) {
     return (
         <AdminLayout adminName={admin.name} active="dashboard" pageTitle="Dashboard" pageLabel="Overview">
-            <Head title="Admin — SNEAKER.DRP" />
+            <Head title="Admin — Walker Sneaker" />
 
             {/* ── TOP STAT CARDS ── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
 
                 {/* Revenue — dark card */}
-                <div style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "28px", gridColumn: "span 1" }}>
+                <div style={{ backgroundColor: "#5B8C5A", color: "#fff", padding: "28px", gridColumn: "span 1" }}>
                     <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(255,255,255,0.3)", marginBottom: "12px" }}>
                         Total Revenue
                     </p>
@@ -298,7 +298,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                                 style={{
                                                     width: "100%",
                                                     height: `${barH}px`,
-                                                    backgroundColor: day.revenue === 0 ? "#f5f5f5" : isToday ? "#0A0A0A" : "#2D323E",
+                                                    backgroundColor: day.revenue === 0 ? "#f5f5f5" : isToday ? "#5B8C5A" : "#2D4A31",
                                                     opacity: day.revenue === 0 ? 1 : isToday ? 1 : 0.6 + (i / dailyRevenue.length) * 0.4,
                                                     cursor: "default",
                                                     transition: "opacity 0.2s",
@@ -368,13 +368,13 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                 const barW = m.revenue > 0 ? Math.max((m.revenue / maxRevenue) * 100, 2) : 0;
                                 return (
                                     <div key={m.key} style={{ display: "grid", gridTemplateColumns: "120px 1fr 100px 80px", gap: "16px", alignItems: "center", padding: "14px 16px", backgroundColor: "#fff" }}>
-                                        <p style={{ fontSize: "11px", fontWeight: isCurrentMonth ? 900 : 700, color: isCurrentMonth ? "#0A0A0A" : "rgba(45,50,62,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
+                                        <p style={{ fontSize: "11px", fontWeight: isCurrentMonth ? 900 : 700, color: isCurrentMonth ? "#5B8C5A" : "rgba(45,50,62,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
                                             {m.label}
                                             {isCurrentMonth && <span style={{ fontSize: "7px", fontWeight: 900, color: "rgba(45,50,62,0.3)", marginLeft: "6px", letterSpacing: "0.1em" }}>MTD</span>}
                                         </p>
                                         {/* Bar */}
                                         <div style={{ height: "6px", backgroundColor: "#f5f5f5", overflow: "hidden" }}>
-                                            <div style={{ height: "100%", width: `${barW}%`, backgroundColor: isCurrentMonth ? "#0A0A0A" : "#d1d5db", transition: "width 0.6s ease" }} />
+                                            <div style={{ height: "100%", width: `${barW}%`, backgroundColor: isCurrentMonth ? "#5B8C5A" : "#d1d5db", transition: "width 0.6s ease" }} />
                                         </div>
                                         <p style={{ fontSize: "13px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
                                             {fmt(m.revenue)}
@@ -431,7 +431,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                 style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 80px 100px", gap: "16px", alignItems: "center", padding: "14px 24px", backgroundColor: "#fffbeb" }}
                             >
                                 {/* Product name */}
-                                <p style={{ fontSize: "12px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "-0.01em", color: "#0A0A0A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
+                                <p style={{ fontSize: "12px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "-0.01em", color: "#5B8C5A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
                                     {v.product_name}
                                 </p>
 
@@ -516,7 +516,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                     {/* Rank */}
                                     <span style={{
                                         fontSize: "11px", fontWeight: 900, fontVariantNumeric: "tabular-nums",
-                                        color: i === 0 ? "#0A0A0A" : i === 1 ? "rgba(45,50,62,0.5)" : "rgba(45,50,62,0.3)",
+                                        color: i === 0 ? "#5B8C5A" : i === 1 ? "rgba(45,50,62,0.5)" : "rgba(45,50,62,0.3)",
                                     }}>
                                         {i + 1}
                                     </span>
@@ -527,7 +527,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                             {p.product_name}
                                         </p>
                                         <div style={{ height: "3px", backgroundColor: "#f5f5f5", overflow: "hidden" }}>
-                                            <div style={{ height: "100%", width: `${barWidth}%`, backgroundColor: i === 0 ? "#0A0A0A" : "#d1d5db", transition: "width 0.6s ease" }} />
+                                            <div style={{ height: "100%", width: `${barWidth}%`, backgroundColor: i === 0 ? "#5B8C5A" : "#d1d5db", transition: "width 0.6s ease" }} />
                                         </div>
                                     </div>
 

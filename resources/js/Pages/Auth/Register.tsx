@@ -21,12 +21,12 @@ export default function Register() {
 
     return (
         <div className="min-h-screen bg-brand-white flex">
-            <Head title="Create Account — SNEAKER.DRP" />
+            <Head title="Create Account — Walker Sneaker" />
 
             {/* ── Left panel: branding ── */}
             <div className="hidden lg:flex lg:w-1/2 bg-brand-charcoal flex-col justify-between p-16">
                 <Link href="/" className="text-2xl font-black tracking-tightest uppercase text-white">
-                    SNEAKER.DRP
+                    Walker Sneaker
                 </Link>
                 <div>
                     <p className="text-[9px] font-black uppercase tracking-[0.5em] text-white/20 mb-6">
@@ -48,7 +48,7 @@ export default function Register() {
                     {/* Mobile logo */}
                     <div className="lg:hidden mb-12 text-center">
                         <Link href="/" className="text-2xl font-black tracking-tightest uppercase text-brand-charcoal">
-                            SNEAKER.DRP
+                            Walker Sneaker
                         </Link>
                     </div>
 

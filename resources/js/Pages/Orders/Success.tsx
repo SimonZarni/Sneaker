@@ -46,13 +46,13 @@ export default function OrderSuccess({ order }: Props) {
     const isCOD = order.payment_method === "Cash on Delivery";
 
     return (
-        <div style={{ minHeight: "100vh", backgroundColor: "#F5F5F7", fontFamily: "inherit" }}>
+        <div style={{ minHeight: "100vh", backgroundColor: "#EEF3EE", fontFamily: "inherit" }}>
             <Head title={`Order Confirmed — ${order.order_number}`} />
 
             {/* ── NAVBAR ── */}
-            <nav style={{ backgroundColor: "#0A0A0A", padding: "0 40px", height: "56px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+            <nav style={{ backgroundColor: "#5B8C5A", padding: "0 40px", height: "56px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
                 <Link href={route("home")} style={{ fontSize: "15px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#fff", textDecoration: "none" }}>
-                    SNEAKER.DRP
+                    Walker Sneaker
                 </Link>
                 <Link href={route("orders.index")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
                     My Orders
@@ -64,7 +64,7 @@ export default function OrderSuccess({ order }: Props) {
                 {/* ── CONFIRMATION HEADER ── */}
                 <div style={{ textAlign: "center", marginBottom: "48px" }}>
                     {/* Checkmark */}
-                    <div style={{ width: "64px", height: "64px", borderRadius: "50%", backgroundColor: "#0A0A0A", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+                    <div style={{ width: "64px", height: "64px", borderRadius: "50%", backgroundColor: "#5B8C5A", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
                         <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#fff" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                         </svg>
@@ -77,7 +77,7 @@ export default function OrderSuccess({ order }: Props) {
                         Thank You!
                     </h1>
                     <p style={{ fontSize: "13px", color: "rgba(45,50,62,0.5)", fontWeight: 600 }}>
-                        Order <span style={{ fontWeight: 900, color: "#0A0A0A" }}>{order.order_number}</span> has been placed successfully.
+                        Order <span style={{ fontWeight: 900, color: "#5B8C5A" }}>{order.order_number}</span> has been placed successfully.
                     </p>
 
                     {isCOD && (
@@ -102,15 +102,15 @@ export default function OrderSuccess({ order }: Props) {
                                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: "none" }}>
                                         <div style={{
                                             width: "14px", height: "14px", borderRadius: "50%",
-                                            backgroundColor: done ? "#0A0A0A" : "#fff",
-                                            border: `2px solid ${done ? "#0A0A0A" : "#e5e7eb"}`,
+                                            backgroundColor: done ? "#5B8C5A" : "#fff",
+                                            border: `2px solid ${done ? "#5B8C5A" : "#e5e7eb"}`,
                                             transform: active ? "scale(1.3)" : "scale(1)",
                                             transition: "all 0.2s",
                                         }} />
                                         <span style={{
                                             marginTop: "10px", fontSize: "9px", fontWeight: 900,
                                             textTransform: "uppercase", letterSpacing: "0.1em",
-                                            color: active ? "#0A0A0A" : done ? "rgba(45,50,62,0.5)" : "rgba(45,50,62,0.2)",
+                                            color: active ? "#5B8C5A" : done ? "rgba(45,50,62,0.5)" : "rgba(45,50,62,0.2)",
                                             whiteSpace: "nowrap",
                                         }}>
                                             {step}
@@ -124,7 +124,7 @@ export default function OrderSuccess({ order }: Props) {
                                     {i < DELIVERY_STEPS.length - 1 && (
                                         <div style={{
                                             flex: 1, height: "2px", marginTop: "6px", marginBottom: "24px",
-                                            backgroundColor: i < currentStep ? "#0A0A0A" : "#e5e7eb",
+                                            backgroundColor: i < currentStep ? "#5B8C5A" : "#e5e7eb",
                                             transition: "background-color 0.3s",
                                         }} />
                                     )}
@@ -162,7 +162,7 @@ export default function OrderSuccess({ order }: Props) {
                                     </p>
                                     <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
                                         {[item.size_value, item.color_name, `Qty: ${item.quantity}`].map((tag) => (
-                                            <span key={tag} style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", backgroundColor: "#f5f5f7", padding: "2px 8px", color: "rgba(45,50,62,0.5)" }}>
+                                            <span key={tag} style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", backgroundColor: "#EEF3EE", padding: "2px 8px", color: "rgba(45,50,62,0.5)" }}>
                                                 {tag}
                                             </span>
                                         ))}
@@ -191,7 +191,7 @@ export default function OrderSuccess({ order }: Props) {
                                 Ship To
                             </p>
                             <div style={{ fontSize: "12px", fontWeight: 600, color: "rgba(45,50,62,0.7)", lineHeight: 1.8 }}>
-                                <p style={{ fontWeight: 900, color: "#0A0A0A" }}>{order.shipping_full_name}</p>
+                                <p style={{ fontWeight: 900, color: "#5B8C5A" }}>{order.shipping_full_name}</p>
                                 <p>{order.shipping_phone}</p>
                                 <p>{order.shipping_address_line}</p>
                                 <p>
@@ -243,7 +243,7 @@ export default function OrderSuccess({ order }: Props) {
                         {/* CTAs */}
                         <Link
                             href={route("orders.show", order.id)}
-                            style={{ display: "block", padding: "14px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", textAlign: "center", textDecoration: "none" }}
+                            style={{ display: "block", padding: "14px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", textAlign: "center", textDecoration: "none" }}
                         >
                             View Order Details
                         </Link>

@@ -86,7 +86,7 @@ export default function AdminInventoryIndex({ variants, stats, filters, admin }:
             {/* ── STAT CARDS ── */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
                 {[
-                    { label: "Total Variants", value: stats.total,   bg: "#0A0A0A", text: "#fff",     sub: "rgba(255,255,255,0.4)" },
+                    { label: "Total Variants", value: stats.total,   bg: "#5B8C5A", text: "#fff",     sub: "rgba(255,255,255,0.4)" },
                     { label: "Out of Stock",   value: stats.out,     bg: "#fef2f2", text: "#dc2626",  sub: "rgba(220,38,38,0.5)"   },
                     { label: "Low Stock",      value: stats.low,     bg: "#fffbeb", text: "#d97706",  sub: "rgba(217,119,6,0.5)"   },
                     { label: "Healthy",        value: stats.healthy, bg: "#ecfdf5", text: "#065f46",  sub: "rgba(6,95,70,0.5)"     },
@@ -111,7 +111,7 @@ export default function AdminInventoryIndex({ variants, stats, filters, admin }:
                             const active = filters.filter === tab.value;
                             return (
                                 <button key={tab.value} onClick={() => apply({ filter: tab.value, search })}
-                                    style={{ padding: "8px 16px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: `1px solid ${active ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: active ? "#0A0A0A" : "#fff", color: active ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer" }}>
+                                    style={{ padding: "8px 16px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: `1px solid ${active ? "#5B8C5A" : "#e5e7eb"}`, backgroundColor: active ? "#5B8C5A" : "#fff", color: active ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer" }}>
                                     {tab.label}
                                     <span style={{ marginLeft: "6px", fontSize: "8px", opacity: 0.6 }}>({tab.count})</span>
                                 </button>
@@ -129,7 +129,7 @@ export default function AdminInventoryIndex({ variants, stats, filters, admin }:
                             style={{ border: "1px solid #e5e7eb", padding: "8px 14px", fontSize: "12px", outline: "none", width: "220px", fontFamily: "inherit" }}
                         />
                         <button onClick={() => apply({ search, filter: filters.filter })}
-                            style={{ padding: "8px 20px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: "none", cursor: "pointer" }}>
+                            style={{ padding: "8px 20px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.1em", border: "none", cursor: "pointer" }}>
                             Search
                         </button>
                         {(filters.search || filters.filter !== 'all') && (
@@ -201,7 +201,7 @@ export default function AdminInventoryIndex({ variants, stats, filters, admin }:
                                                 onChange={e => setEditValue(e.target.value)}
                                                 onKeyDown={e => handleKeyDown(e, v.id)}
                                                 onBlur={() => saveEdit(v.id)}
-                                                style={{ width: "70px", border: "2px solid #0A0A0A", padding: "4px 8px", fontSize: "12px", fontWeight: 900, outline: "none", fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }}
+                                                style={{ width: "70px", border: "2px solid #5B8C5A", padding: "4px 8px", fontSize: "12px", fontWeight: 900, outline: "none", fontFamily: "inherit", fontVariantNumeric: "tabular-nums" }}
                                                 autoFocus
                                             />
                                         ) : (

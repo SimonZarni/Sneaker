@@ -25,12 +25,12 @@ export default function Login({
 
     return (
         <div className="min-h-screen bg-brand-white flex">
-            <Head title="Sign In — SNEAKER.DRP" />
+            <Head title="Sign In — Walker Sneaker" />
 
             {/* ── Left panel: branding ── */}
             <div className="hidden lg:flex lg:w-1/2 bg-brand-charcoal flex-col justify-between p-16">
                 <Link href="/" className="text-2xl font-black tracking-tightest uppercase text-white">
-                    SNEAKER.DRP
+                    Walker Sneaker
                 </Link>
 
                 <div>
@@ -54,7 +54,7 @@ export default function Login({
                     {/* Mobile logo */}
                     <div className="lg:hidden mb-12 text-center">
                         <Link href="/" className="text-2xl font-black tracking-tightest uppercase text-brand-charcoal">
-                            SNEAKER.DRP
+                            Walker Sneaker
                         </Link>
                     </div>
 
@@ -99,7 +99,7 @@ export default function Login({
                                         <p className="text-[9px] font-black uppercase tracking-wide text-amber-700">
                                             {errors.email}
                                         </p>
-                                        <a href="mailto:support@sneaker.drp" className="text-[9px] font-black uppercase tracking-wide text-amber-600 border-b border-amber-400 mt-1 inline-block">
+                                        <a href="mailto:support@Walker Sneaker" className="text-[9px] font-black uppercase tracking-wide text-amber-600 border-b border-amber-400 mt-1 inline-block">
                                             Contact Support →
                                         </a>
                                     </div>

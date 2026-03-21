@@ -180,7 +180,7 @@ export default function AdminProductsCreate({ brands, categories, genders, color
                                 <button
                                     type="button"
                                     onClick={addVariant}
-                                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "none", cursor: "pointer" }}
+                                    style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 16px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "none", cursor: "pointer" }}
                                 >
                                     <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -194,7 +194,7 @@ export default function AdminProductsCreate({ brands, categories, genders, color
                                     <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(45,50,62,0.3)", marginBottom: "12px" }}>
                                         No colorways added yet
                                     </p>
-                                    <button type="button" onClick={addVariant} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#0A0A0A", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid #0A0A0A", paddingBottom: "1px" }}>
+                                    <button type="button" onClick={addVariant} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#5B8C5A", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid #5B8C5A", paddingBottom: "1px" }}>
                                         + Add first colorway
                                     </button>
                                 </div>
@@ -286,7 +286,7 @@ export default function AdminProductsCreate({ brands, categories, genders, color
                                             />
                                         </div>
                                         {data.sale_price && data.base_price && parseFloat(data.sale_price) < parseFloat(data.base_price) && (
-                                            <p style={{ fontSize: "9px", color: "#0A0A0A", fontWeight: 700, marginTop: "4px" }}>
+                                            <p style={{ fontSize: "9px", color: "#5B8C5A", fontWeight: 700, marginTop: "4px" }}>
                                                 Saving ${(parseFloat(data.base_price) - parseFloat(data.sale_price)).toFixed(2)} ({Math.round((1 - parseFloat(data.sale_price)/parseFloat(data.base_price))*100)}% off)
                                             </p>
                                         )}
@@ -311,7 +311,7 @@ export default function AdminProductsCreate({ brands, categories, genders, color
                                                 key={String(opt.value)}
                                                 type="button"
                                                 onClick={() => setData("is_active", opt.value)}
-                                                style={{ flex: 1, padding: "10px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: `1px solid ${data.is_active === opt.value ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: data.is_active === opt.value ? "#0A0A0A" : "#fff", color: data.is_active === opt.value ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer" }}
+                                                style={{ flex: 1, padding: "10px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: `1px solid ${data.is_active === opt.value ? "#5B8C5A" : "#e5e7eb"}`, backgroundColor: data.is_active === opt.value ? "#5B8C5A" : "#fff", color: data.is_active === opt.value ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer" }}
                                             >
                                                 {opt.label}
                                             </button>
@@ -336,7 +336,7 @@ export default function AdminProductsCreate({ brands, categories, genders, color
                         <button
                             type="submit"
                             disabled={processing}
-                            style={{ width: "100%", padding: "16px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", border: "none", cursor: processing ? "not-allowed" : "pointer", opacity: processing ? 0.5 : 1 }}
+                            style={{ width: "100%", padding: "16px", backgroundColor: "#5B8C5A", color: "#fff", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", border: "none", cursor: processing ? "not-allowed" : "pointer", opacity: processing ? 0.5 : 1 }}
                         >
                             {processing ? "Creating..." : "Create Product"}
                         </button>
@@ -437,9 +437,9 @@ function VariantBuilder({
                                     onClick={() => onToggleSize(size.id)}
                                     style={{
                                         padding: "7px 10px", fontSize: "10px", fontWeight: 900,
-                                        border: `1px solid ${isChecked ? "#0A0A0A" : "#e5e7eb"}`,
+                                        border: `1px solid ${isChecked ? "#5B8C5A" : "#e5e7eb"}`,
                                         borderBottom: isChecked ? "none" : `1px solid #e5e7eb`,
-                                        backgroundColor: isChecked ? "#0A0A0A" : "#fff",
+                                        backgroundColor: isChecked ? "#5B8C5A" : "#fff",
                                         color: isChecked ? "#fff" : "rgba(45,50,62,0.4)",
                                         cursor: "pointer", transition: "all 0.1s",
                                         width: "58px", textAlign: "center",
@@ -449,7 +449,7 @@ function VariantBuilder({
                                 </button>
                                 {/* Stock input — only shown when size is selected */}
                                 {isChecked && entry && (
-                                    <div style={{ width: "58px", border: "1px solid #0A0A0A", borderTop: "1px solid #333", backgroundColor: "#fff" }}>
+                                    <div style={{ width: "58px", border: "1px solid #5B8C5A", borderTop: "1px solid #333", backgroundColor: "#fff" }}>
                                         <p style={{ fontSize: "7px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.35)", textAlign: "center", paddingTop: "4px", marginBottom: "1px" }}>
                                             Stock
                                         </p>

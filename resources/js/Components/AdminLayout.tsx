@@ -98,7 +98,7 @@ export default function AdminLayout({
             {/* ── SIDEBAR ── */}
             <aside style={{
                 position: "fixed", left: 0, top: 0, height: "100%", width: "224px",
-                backgroundColor: "#0A0A0A", color: "#fff", display: "flex",
+                backgroundColor: "#5B8C5A", color: "#fff", display: "flex",
                 flexDirection: "column", zIndex: 50,
             }}>
                 <div style={{ padding: "32px", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
@@ -106,7 +106,7 @@ export default function AdminLayout({
                         Admin Panel
                     </p>
                     <h1 style={{ fontSize: "18px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em" }}>
-                        SNEAKER.DRP
+                        Walker Sneaker
                     </h1>
                 </div>
 

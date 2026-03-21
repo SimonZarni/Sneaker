@@ -21,7 +21,7 @@ export default function Home({ featured }: any) {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="SNEAKER.DRP — The Vault" />
+            <Head title="Walker Sneaker — The Vault" />
 
             {/* NAVIGATION WRAPPER */}
             <nav
@@ -46,7 +46,7 @@ export default function Home({ featured }: any) {
                     </div>
 
                     <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
-                        <Link href="/">SNEAKER.DRP</Link>
+                        <Link href="/">Walker Sneaker</Link>
                     </h1>
                     <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
                         {auth?.user ? (
