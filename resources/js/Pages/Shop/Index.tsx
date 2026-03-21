@@ -69,13 +69,13 @@ export default function ShopIndex({ products, brands, categories, genders, filte
 
     return (
         <div style={{ minHeight: "100vh", backgroundColor: "#fff", fontFamily: "inherit" }}>
-            <Head title="Shop — Walker Sneaker Store" />
+            <Head title="Shop — SNEAKER.DRP" />
 
             {/* ── NAV ── */}
             <nav style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: 0, zIndex: 50 }}>
                 <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#0A0A0A", textDecoration: "none" }}>
-                        Walker Sneaker Store
+                        SNEAKER.DRP
                     </Link>
 
                     <div style={{ display: "flex", alignItems: "center", gap: "32px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>

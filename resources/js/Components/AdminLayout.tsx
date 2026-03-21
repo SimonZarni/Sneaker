@@ -106,7 +106,7 @@ export default function AdminLayout({
                         Admin Panel
                     </p>
                     <h1 style={{ fontSize: "18px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.03em" }}>
-                        Walker Sneaker Store
+                        SNEAKER.DRP
                     </h1>
                 </div>
 
