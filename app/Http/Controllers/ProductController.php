@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Brand;
-use App\Models\Category;
-use App\Models\Gender;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\Order;
@@ -36,7 +33,10 @@ class ProductController extends Controller
             ? Wishlist::where('user_id', Auth::id())->pluck('product_id')->all()
             : [];
 
-        $products = $query->get()->map(fn($p) => [
+        // paginate(16) instead of get() — never loads the full catalogue into memory.
+        // Brands/categories/genders are already shared via the navigation prop in
+        // HandleInertiaRequests, so we don't need to fetch them again here.
+        $products = $query->paginate(16)->through(fn($p) => [
             'id'              => $p->id,
             'name'            => $p->name,
             'base_price'      => $p->base_price,
@@ -51,12 +51,8 @@ class ProductController extends Controller
         ]);
 
         return Inertia::render('Shop/Index', [
-            'products'   => $products,
-            'brands'     => Brand::orderBy('name')->get(['id', 'name']),
-            'categories' => Category::orderBy('name')->get(['id', 'name']),
-            'genders'    => Gender::orderBy('name')->get(['id', 'name']),
-            'filters'    => $request->only(['brand', 'gender', 'category', 'search', 'sort']),
-            'total'      => Product::where('is_active', true)->count(),
+            'products' => $products,
+            'filters'  => $request->only(['brand', 'gender', 'category', 'search', 'sort']),
         ]);
     }
 
