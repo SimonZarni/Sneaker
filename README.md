@@ -66,7 +66,7 @@ Then open `.env` in any text editor (VS Code, Notepad, etc.) and update these li
 APP_NAME="SNEAKER.DRP"
 APP_URL=http://localhost:8000
 
-DB_DATABASE=sneaker_shop
+DB_DATABASE=sneaker_drp
 DB_USERNAME=root
 DB_PASSWORD=             ← your MySQL password here (leave blank if none)
 
@@ -94,13 +94,13 @@ You will see: `Application key set successfully.`
 Open your MySQL client (XAMPP's phpMyAdmin, Laragon's HeidiSQL, MySQL Workbench, or terminal) and create a new database:
 
 ```sql
-CREATE DATABASE sneaker_shop;
+CREATE DATABASE sneaker_drp;
 ```
 
 Or from terminal:
 
 ```bash
-mysql -u root -p -e "CREATE DATABASE sneaker_shop;"
+mysql -u root -p -e "CREATE DATABASE sneaker_drp;"
 ```
 
 ---
@@ -124,10 +124,6 @@ This fills the database with sample data — brands, products, sizes, colors, an
 ```bash
 # Seed everything (products + test user)
 php artisan db:seed
-
-# Seed the admin account separately
-php artisan db:seed --class=AdminSeeder
-```
 
 After seeding you will have:
 
