@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\SendOrderConfirmationEmail;
 use App\Models\Cart;
 use App\Models\Setting;
 use App\Models\Order;
@@ -260,18 +259,8 @@ class CheckoutController extends Controller
             // F. Clear the Cart
             $cart->items()->delete();
 
-            // G. Queue order confirmation email.
-            // Wrapped in try/catch so any mail failure (SMTP timeout, bad credentials,
-            // blocked port) never crashes checkout — the order is already confirmed.
-            try {
-                SendOrderConfirmationEmail::dispatch($order);
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to dispatch order confirmation email', [
-                    'order_id' => $order->id,
-                    'error'    => $e->getMessage(),
-                ]);
-            }
-
+            // return redirect()->route('shop.index')
+            //     ->with('success', "Order {$order->order_number} secured successfully.");
             return redirect()->route('orders.success', $order->id);
         });
     }
