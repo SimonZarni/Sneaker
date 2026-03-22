@@ -272,10 +272,31 @@ class CheckoutController extends Controller
         // caught silently and logged — checkout always succeeds regardless.
         try {
             $freshOrder = \App\Models\Order::with(['items', 'payment'])->find($order->id);
+            $deliverable = $this->emailLikelyDeliverable($user->email);
 
-            if ($freshOrder && $this->emailLikelyDeliverable($user->email)) {
+            Log::info('Order confirmation email attempt', [
+                'user_id'     => $user->id,
+                'email'       => $user->email,
+                'order_id'    => $order->id,
+                'order_num'   => $order->order_number,
+                'deliverable' => $deliverable,
+                'mailer'      => config('mail.default'),
+            ]);
+
+            if ($freshOrder && $deliverable) {
                 Mail::to($user->email, $user->name)
                     ->send(new OrderConfirmation($freshOrder));
+
+                Log::info('Order confirmation email sent', [
+                    'email'    => $user->email,
+                    'order'    => $order->order_number,
+                ]);
+            } else {
+                Log::info('Order confirmation email skipped', [
+                    'email'       => $user->email,
+                    'deliverable' => $deliverable,
+                    'order'       => $order->order_number,
+                ]);
             }
         } catch (\Throwable $e) {
             Log::warning('Order confirmation email failed', [
@@ -283,6 +304,7 @@ class CheckoutController extends Controller
                 'email'    => $user->email,
                 'order'    => $order->order_number ?? 'unknown',
                 'error'    => $e->getMessage(),
+                'trace'    => $e->getTraceAsString(),
             ]);
         }
 
