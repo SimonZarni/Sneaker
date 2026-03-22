@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\OrderDelivered;
 use App\Models\Order;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class AdminOrderController extends Controller
@@ -110,6 +113,35 @@ class AdminOrderController extends Controller
 
             $order->update(['delivery_status' => $request->delivery_status]);
         });
+
+        // Send delivered email when order reaches final Delivered state.
+        // Runs outside the transaction — a mail failure never rolls back the status update.
+        if ($request->delivery_status === 'Delivered') {
+            try {
+                $delivered = Order::with(['items', 'payment', 'user'])->find($id);
+
+                if ($delivered && $delivered->user && $delivered->user->email) {
+                    $domain = substr(strrchr($delivered->user->email, '@'), 1);
+                    $skipDomains = ['example.com', 'example.net', 'example.org', 'test.com', 'localhost'];
+                    $deliverable = $domain && !in_array(strtolower($domain), $skipDomains) && @getmxrr($domain, $hosts);
+
+                    if ($deliverable) {
+                        Mail::to($delivered->user->email, $delivered->user->name)
+                            ->send(new OrderDelivered($delivered));
+
+                        Log::info('Order delivered email sent', [
+                            'order_id' => $id,
+                            'email'    => $delivered->user->email,
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Order delivered email failed', [
+                    'order_id' => $id,
+                    'error'    => $e->getMessage(),
+                ]);
+            }
+        }
 
         return back()->with('success', "Order updated to {$request->delivery_status}.");
     }
