@@ -265,6 +265,10 @@ class CheckoutController extends Controller
             return $order; // Return order from transaction so we can email after
         });
 
+        // Bust the admin dashboard stats cache so the new order shows
+        // immediately instead of waiting up to 5 minutes for TTL expiry.
+        \Illuminate\Support\Facades\Cache::forget('dashboard.stats');
+
         // ── Send order confirmation email ─────────────────────────────────────
         // Runs outside the DB transaction so a mail failure never rolls back
         // the order. Uses DNS MX check to skip obviously fake/seeded addresses
@@ -276,7 +280,9 @@ class CheckoutController extends Controller
 
             Log::info('Order confirmation email attempt', [
                 'user_id'     => $user->id,
+                'email'       => $user->email,
                 'order_id'    => $order->id,
+                'order_num'   => $order->order_number,
                 'deliverable' => $deliverable,
                 'mailer'      => config('mail.default'),
             ]);
@@ -286,21 +292,23 @@ class CheckoutController extends Controller
                     ->send(new OrderConfirmation($freshOrder));
 
                 Log::info('Order confirmation email sent', [
-                    'user_id'  => $user->id,
-                    'order_id' => $order->id,
+                    'email'    => $user->email,
+                    'order'    => $order->order_number,
                 ]);
             } else {
                 Log::info('Order confirmation email skipped', [
-                    'user_id'     => $user->id,
-                    'order_id'    => $order->id,
+                    'email'       => $user->email,
                     'deliverable' => $deliverable,
+                    'order'       => $order->order_number,
                 ]);
             }
         } catch (\Throwable $e) {
             Log::warning('Order confirmation email failed', [
                 'user_id'  => $user->id,
-                'order_id' => $order->id,
+                'email'    => $user->email,
+                'order'    => $order->order_number ?? 'unknown',
                 'error'    => $e->getMessage(),
+                'trace'    => $e->getTraceAsString(),
             ]);
         }
 

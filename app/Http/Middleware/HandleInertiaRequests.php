@@ -54,9 +54,14 @@ class HandleInertiaRequests extends Middleware
                                 $q->where('is_active', true)
                             )
                         ),
-                        'items.productVariant.product',
-                        'items.productVariant.size',
-                        'items.productVariant.color',
+                        // Select only columns needed by the cart drawer —
+                        // excludes description (TEXT), created_by_admin_id etc.
+                        'items.productVariant.product' => fn($q) => $q->select(
+                            'id', 'name', 'base_price', 'sale_price',
+                            'sale_ends_at', 'main_image_url', 'is_active'
+                        ),
+                        'items.productVariant.size'  => fn($q) => $q->select('id', 'size_value'),
+                        'items.productVariant.color' => fn($q) => $q->select('id', 'name', 'hex_code'),
                     ])->where('user_id', Auth::id())->first();
 
                     if (!$cart) return null;
