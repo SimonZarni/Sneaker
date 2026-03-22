@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\OrderConfirmation;
 use App\Models\Cart;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use App\Models\Setting;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -136,7 +139,7 @@ class CheckoutController extends Controller
         $paymentStatus = $isCard ? 'Confirmed' : 'COD';
 
         // ── DB Transaction ────────────────────────────────────────────────────
-        return DB::transaction(function () use ($validated, $user, $cart, $subtotal, $totalAmount, $shippingFee, $isCard, $paymentStatus) {
+        $order = DB::transaction(function () use ($validated, $user, $cart, $subtotal, $totalAmount, $shippingFee, $isCard, $paymentStatus) {
 
             // A. Stock validation — acquire row-level write locks so two concurrent
             //    checkouts for the same variant cannot both read sufficient stock
@@ -259,10 +262,31 @@ class CheckoutController extends Controller
             // F. Clear the Cart
             $cart->items()->delete();
 
-            // return redirect()->route('shop.index')
-            //     ->with('success', "Order {$order->order_number} secured successfully.");
-            return redirect()->route('orders.success', $order->id);
+            return $order; // Return order from transaction so we can email after
         });
+
+        // ── Send order confirmation email ─────────────────────────────────────
+        // Runs outside the DB transaction so a mail failure never rolls back
+        // the order. Uses DNS MX check to skip obviously fake/seeded addresses
+        // before attempting SMTP delivery. Any remaining send failures are
+        // caught silently and logged — checkout always succeeds regardless.
+        try {
+            $freshOrder = \App\Models\Order::with(['items', 'payment'])->find($order->id);
+
+            if ($freshOrder && $this->emailLikelyDeliverable($user->email)) {
+                Mail::to($user->email, $user->name)
+                    ->send(new OrderConfirmation($freshOrder));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Order confirmation email failed', [
+                'user_id'  => $user->id,
+                'email'    => $user->email,
+                'order'    => $order->order_number ?? 'unknown',
+                'error'    => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()->route('orders.success', $order->id);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -272,6 +296,25 @@ class CheckoutController extends Controller
      * Retries on the rare chance of a collision (probability ~1 in 10^18 at low volumes).
      * Example output: SDRP-VLBZU376WIHD
      */
+    /**
+     * Quick deliverability check using DNS MX lookup.
+     * Returns false for domains with no mail server (e.g. @example.com, @faker.dev).
+     * This is a best-effort filter — not a guarantee of delivery.
+     */
+    private function emailLikelyDeliverable(string $email): bool
+    {
+        $domain = substr(strrchr($email, '@'), 1);
+
+        if (!$domain) return false;
+
+        // Skip obviously fake/test domains regardless of MX records
+        $skipDomains = ['example.com', 'example.net', 'example.org', 'test.com', 'localhost'];
+        if (in_array(strtolower($domain), $skipDomains)) return false;
+
+        // DNS MX lookup — if the domain has no mail server, skip sending
+        return (bool) @getmxrr($domain, $mxhosts);
+    }
+
     private function generateOrderNumber(): string
     {
         $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
