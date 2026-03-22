@@ -263,7 +263,7 @@ class CheckoutController extends Controller
             // G. Queue order confirmation email — dispatched after the transaction
             // commits so the job always sees a fully persisted order. The job
             // handles delivery failures silently so a bad email never affects checkout.
-            SendOrderConfirmationEmail::dispatch($order)->afterCommit();
+            SendOrderConfirmationEmail::dispatch($order);
 
             return redirect()->route('orders.success', $order->id);
         });
