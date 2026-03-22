@@ -260,10 +260,17 @@ class CheckoutController extends Controller
             // F. Clear the Cart
             $cart->items()->delete();
 
-            // G. Queue order confirmation email — dispatched after the transaction
-            // commits so the job always sees a fully persisted order. The job
-            // handles delivery failures silently so a bad email never affects checkout.
-            SendOrderConfirmationEmail::dispatch($order);
+            // G. Queue order confirmation email.
+            // Wrapped in try/catch so any mail failure (SMTP timeout, bad credentials,
+            // blocked port) never crashes checkout — the order is already confirmed.
+            try {
+                SendOrderConfirmationEmail::dispatch($order);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to dispatch order confirmation email', [
+                    'order_id' => $order->id,
+                    'error'    => $e->getMessage(),
+                ]);
+            }
 
             return redirect()->route('orders.success', $order->id);
         });
