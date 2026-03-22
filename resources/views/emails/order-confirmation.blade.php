@@ -65,18 +65,9 @@
             line-height: 1.7;
         }
         /* Order meta */
-        .meta-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
-            border-top: 1px solid #f0f0f0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .meta-cell {
-            padding: 22px 48px;
-            border-right: 1px solid #f0f0f0;
-        }
-        .meta-cell:last-child { border-right: none; }
+        .meta-table { width: 100%; border-collapse: collapse; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
+        .meta-cell { padding: 20px 24px; border-right: 1px solid #f0f0f0; width: 50%; vertical-align: top; }
+        .meta-cell-last { padding: 20px 24px; width: 50%; vertical-align: top; }
         .meta-label {
             font-size: 8px;
             font-weight: 900;
@@ -104,67 +95,29 @@
             margin-bottom: 20px;
         }
         /* Items */
-        .item {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 14px 0;
-            border-bottom: 1px solid #f5f5f7;
-        }
-        .item:last-child { border-bottom: none; }
-        .item-name {
-            font-size: 13px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -0.01em;
-            margin-bottom: 4px;
-        }
-        .item-meta {
-            font-size: 10px;
-            font-weight: 600;
-            color: rgba(45,50,62,0.45);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .item-price {
-            font-size: 13px;
-            font-weight: 900;
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-            margin-left: 24px;
-        }
+        .items-table { width: 100%; border-collapse: collapse; }
+        .items-table td { padding: 14px 0; border-bottom: 1px solid #f5f5f7; vertical-align: top; }
+        .items-table tr:last-child td { border-bottom: none; }
+        .item-name { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: -0.01em; margin-bottom: 4px; }
+        .item-meta { font-size: 10px; font-weight: 600; color: rgba(45,50,62,0.45); text-transform: uppercase; letter-spacing: 0.05em; }
+        .item-price { font-size: 13px; font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; padding-left: 24px; }
         /* Totals */
         .totals { padding: 0 48px 32px; }
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 9px 0;
-            border-bottom: 1px solid #f5f5f7;
-        }
-        .total-row:last-child { border-bottom: none; }
+        .totals table { width: 100%; border-collapse: collapse; }
+        .totals td { padding: 9px 0; border-bottom: 1px solid #f5f5f7; vertical-align: middle; }
+        .totals tr:last-child td { border-bottom: none; }
         .total-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            color: rgba(45,50,62,0.5);
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.15em;
+            color: rgba(45,50,62,0.5); text-align: left;
         }
         .total-value {
-            font-size: 12px;
-            font-weight: 900;
+            font-size: 12px; font-weight: 900;
             font-variant-numeric: tabular-nums;
+            text-align: right; white-space: nowrap;
         }
-        .total-row.grand .total-label {
-            font-size: 11px;
-            font-weight: 900;
-            color: #0a0a0a;
-        }
-        .total-row.grand .total-value {
-            font-size: 20px;
-            font-weight: 900;
-            letter-spacing: -0.03em;
-        }
+        .grand .total-label { font-size: 11px; font-weight: 900; color: #0a0a0a; }
+        .grand .total-value { font-size: 20px; font-weight: 900; letter-spacing: -0.03em; }
         /* Address */
         .address-block {
             font-size: 12px;
@@ -222,7 +175,7 @@
 
         {{-- Header --}}
         <div class="header">
-            <div class="header-brand">Walker Sneaker Store</div>
+            <div class="header-brand">SNEAKER.DRP</div>
             <div class="header-sub">Order Confirmation</div>
         </div>
 
@@ -237,33 +190,38 @@
         </div>
 
         {{-- Order meta --}}
-        <div class="meta-grid">
-            <div class="meta-cell">
-                <div class="meta-label">Order Number</div>
-                <div class="meta-value">{{ $order->order_number }}</div>
-            </div>
-            <div class="meta-cell">
-                <div class="meta-label">Date Placed</div>
-                <div class="meta-value">{{ $order->placed_at->format('M j, Y') }}</div>
-            </div>
-            <div class="meta-cell" style="border-top: 1px solid #f0f0f0;">
-                <div class="meta-label">Payment</div>
-                <div class="meta-value">
-                    {{ $order->payment?->payment_method === 'COD' ? 'Cash on Delivery' : 'Credit Card' }}
-                </div>
-            </div>
-            <div class="meta-cell" style="border-top: 1px solid #f0f0f0;">
-                <div class="meta-label">Status</div>
-                <div class="meta-value">{{ $order->delivery_status }}</div>
-            </div>
-        </div>
+        <table class="meta-table">
+            <tr>
+                <td class="meta-cell">
+                    <div class="meta-label">Order Number</div>
+                    <div class="meta-value">{{ $order->order_number }}</div>
+                </td>
+                <td class="meta-cell-last">
+                    <div class="meta-label">Date Placed</div>
+                    <div class="meta-value">{{ $order->placed_at->format('M j, Y') }}</div>
+                </td>
+            </tr>
+            <tr>
+                <td class="meta-cell" style="border-top: 1px solid #f0f0f0;">
+                    <div class="meta-label">Payment</div>
+                    <div class="meta-value">
+                        {{ $order->payment?->payment_method === 'COD' ? 'Cash on Delivery' : 'Credit Card' }}
+                    </div>
+                </td>
+                <td class="meta-cell-last" style="border-top: 1px solid #f0f0f0;">
+                    <div class="meta-label">Status</div>
+                    <div class="meta-value">{{ $order->delivery_status }}</div>
+                </td>
+            </tr>
+        </table>
 
         {{-- Order Items --}}
         <div class="section">
             <div class="section-title">Order Summary</div>
-            @foreach($order->items as $item)
-                <div class="item">
-                    <div>
+            <table class="items-table">
+                @foreach($order->items as $item)
+                <tr>
+                    <td>
                         <div class="item-name">{{ $item->product_name }}</div>
                         <div class="item-meta">
                             {{ $item->brand_name }} &nbsp;·&nbsp;
@@ -271,10 +229,11 @@
                             US {{ $item->size_value }} &nbsp;·&nbsp;
                             Qty {{ $item->quantity }}
                         </div>
-                    </div>
-                    <div class="item-price">${{ number_format($item->subtotal, 2) }}</div>
-                </div>
-            @endforeach
+                    </td>
+                    <td class="item-price">${{ number_format($item->subtotal, 2) }}</td>
+                </tr>
+                @endforeach
+            </table>
         </div>
 
         {{-- Totals --}}
@@ -283,20 +242,20 @@
                 $subtotal = $order->items->sum(fn($i) => (float) $i->subtotal);
                 $shipping = (float) $order->shipping_fee;
             @endphp
-            <div class="total-row">
-                <span class="total-label">Subtotal</span>
-                <span class="total-value">${{ number_format($subtotal, 2) }}</span>
-            </div>
-            <div class="total-row">
-                <span class="total-label">Shipping</span>
-                <span class="total-value">
-                    {{ $shipping > 0 ? '$' . number_format($shipping, 2) : 'Free' }}
-                </span>
-            </div>
-            <div class="total-row grand">
-                <span class="total-label">Total Charged</span>
-                <span class="total-value">${{ number_format($order->total_amount, 2) }}</span>
-            </div>
+            <table>
+                <tr>
+                    <td class="total-label">Subtotal</td>
+                    <td class="total-value">${{ number_format($subtotal, 2) }}</td>
+                </tr>
+                <tr>
+                    <td class="total-label">Shipping</td>
+                    <td class="total-value">{{ $shipping > 0 ? '$' . number_format($shipping, 2) : 'Free' }}</td>
+                </tr>
+                <tr class="grand">
+                    <td class="total-label">Total Charged</td>
+                    <td class="total-value">${{ number_format($order->total_amount, 2) }}</td>
+                </tr>
+            </table>
         </div>
 
         {{-- Shipping Address --}}
@@ -324,9 +283,9 @@
 
         {{-- Footer --}}
         <div class="footer">
-            <div class="footer-brand">Walker Sneaker Store</div>
+            <div class="footer-brand">SNEAKER.DRP</div>
             <div class="footer-text">
-                Questions? Contact us at support@walkersneakerstore.com<br>
+                Questions? Contact us at support@sneaker.drp<br>
                 You're receiving this because you placed an order with us.
             </div>
         </div>
