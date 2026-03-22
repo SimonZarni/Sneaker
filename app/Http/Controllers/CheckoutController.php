@@ -276,9 +276,7 @@ class CheckoutController extends Controller
 
             Log::info('Order confirmation email attempt', [
                 'user_id'     => $user->id,
-                'email'       => $user->email,
                 'order_id'    => $order->id,
-                'order_num'   => $order->order_number,
                 'deliverable' => $deliverable,
                 'mailer'      => config('mail.default'),
             ]);
@@ -288,23 +286,21 @@ class CheckoutController extends Controller
                     ->send(new OrderConfirmation($freshOrder));
 
                 Log::info('Order confirmation email sent', [
-                    'email'    => $user->email,
-                    'order'    => $order->order_number,
+                    'user_id'  => $user->id,
+                    'order_id' => $order->id,
                 ]);
             } else {
                 Log::info('Order confirmation email skipped', [
-                    'email'       => $user->email,
+                    'user_id'     => $user->id,
+                    'order_id'    => $order->id,
                     'deliverable' => $deliverable,
-                    'order'       => $order->order_number,
                 ]);
             }
         } catch (\Throwable $e) {
             Log::warning('Order confirmation email failed', [
                 'user_id'  => $user->id,
-                'email'    => $user->email,
-                'order'    => $order->order_number ?? 'unknown',
+                'order_id' => $order->id,
                 'error'    => $e->getMessage(),
-                'trace'    => $e->getTraceAsString(),
             ]);
         }
 

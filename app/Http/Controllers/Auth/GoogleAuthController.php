@@ -38,18 +38,20 @@ class GoogleAuthController extends Controller
             $user = User::where('email', $googleUser->getEmail())->first();
 
             if ($user) {
-                // Account exists — link Google ID to it
-                $user->update(['google_id' => $googleUser->getId()]);
+                // Account exists — link Google ID via explicit assignment
+                // (not update() since google_id is not in $fillable)
+                $user->google_id = $googleUser->getId();
+                $user->save();
             } else {
                 // 3. Brand new user — create account from Google profile
-                $user = User::create([
-                    'name'              => $googleUser->getName(),
-                    'email'             => $googleUser->getEmail(),
-                    'google_id'         => $googleUser->getId(),
-                    'email_verified_at' => now(), // Google emails are already verified
-                    'password'          => null,  // No password for Google-only accounts
-                    'is_active'         => true,
-                ]);
+                $user = new User();
+                $user->name              = $googleUser->getName();
+                $user->email             = $googleUser->getEmail();
+                $user->google_id         = $googleUser->getId();
+                $user->email_verified_at = now();
+                $user->password          = null;
+                $user->is_active         = true;
+                $user->save();
             }
         }
 
