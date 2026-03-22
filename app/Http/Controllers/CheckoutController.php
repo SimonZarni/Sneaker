@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendOrderConfirmationEmail;
 use App\Models\Cart;
 use App\Models\Setting;
 use App\Models\Order;
@@ -259,8 +260,11 @@ class CheckoutController extends Controller
             // F. Clear the Cart
             $cart->items()->delete();
 
-            // return redirect()->route('shop.index')
-            //     ->with('success', "Order {$order->order_number} secured successfully.");
+            // G. Queue order confirmation email — dispatched after the transaction
+            // commits so the job always sees a fully persisted order. The job
+            // handles delivery failures silently so a bad email never affects checkout.
+            SendOrderConfirmationEmail::dispatch($order)->afterCommit();
+
             return redirect()->route('orders.success', $order->id);
         });
     }
