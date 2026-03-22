@@ -25,8 +25,10 @@ class ReviewController extends Controller
         $userId    = Auth::id();
         $productId = $validated['product_id'];
 
-        // Verify the user has actually bought this product
+        // Verify the user has actually received this product
+        // Cancelled orders excluded — user never received the product
         $hasBought = Order::where('user_id', $userId)
+            ->where('order_status', '!=', 'Cancelled')
             ->whereHas('items', fn($q) => $q->where('product_id', $productId))
             ->exists();
 

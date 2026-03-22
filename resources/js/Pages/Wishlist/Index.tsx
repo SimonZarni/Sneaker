@@ -188,7 +188,7 @@ function WishlistCard({
             <Link href={route("shop.show", item.product_id)}>
                 <div className="aspect-square bg-brand-surface mb-5 overflow-hidden">
                     <img
-                        src={item.image_url || "https://via.placeholder.com/400"}
+                        src={item.image_url || "https://via.placeholder.com/400"} loading="lazy" decoding="async"
                         alt={item.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         style={{

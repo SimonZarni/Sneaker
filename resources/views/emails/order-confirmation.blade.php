@@ -285,7 +285,7 @@
         <div class="footer">
             <div class="footer-brand">SNEAKER.DRP</div>
             <div class="footer-text">
-                Questions? Contact us at support@sneaker.drp<br>
+                Questions? Contact us at {{ config('mail.from.address') }}<br>
                 You're receiving this because you placed an order with us.
             </div>
         </div>

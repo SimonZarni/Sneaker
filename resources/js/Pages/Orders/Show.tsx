@@ -404,7 +404,7 @@ export default function OrdersShow({ order }: Props) {
                                 <div key={item.id} className="flex gap-6 p-6 bg-brand-surface/20 border border-transparent">
                                     <div className="flex-shrink-0 w-24 h-24 bg-brand-surface overflow-hidden">
                                         {item.image_url
-                                            ? <img src={item.image_url} alt={item.product_name} className="w-full h-full object-contain mix-blend-multiply p-1" />
+                                            ? <img src={item.image_url} alt={item.product_name} loading="lazy" decoding="async" className="w-full h-full object-contain mix-blend-multiply p-1" />
                                             : <div className="w-full h-full flex items-center justify-center"><span className="text-[8px] font-black uppercase text-brand-slate/20">No Image</span></div>
                                         }
                                     </div>

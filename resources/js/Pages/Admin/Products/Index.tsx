@@ -161,7 +161,7 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
                         {/* Thumbnail */}
                         <div style={{ width: "48px", height: "48px", backgroundColor: "#f9fafb", overflow: "hidden", flexShrink: 0 }}>
                             {product.main_image_url
-                                ? <img src={product.main_image_url} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply", padding: "4px" }} />
+                                ? <img src={product.main_image_url} alt={product.name} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply", padding: "4px" }} />
                                 : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", color: "#d1d5db", fontWeight: 700 }}>IMG</div>
                             }
                         </div>

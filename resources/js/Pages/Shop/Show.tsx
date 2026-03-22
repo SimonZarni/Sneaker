@@ -188,7 +188,7 @@ export default function Show({
                 {/* Gallery */}
                 <div className="lg:w-[60%]">
                     <div className="aspect-[4/5] bg-brand-surface overflow-hidden border border-brand-surface">
-                        <img key={activeImage} src={activeImage} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt={product.name} />
+                        <img key={activeImage} src={activeImage} className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" alt={product.name} loading="lazy" decoding="async" />
                     </div>
                 </div>
 
@@ -400,7 +400,7 @@ function RelatedSection({ related }: { related: RelatedProduct[] }) {
                     {related.map(p => (
                         <Link key={p.id} href={route("shop.show", p.id)} className="block bg-brand-white p-6 group">
                             <div className="aspect-square bg-brand-surface mb-5 overflow-hidden">
-                                <img src={p.main_image_url || ""} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={p.name} />
+                                <img src={p.main_image_url || ""} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={p.name} loading="lazy" decoding="async" />
                             </div>
                             <p className="text-[9px] font-black uppercase text-brand-slate/35 mb-1">{p.brand}</p>
                             <h4 className="text-sm font-black uppercase mb-3">{p.name}</h4>

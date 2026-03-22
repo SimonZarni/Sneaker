@@ -293,7 +293,7 @@ function ProductCard({ product, auth }: { product: Product; auth: any }) {
                 </svg>
             </button>
             <div style={{ aspectRatio: "1/1", backgroundColor: "#F5F5F7", overflow: "hidden", marginBottom: "20px" }}>
-                <img src={product.main_image_url ?? "https://via.placeholder.com/600"} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", transform: hovered ? "scale(1.07)" : "scale(1)", transition: "transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94)", mixBlendMode: "multiply" }} />
+                <img src={product.main_image_url ?? "https://via.placeholder.com/600"} alt={product.name} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", transform: hovered ? "scale(1.07)" : "scale(1)", transition: "transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94)", mixBlendMode: "multiply" }} />
             </div>
             <div>
                 <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.25em", color: "rgba(45,50,62,0.35)", marginBottom: "6px" }}>{product.brand.name}</p>
