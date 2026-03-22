@@ -57,7 +57,7 @@
         {{-- Header --}}
         <div class="header">
             <div class="header-brand">SNEAKER.DRP</div>
-            <div class="header-sub">Delivery Confirmed</div>
+            <div class="header-sub">Package Delivered</div>
         </div>
 
         {{-- Hero --}}
