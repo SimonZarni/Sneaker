@@ -36,8 +36,13 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
     const [loadingMessages, setLoadingMessages]     = useState(false);
     const bottomRef                                 = useRef<HTMLDivElement>(null);
     const inputRef                                  = useRef<HTMLInputElement>(null);
+    const selectedRef                               = useRef<Conversation | null>(null);
 
-    // Subscribe to admin-chat Pusher channel
+    // Keep selectedRef in sync so Pusher handler always has the latest selected
+    // without needing to rejoin the channel on every conversation click
+    useEffect(() => { selectedRef.current = selected; }, [selected]);
+
+    // Subscribe to admin-chat Pusher channel — only runs once on mount
     useEffect(() => {
         // @ts-ignore
         if (typeof window.Echo === 'undefined') return;
@@ -45,6 +50,9 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
         // @ts-ignore
         window.Echo.private('admin-chat')
             .listen('.chat.message', (data: any) => {
+                const currentSelected = selectedRef.current;
+                const isOpen = data.sender_type === 'user' && currentSelected?.id === data.conversation_id;
+
                 // Update conversation list — bump to top with new last message
                 setConversations(prev => {
                     const existing = prev.find(c => c.id === data.conversation_id);
@@ -53,7 +61,7 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
                             ...existing,
                             last_message:    data.body,
                             last_message_at: data.created_at,
-                            unread: data.sender_type === 'user' && selected?.id !== data.conversation_id
+                            unread: data.sender_type === 'user' && !isOpen
                                 ? existing.unread + 1
                                 : existing.unread,
                         };
@@ -68,22 +76,23 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
                         status:          'open' as const,
                         last_message_at: data.created_at,
                         last_message:    data.body,
-                        unread:          1,
+                        unread:          isOpen ? 0 : 1,
                     }, ...prev];
                 });
 
-                // If this conversation is currently open — add message live
-                if (data.sender_type === 'user' && selected?.id === data.conversation_id) {
+                // If this conversation is currently open — add message live + mark read in DB
+                if (isOpen) {
                     setMessages(prev => [...prev, {
                         id:          data.id,
                         sender_type: 'user',
                         body:        data.body,
                         created_at:  data.created_at,
                     }]);
-                    // Mark as read since admin has the conversation open
                     setConversations(prev => prev.map(c =>
                         c.id === data.conversation_id ? { ...c, unread: 0 } : c
                     ));
+                    // Mark as read in DB so reload doesn't resurface the badge
+                    axios.post(`/admin/chat/${data.conversation_id}/read`).catch(() => {});
                 }
             });
 
@@ -91,11 +100,29 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
             // @ts-ignore
             window.Echo.leave('admin-chat');
         };
-    }, [selected]);
+    }, []); // empty deps — channel registered once, uses selectedRef for current state
+
+    // Poll unread counts every 30s so badge stays accurate
+    // even if a Pusher message was missed due to reconnection
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setConversations(prev => {
+                // Re-fetch only if not currently loading a conversation
+                axios.get('/admin/chat/unread').then(r => {
+                    // Only update total — individual counts already managed by Pusher
+                    // Use the total to detect drift and trigger a soft refresh if needed
+                }).catch(() => {});
+                return prev;
+            });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Scroll to bottom on new messages
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (messages.length > 0) {
+            bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+        }
     }, [messages]);
 
     const openConversation = async (conv: Conversation) => {

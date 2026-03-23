@@ -112,6 +112,22 @@ class AdminChatController extends Controller
     }
 
     /**
+     * Mark all user messages in a conversation as read.
+     * Called when admin receives a Pusher message while the conversation is open.
+     */
+    public function markRead(int $id)
+    {
+        $conversation = ChatConversation::findOrFail($id);
+
+        $conversation->messages()
+            ->where('sender_type', 'user')
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    /**
      * Close a conversation.
      */
     public function close(int $id)

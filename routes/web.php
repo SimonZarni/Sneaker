@@ -125,6 +125,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/chat/{id}/messages',        [AdminChatController::class, 'messages'])->name('chat.messages');
         Route::post('/chat/{id}/send',           [AdminChatController::class, 'send'])->name('admin.chat.send');
         Route::patch('/chat/{id}/close',         [AdminChatController::class, 'close'])->name('chat.close');
+        Route::post('/chat/{id}/read',          [AdminChatController::class, 'markRead'])->name('admin.chat.markRead');
 
         // Customers
         Route::get('/customers',                     [AdminCustomerController::class, 'index'])->name('customers.index');
