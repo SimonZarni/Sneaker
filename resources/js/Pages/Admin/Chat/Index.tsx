@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { Head } from '@inertiajs/react';
 import AdminLayout from '@/Components/AdminLayout';
 
@@ -103,10 +104,8 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
         setMessages([]);
 
         try {
-            const res  = await fetch(`/admin/chat/${conv.id}/messages`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            });
-            const data = await res.json();
+            const res  = await axios.get(`/admin/chat/${conv.id}/messages`);
+            const data = res.data;
             setMessages(data.messages);
             // Clear unread for this conversation
             setConversations(prev => prev.map(c =>
@@ -132,27 +131,14 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
             created_at:  new Date().toISOString(),
         }]);
 
-        const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-        await fetch(`/admin/chat/${selected.id}/send`, {
-            method:  'POST',
-            headers: {
-                'Content-Type':     'application/json',
-                'X-CSRF-TOKEN':     csrf ?? '',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            body: JSON.stringify({ body }),
-        });
+        await axios.post(`/admin/chat/${selected.id}/send`, { body });
 
         setSending(false);
     };
 
     const closeConversation = async () => {
         if (!selected) return;
-        const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-        await fetch(`/admin/chat/${selected.id}/close`, {
-            method:  'PATCH',
-            headers: { 'X-CSRF-TOKEN': csrf ?? '', 'X-Requested-With': 'XMLHttpRequest' },
-        });
+        await axios.patch(`/admin/chat/${selected.id}/close`);
         setConversations(prev => prev.map(c => c.id === selected.id ? { ...c, status: 'closed' } : c));
         setSelected(prev => prev ? { ...prev, status: 'closed' } : null);
     };

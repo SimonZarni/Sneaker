@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 
 interface Message {
     id: number;
@@ -30,14 +31,11 @@ export default function ChatWidget({ userId }: Props) {
         loadedRef.current = true;
         setLoading(true);
 
-        fetch('/chat/conversation', {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        })
-            .then(r => r.json())
-            .then(data => {
-                setConversationId(data.conversation_id);
-                setStatus(data.status);
-                setMessages(data.messages);
+        axios.get('/chat/conversation')
+            .then(r => {
+                setConversationId(r.data.conversation_id);
+                setStatus(r.data.status);
+                setMessages(r.data.messages);
                 setUnread(0);
             })
             .finally(() => setLoading(false));
@@ -87,9 +85,7 @@ export default function ChatWidget({ userId }: Props) {
     useEffect(() => {
         if (open || !conversationId) return;
         const interval = setInterval(() => {
-            fetch('/chat/unread', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(r => r.json())
-                .then(d => setUnread(d.unread));
+            axios.get('/chat/unread').then(r => setUnread(r.data.unread));
         }, 30000);
         return () => clearInterval(interval);
     }, [open, conversationId]);
@@ -110,16 +106,7 @@ export default function ChatWidget({ userId }: Props) {
         setMessages(prev => [...prev, tempMsg]);
 
         try {
-            const csrf = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content;
-            await fetch('/chat/send', {
-                method:  'POST',
-                headers: {
-                    'Content-Type':     'application/json',
-                    'X-CSRF-TOKEN':     csrf ?? '',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify({ body }),
-            });
+            await axios.post('/chat/send', { body });
         } catch {
             // Silent fail — message already shown optimistically
         } finally {
