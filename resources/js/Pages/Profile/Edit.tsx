@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
+import NotificationBell from "@/Components/NotificationBell";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -272,13 +273,15 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                     </Link>
                     <div style={{ display: "flex", alignItems: "center", gap: "28px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
                         <Link href={route("shop.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Shop</Link>
-                        <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>My Orders{auth.activeOrderCount > 0 && (<span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "1px 6px", borderRadius: "9999px", fontSize: "8px", fontWeight: 900, marginLeft: "4px" }}>{auth.activeOrderCount}</span>)}</Link>                        <span style={{ color: "#0A0A0A", borderBottom: "2px solid #0A0A0A", paddingBottom: "2px" }}>Account</span>
+                        <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Orders</Link>
+                        <span style={{ color: "#0A0A0A", borderBottom: "2px solid #0A0A0A", paddingBottom: "2px" }}>Account</span>
                         <Link
                             href="/logout" method="post" as="button"
                             style={{ color: "rgba(45,50,62,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}
                         >
                             Log Out
                         </Link>
+                        <NotificationBell userId={auth.user.id} />
                     </div>
                 </div>
             </nav>

@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import CartDrawer from "@/Components/CartDrawer";
 import Pagination from "@/Components/Pagination";
+import NotificationBell from "@/Components/NotificationBell";
 
 interface Product {
     id: number;
@@ -96,10 +97,12 @@ export default function ShopIndex({ products, filters }: Props) {
                         <Link href={route("about")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>About Us</Link>
                         {auth.user ? (
                             <>
-                                <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>My Orders{auth.activeOrderCount > 0 && (<span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "1px 6px", borderRadius: "9999px", fontSize: "8px", fontWeight: 900, marginLeft: "4px" }}>{auth.activeOrderCount}</span>)}</Link>                                <Link href={route("wishlist.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Wishlist</Link>
+                                <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Orders</Link>
+                                <Link href={route("wishlist.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Wishlist</Link>
                                 <Link href="/logout" method="post" as="button" style={{ color: "rgba(45,50,62,0.4)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
                                     Log Out
                                 </Link>
+                                <NotificationBell userId={auth.user.id} />
                             </>
                         ) : (
                             <Link href="/login" style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Login</Link>
@@ -292,7 +295,7 @@ function ProductCard({ product, auth }: { product: Product; auth: any }) {
                 </svg>
             </button>
             <div style={{ aspectRatio: "1/1", backgroundColor: "#F5F5F7", overflow: "hidden", marginBottom: "20px" }}>
-                <img src={product.main_image_url ?? "https://via.placeholder.com/600"} alt={product.name} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", transform: hovered ? "scale(1.07)" : "scale(1)", transition: "transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94)", mixBlendMode: "multiply" }} />
+                <img src={product.main_image_url ?? "https://via.placeholder.com/600"} alt={product.name} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", transform: hovered ? "scale(1.07)" : "scale(1)", transition: "transform 0.8s cubic-bezier(0.25,0.46,0.45,0.94)", mixBlendMode: "multiply" }} />
             </div>
             <div>
                 <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.25em", color: "rgba(45,50,62,0.35)", marginBottom: "6px" }}>{product.brand.name}</p>

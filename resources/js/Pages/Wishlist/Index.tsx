@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
+import NotificationBell from "@/Components/NotificationBell";
 import CartDrawer from "@/Components/CartDrawer";
 
 interface WishlistItem {
@@ -47,8 +48,8 @@ export default function WishlistIndex({ items }: Props) {
                         <Link href={route("shop.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
                             Shop
                         </Link>
-                       <Link href={route("orders.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
-                            My Orders{auth.activeOrderCount > 0 && (<span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "1px 6px", borderRadius: "9999px", fontSize: "8px", fontWeight: 900, marginLeft: "4px" }}>{auth.activeOrderCount}</span>)}
+                        <Link href={route("orders.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
+                            Orders
                         </Link>
                         <span className="border-b-2 border-brand-charcoal pb-0.5">Wishlist</span>
                     </div>
@@ -59,6 +60,7 @@ export default function WishlistIndex({ items }: Props) {
                                 {auth.user.name}
                             </Link>
                         )}
+                        {auth?.user && <NotificationBell userId={auth.user.id} />}
                         <button
                             onClick={() => setIsCartOpen(true)}
                             className="flex items-center gap-2 hover:text-brand-slate transition-colors"
@@ -188,7 +190,7 @@ function WishlistCard({
             <Link href={route("shop.show", item.product_id)}>
                 <div className="aspect-square bg-brand-surface mb-5 overflow-hidden">
                     <img
-                        src={item.image_url || "https://via.placeholder.com/400"} loading="lazy" decoding="async"
+                        src={item.image_url || "https://via.placeholder.com/400"}
                         alt={item.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         style={{

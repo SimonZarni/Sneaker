@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import CartDrawer from "@/Components/CartDrawer";
 import Pagination from "@/Components/Pagination";
+import NotificationBell from "@/Components/NotificationBell";
 
 interface Order {
     id: number;
@@ -76,7 +77,8 @@ export default function OrdersIndex({ orders }: Props) {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
                     <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
                         <Link href="/shop" className="hover:text-brand-slate transition-colors">The Archive</Link>
-                        <Link href="/orders" className="border-b-2 border-brand-charcoal pb-0.5">My Orders{auth.activeOrderCount > 0 && (<span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "1px 6px", borderRadius: "9999px", fontSize: "8px", fontWeight: 900, marginLeft: "4px" }}>{auth.activeOrderCount}</span>)}</Link>                    </div>
+                        <Link href="/orders" className="border-b-2 border-brand-charcoal pb-0.5">My Orders</Link>
+                    </div>
                     <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
                         <Link href="/">SNEAKER.DRP</Link>
                     </h1>
@@ -85,6 +87,7 @@ export default function OrdersIndex({ orders }: Props) {
                             <>
                                 <Link href="/profile" className="hover:text-brand-slate transition-colors">{auth.user.name}</Link>
                                 <Link href="/logout" method="post" as="button" className="hover:text-brand-slate transition-colors uppercase cursor-pointer">Log Out</Link>
+                                <NotificationBell userId={auth.user.id} />
                             </>
                         ) : (
                             <Link href="/login" className="hover:text-brand-slate transition-colors">Account</Link>
