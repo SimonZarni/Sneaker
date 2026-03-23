@@ -36,8 +36,8 @@ export default function NotificationBell({ userId }: Props) {
         const channel = window.Echo.private(`orders.${userId}`)
             .listen('.order.status.changed', (data: any) => {
                 const notification: Notification = {
-                    id:              `${data.order_id}-${data.type}-${Date.now()}`,
-                    order_id:        data.order_id,
+                    id:              `${data.id}-${data.type}-${Date.now()}`,
+                    order_id:        data.id,
                     order_number:    data.order_number,
                     type:            data.type,
                     title:           data.title,
