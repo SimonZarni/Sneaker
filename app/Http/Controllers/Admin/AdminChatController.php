@@ -2,27 +2,53 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Events\ChatMessageSent;
+use App\Http\Controllers\Controller;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class AdminChatController extends Controller
 {
     /**
-     * Get or create the authenticated user's conversation.
-     * Returns conversation id + last 50 messages.
+     * Admin chat index — all conversations.
      */
-    public function conversation()
+    public function index()
     {
-        $user = Auth::user();
+        $conversations = ChatConversation::with(['user', 'messages' => fn($q) => $q->latest()->limit(1)])
+            ->orderByDesc('last_message_at')
+            ->get()
+            ->map(fn($c) => [
+                'id'              => $c->id,
+                'user_id'         => $c->user_id,
+                'user_name'       => $c->user->name ?? 'Deleted User',
+                'user_email'      => $c->user->email ?? '',
+                'status'          => $c->status,
+                'last_message_at' => $c->last_message_at?->toISOString(),
+                'last_message'    => $c->messages->first()?->body ?? '',
+                'unread'          => $c->messages()
+                    ->where('sender_type', 'user')
+                    ->whereNull('read_at')
+                    ->count(),
+            ]);
 
-        $conversation = ChatConversation::firstOrCreate(
-            ['user_id' => $user->id],
-            ['status' => 'open', 'last_message_at' => now()]
-        );
+        $totalUnread = $conversations->sum('unread');
+
+        return Inertia::render('Admin/Chat/Index', [
+            'conversations' => $conversations,
+            'totalUnread'   => $totalUnread,
+            'admin'         => ['name' => Auth::guard('admin')->user()->full_name],
+        ]);
+    }
+
+    /**
+     * Get messages for a specific conversation.
+     */
+    public function messages(int $id)
+    {
+        $conversation = ChatConversation::with('user')->findOrFail($id);
 
         $messages = $conversation->messages()
             ->orderBy('created_at')
@@ -34,69 +60,66 @@ class AdminChatController extends Controller
                 'created_at'  => $m->created_at->toISOString(),
             ]);
 
-        // Mark all admin messages as read when user opens chat
+        // Mark all user messages as read when admin opens conversation
         $conversation->messages()
-            ->where('sender_type', 'admin')
+            ->where('sender_type', 'user')
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
 
         return response()->json([
-            'conversation_id' => $conversation->id,
-            'status'          => $conversation->status,
-            'messages'        => $messages,
+            'conversation' => [
+                'id'        => $conversation->id,
+                'user_name' => $conversation->user->name ?? 'Deleted User',
+                'status'    => $conversation->status,
+            ],
+            'messages' => $messages,
         ]);
     }
 
     /**
-     * Send a message from the user.
+     * Send a message from admin to user.
      */
-    public function send(Request $request)
+    public function send(Request $request, int $id)
     {
         $request->validate([
             'body' => 'required|string|max:1000',
         ]);
 
-        $user = Auth::user();
+        $conversation = ChatConversation::with('user')->findOrFail($id);
 
-        $conversation = ChatConversation::firstOrCreate(
-            ['user_id' => $user->id],
-            ['status' => 'open', 'last_message_at' => now()]
-        );
-
-        // Reopen closed conversations when user sends a new message
-        if ($conversation->status === 'closed') {
-            $conversation->update(['status' => 'open']);
-        }
+        $admin = Auth::guard('admin')->user();
 
         $message = ChatMessage::create([
             'conversation_id' => $conversation->id,
-            'sender_type'     => 'user',
-            'sender_id'       => $user->id,
+            'sender_type'     => 'admin',
+            'sender_id'       => $admin->id,
             'body'            => $request->body,
         ]);
 
         $conversation->update(['last_message_at' => now()]);
 
-        broadcast(new ChatMessageSent($message, $conversation->load('user')));
+        broadcast(new ChatMessageSent($message, $conversation));
 
         return response()->json(['ok' => true]);
     }
 
     /**
-     * Unread count — how many admin messages the user hasn't read.
+     * Close a conversation.
+     */
+    public function close(int $id)
+    {
+        ChatConversation::findOrFail($id)->update(['status' => 'closed']);
+        return response()->json(['ok' => true]);
+    }
+
+    /**
+     * Total unread count across all conversations — for admin badge.
      */
     public function unread()
     {
-        $user = Auth::user();
-
-        $conversation = ChatConversation::where('user_id', $user->id)->first();
-
-        $count = $conversation
-            ? $conversation->messages()
-                ->where('sender_type', 'admin')
-                ->whereNull('read_at')
-                ->count()
-            : 0;
+        $count = ChatMessage::where('sender_type', 'user')
+            ->whereNull('read_at')
+            ->count();
 
         return response()->json(['unread' => $count]);
     }
