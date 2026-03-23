@@ -14,7 +14,13 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
+
+// ── Broadcasting auth route ───────────────────────────────────────────────────
+// Required for private Pusher channels — authenticates the user before
+// allowing them to subscribe to their orders.{userId} channel.
+Broadcast::routes(['middleware' => ['web', 'auth']]);
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -43,7 +49,7 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store')->middleware('throttle:10,1');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}/success', [OrderController::class, 'success'])->name('orders.success');

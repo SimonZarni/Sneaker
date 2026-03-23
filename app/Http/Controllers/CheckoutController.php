@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderStatusChanged;
 use App\Mail\OrderConfirmation;
 use App\Models\Cart;
 use Illuminate\Support\Facades\Log;
@@ -265,9 +266,18 @@ class CheckoutController extends Controller
             return $order; // Return order from transaction so we can email after
         });
 
-        // Bust the admin dashboard stats cache so the new order shows
-        // immediately instead of waiting up to 5 minutes for TTL expiry.
+        // Bust admin dashboard stats cache so new order shows immediately
         \Illuminate\Support\Facades\Cache::forget('dashboard.stats');
+
+        // ── Broadcast order confirmed notification via Pusher ─────────────────
+        try {
+            broadcast(new OrderStatusChanged($order, 'confirmed'));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to broadcast order confirmed', [
+                'order_id' => $order->id,
+                'error'    => $e->getMessage(),
+            ]);
+        }
 
         // ── Send order confirmation email ─────────────────────────────────────
         // Runs outside the DB transaction so a mail failure never rolls back
@@ -280,9 +290,7 @@ class CheckoutController extends Controller
 
             Log::info('Order confirmation email attempt', [
                 'user_id'     => $user->id,
-                'email'       => $user->email,
                 'order_id'    => $order->id,
-                'order_num'   => $order->order_number,
                 'deliverable' => $deliverable,
                 'mailer'      => config('mail.default'),
             ]);
@@ -292,23 +300,21 @@ class CheckoutController extends Controller
                     ->send(new OrderConfirmation($freshOrder));
 
                 Log::info('Order confirmation email sent', [
-                    'email'    => $user->email,
-                    'order'    => $order->order_number,
+                    'user_id'  => $user->id,
+                    'order_id' => $order->id,
                 ]);
             } else {
                 Log::info('Order confirmation email skipped', [
-                    'email'       => $user->email,
+                    'user_id'     => $user->id,
+                    'order_id'    => $order->id,
                     'deliverable' => $deliverable,
-                    'order'       => $order->order_number,
                 ]);
             }
         } catch (\Throwable $e) {
             Log::warning('Order confirmation email failed', [
                 'user_id'  => $user->id,
-                'email'    => $user->email,
-                'order'    => $order->order_number ?? 'unknown',
+                'order_id' => $order->id,
                 'error'    => $e->getMessage(),
-                'trace'    => $e->getTraceAsString(),
             ]);
         }
 

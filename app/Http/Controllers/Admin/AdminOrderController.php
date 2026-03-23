@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Events\OrderStatusChanged;
 use App\Mail\OrderDelivered;
 use App\Models\Order;
 use App\Models\ProductVariant;
@@ -93,8 +94,6 @@ class AdminOrderController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $id) {
-            // Lock the order row so two admins clicking simultaneously cannot
-            // both read the same current status and both advance it, skipping a step.
             $order = Order::where('id', $id)->lockForUpdate()->firstOrFail();
 
             $currentIndex = array_search($order->delivery_status, self::DELIVERY_STEPS);
@@ -114,14 +113,29 @@ class AdminOrderController extends Controller
             $order->update(['delivery_status' => $request->delivery_status]);
         });
 
-        // Send delivered email when order reaches final Delivered state.
+        // ── Broadcast real-time notification to user via Pusher ───────────────
+        // Runs outside the transaction — broadcast failure never rolls back.
+        try {
+            $fresh = Order::with('user')->find($id);
+            if ($fresh && $fresh->user) {
+                $type = strtolower($request->delivery_status);
+                broadcast(new OrderStatusChanged($fresh, $type));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to broadcast order status change', [
+                'order_id' => $id,
+                'error'    => $e->getMessage(),
+            ]);
+        }
+
+        // ── Send delivered email when order reaches final Delivered state ──────
         // Runs outside the transaction — a mail failure never rolls back the status update.
         if ($request->delivery_status === 'Delivered') {
             try {
                 $delivered = Order::with(['items', 'payment', 'user'])->find($id);
 
                 if ($delivered && $delivered->user && $delivered->user->email) {
-                    $domain = substr(strrchr($delivered->user->email, '@'), 1);
+                    $domain      = substr(strrchr($delivered->user->email, '@'), 1);
                     $skipDomains = ['example.com', 'example.net', 'example.org', 'test.com', 'localhost'];
                     $deliverable = $domain && !in_array(strtolower($domain), $skipDomains) && @getmxrr($domain, $hosts);
 
@@ -131,7 +145,6 @@ class AdminOrderController extends Controller
 
                         Log::info('Order delivered email sent', [
                             'order_id' => $id,
-                            'email'    => $delivered->user->email,
                         ]);
                     }
                 }
@@ -156,8 +169,6 @@ class AdminOrderController extends Controller
         ]);
 
         DB::transaction(function () use ($order, $request) {
-            // Re-read with a write lock — prevents two admins from simultaneously
-            // cancelling the same order and restoring stock twice.
             $fresh = Order::where('id', $order->id)
                 ->lockForUpdate()
                 ->first();

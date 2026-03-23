@@ -2,6 +2,7 @@ import { Head, Link, usePage } from "@inertiajs/react";
 import React, { useState } from "react";
 import CartDrawer from "@/Components/CartDrawer";
 import Footer from "@/Components/Footer";
+import NotificationBell from "@/Components/NotificationBell";
 
 export default function Home({ featured }: any) {
     const { navigation, cart, auth }: any = usePage().props;
@@ -59,11 +60,11 @@ export default function Home({ featured }: any) {
                                     {auth.user.name}
                                 </Link>
 
-                                 <Link
+                                <Link
                                     href="/orders"
                                     className="hover:text-brand-slate transition-colors"
                                 >
-                                    My Orders{auth.activeOrderCount > 0 && (<span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "1px 6px", borderRadius: "9999px", fontSize: "8px", fontWeight: 900, marginLeft: "4px" }}>{auth.activeOrderCount}</span>)}
+                                    My Orders
                                 </Link>
 
                                 <Link
@@ -74,6 +75,7 @@ export default function Home({ featured }: any) {
                                 >
                                     Log Out
                                 </Link>
+                                <NotificationBell userId={auth.user.id} />
                             </>
                         ) : (
                             /* User is Guest */
@@ -178,7 +180,6 @@ export default function Home({ featured }: any) {
                                 <div className="relative aspect-[16/7] bg-brand-surface overflow-hidden group">
                                     <img
                                         src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=1450&auto=format&fit=crop"
-                                        loading="lazy" decoding="async"
                                         className="w-full h-full object-cover grayscale opacity-60 group-hover:scale-105 group-hover:grayscale-0 transition-all duration-1000"
                                     />
                                     <div className="absolute inset-0 p-8 flex flex-col justify-end bg-gradient-to-t from-brand-white/40 to-transparent">
@@ -300,7 +301,6 @@ export default function Home({ featured }: any) {
                                 <div className="aspect-square bg-brand-surface mb-6 overflow-hidden">
                                     <img
                                         src={product.main_image_url}
-                                        loading="lazy" decoding="async"
                                         className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
                                     />
                                 </div>
