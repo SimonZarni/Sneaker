@@ -24,6 +24,10 @@ export default function ChatWidget({ userId }: Props) {
     const bottomRef                         = useRef<HTMLDivElement>(null);
     const inputRef                          = useRef<HTMLInputElement>(null);
     const loadedRef                         = useRef(false);
+    const openRef                           = useRef(false);
+
+    // Keep openRef in sync so Pusher handler always reads current open state
+    useEffect(() => { openRef.current = open; }, [open]);
 
     // Fetch unread count on mount so badge shows without needing to open chat first
     useEffect(() => {
@@ -62,7 +66,7 @@ export default function ChatWidget({ userId }: Props) {
                         body:        data.body,
                         created_at:  data.created_at,
                     }]);
-                    if (open) {
+                    if (openRef.current) {
                         // Chat is open — mark as read in DB immediately
                         axios.post('/chat/read').catch(() => {});
                     } else {
