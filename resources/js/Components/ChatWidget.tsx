@@ -302,8 +302,7 @@ export default function ChatWidget({ userId }: Props) {
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const loadedRef = useRef(false);
-    // Ref used for the Pusher listener to avoid stale closures
-    const openRef = useRef(false);
+    const openRef = useRef(false); // Used to avoid stale closures in Pusher listener
 
     // Sync openRef with state
     useEffect(() => {
@@ -311,7 +310,7 @@ export default function ChatWidget({ userId }: Props) {
     }, [open]);
 
     // ─── EFFECT: BOOTSTRAP ───
-    // Runs once on mount to get the ID and current unread count
+    // Get conversation ID and unread count immediately on mount for Pusher subscription
     useEffect(() => {
         if (!userId) return;
 
@@ -320,11 +319,10 @@ export default function ChatWidget({ userId }: Props) {
                 setUnread(r.data.unread);
                 setConversationId(r.data.conversation_id);
             })
-            .catch(err => console.error("Could not fetch initial chat state", err));
+            .catch(err => console.error("Initial chat bootstrap failed", err));
     }, [userId]);
 
     // ─── EFFECT: PUSHER SUBSCRIPTION ───
-    // Activates as soon as conversationId is known, even if widget is closed
     useEffect(() => {
         // @ts-ignore
         if (!conversationId || typeof window.Echo === 'undefined') return;
@@ -332,7 +330,6 @@ export default function ChatWidget({ userId }: Props) {
         // @ts-ignore
         const channel = window.Echo.private(`chat.${conversationId}`)
             .listen('.chat.message', (data: any) => {
-                // Only process messages from the admin
                 if (data.sender_type === 'admin') {
                     setMessages(prev => [...prev, {
                         id: data.id,
@@ -342,10 +339,8 @@ export default function ChatWidget({ userId }: Props) {
                     }]);
 
                     if (openRef.current) {
-                        // If chat is open, tell backend we read it immediately
                         axios.post('/chat/read').catch(() => {});
                     } else {
-                        // If chat is closed, increment the badge
                         setUnread(u => u + 1);
                     }
                 }
@@ -357,8 +352,7 @@ export default function ChatWidget({ userId }: Props) {
         };
     }, [conversationId]);
 
-    // ─── EFFECT: LOAD HISTORY ───
-    // Fetches full message history the first time the user opens the widget
+    // ─── EFFECT: LOAD HISTORY & INITIAL SCROLL ───
     useEffect(() => {
         if (!open || loadedRef.current || !userId) return;
 
@@ -369,32 +363,43 @@ export default function ChatWidget({ userId }: Props) {
                 setStatus(r.data.status);
                 loadedRef.current = true;
                 setUnread(0);
+
+                // Scroll to bottom immediately after loading data
+                setTimeout(() => {
+                    bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+                }, 100);
             })
-            .catch(err => console.error("Could not load conversation", err))
+            .catch(err => console.error("Could not load history", err))
             .finally(() => setLoading(false));
     }, [open, userId]);
 
-    // ─── EFFECT: UI INTERACTIONS ───
-    // Focus input and mark as read when opened
+    // ─── EFFECT: SCROLL ON RE-OPEN ───
+    useEffect(() => {
+        if (open && loadedRef.current) {
+            // If already loaded, just scroll to bottom when window opens
+            const timer = setTimeout(() => {
+                bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+            }, 50);
+            return () => clearTimeout(timer);
+        }
+    }, [open]);
+
+    // ─── EFFECT: NEW MESSAGE SCROLL ───
+    useEffect(() => {
+        // Smooth scroll only for new messages while chat is open
+        if (open && !loading && messages.length > 0) {
+            bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages, open, loading]);
+
+    // ─── EFFECT: FOCUS & READ STATUS ───
     useEffect(() => {
         if (!open) return;
 
-        // Focus the input field
-        const focusTimer = setTimeout(() => inputRef.current?.focus(), 100);
-
-        // Clear badge locally and in DB
+        setTimeout(() => inputRef.current?.focus(), 100);
         setUnread(0);
         axios.post('/chat/read').catch(() => {});
-
-        return () => clearTimeout(focusTimer);
     }, [open]);
-
-    // Auto-scroll to bottom on new messages
-    useEffect(() => {
-        if (messages.length > 0) {
-            bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [messages]);
 
     // ─── HANDLERS ───
     const sendMessage = async () => {
@@ -405,9 +410,8 @@ export default function ChatWidget({ userId }: Props) {
         setSending(true);
 
         // Optimistic UI Update
-        const tempId = Date.now();
         setMessages(prev => [...prev, {
-            id: tempId,
+            id: Date.now(),
             sender_type: 'user',
             body: body,
             created_at: new Date().toISOString(),
@@ -416,8 +420,7 @@ export default function ChatWidget({ userId }: Props) {
         try {
             await axios.post('/chat/send', { body });
         } catch (err) {
-            console.error("Message failed to send", err);
-            // Optional: Mark the message as "failed" in the UI here
+            console.error("Failed to send message", err);
         } finally {
             setSending(false);
         }
@@ -430,45 +433,45 @@ export default function ChatWidget({ userId }: Props) {
         }
     };
 
-    const formatTime = (iso: string) => {
-        return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    };
+    const formatTime = (iso: string) =>
+        new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // Do not render if the user is not logged in
     if (!userId) return null;
 
     return (
-        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000, fontFamily: 'sans-serif' }}>
+        <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000, fontFamily: 'Inter, system-ui, sans-serif' }}>
 
             {/* ── CHAT WINDOW ── */}
             {open && (
                 <div style={{
-                    position: 'absolute', bottom: '70px', right: 0,
-                    width: '360px', height: '500px',
+                    position: 'absolute', bottom: '72px', right: 0,
+                    width: '350px', height: '500px',
                     backgroundColor: '#fff', border: '1px solid #e5e7eb',
-                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-                    display: 'flex', flexDirection: 'column', borderRadius: '12px',
-                    overflow: 'hidden', animation: 'chatFadeIn 0.2s ease-out'
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                    display: 'flex', flexDirection: 'column', borderRadius: '16px',
+                    overflow: 'hidden', animation: 'chatSlideIn 0.2s ease-out'
                 }}>
                     {/* Header */}
                     <div style={{ backgroundColor: '#000', color: '#fff', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 700, letterSpacing: '0.05em' }}>SNEAKER.DRP SUPPORT</h3>
-                            <span style={{ fontSize: '10px', opacity: 0.7 }}>
-                                {status === 'closed' ? 'Conversation Closed' : 'Online'}
-                            </span>
+                            <h3 style={{ margin: 0, fontSize: '13px', fontWeight: 800, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Support Chat</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: status === 'open' ? '#22c55e' : '#9ca3af' }}></div>
+                                <span style={{ fontSize: '10px', opacity: 0.8 }}>{status === 'open' ? 'Active' : 'Closed'}</span>
+                            </div>
                         </div>
                         <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '18px' }}>✕</button>
                     </div>
 
                     {/* Message Area */}
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#f9fafb' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#fdfdfd' }}>
                         {loading ? (
-                            <div style={{ textAlign: 'center', fontSize: '12px', color: '#9ca3af', marginTop: '20px' }}>Loading history...</div>
+                            <div style={{ textAlign: 'center', fontSize: '11px', color: '#9ca3af', marginTop: '20px' }}>Syncing messages...</div>
                         ) : messages.length === 0 ? (
-                            <div style={{ textAlign: 'center', marginTop: '40px', color: '#6b7280' }}>
-                                <p style={{ fontSize: '24px' }}>👟</p>
-                                <p style={{ fontSize: '12px', fontWeight: 600 }}>How can we help you today?</p>
+                            <div style={{ textAlign: 'center', marginTop: '60px', padding: '0 20px' }}>
+                                <p style={{ fontSize: '28px', marginBottom: '8px' }}>💬</p>
+                                <p style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>Need help with an order?</p>
+                                <p style={{ fontSize: '11px', color: '#6b7280', lineHeight: 1.5 }}>Our team is here to assist you with tracking, sizing, or returns.</p>
                             </div>
                         ) : (
                             messages.map((msg) => (
@@ -481,12 +484,12 @@ export default function ChatWidget({ userId }: Props) {
                                     <div style={{
                                         maxWidth: '80%',
                                         padding: '10px 14px',
-                                        borderRadius: msg.sender_type === 'user' ? '14px 14px 2px 14px' : '14px 14px 14px 2px',
-                                        backgroundColor: msg.sender_type === 'user' ? '#000' : '#fff',
-                                        color: msg.sender_type === 'user' ? '#fff' : '#1f2937',
+                                        borderRadius: msg.sender_type === 'user' ? '16px 16px 2px 16px' : '16px 16px 16px 2px',
+                                        backgroundColor: msg.sender_type === 'user' ? '#000' : '#f3f4f6',
+                                        color: msg.sender_type === 'user' ? '#fff' : '#111827',
                                         fontSize: '13px',
-                                        boxShadow: msg.sender_type === 'user' ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-                                        border: msg.sender_type === 'user' ? 'none' : '1px solid #f3f4f6'
+                                        lineHeight: 1.4,
+                                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                                     }}>
                                         {msg.body}
                                         <div style={{ fontSize: '9px', opacity: 0.5, marginTop: '4px', textAlign: 'right' }}>
@@ -496,25 +499,26 @@ export default function ChatWidget({ userId }: Props) {
                                 </div>
                             ))
                         )}
-                        <div ref={bottomRef} />
+                        <div ref={bottomRef} style={{ height: '1px' }} />
                     </div>
 
                     {/* Input Area */}
                     <div style={{ padding: '16px', borderTop: '1px solid #f3f4f6', backgroundColor: '#fff' }}>
                         {status === 'closed' ? (
-                            <p style={{ textAlign: 'center', fontSize: '11px', color: '#9ca3af' }}>This conversation is closed.</p>
+                            <p style={{ textAlign: 'center', fontSize: '11px', color: '#9ca3af' }}>Conversation archived.</p>
                         ) : (
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 <input
                                     ref={inputRef}
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={handleKey}
-                                    placeholder="Type your message..."
+                                    placeholder="Message support..."
                                     style={{
-                                        flex: 1, border: '1px solid #e5e7eb', borderRadius: '6px',
-                                        padding: '8px 12px', fontSize: '13px', outline: 'none'
+                                        flex: 1, border: '1px solid #e5e7eb', borderRadius: '8px',
+                                        padding: '10px 12px', fontSize: '13px', outline: 'none',
+                                        backgroundColor: '#f9fafb'
                                     }}
                                 />
                                 <button
@@ -522,11 +526,13 @@ export default function ChatWidget({ userId }: Props) {
                                     disabled={!input.trim() || sending}
                                     style={{
                                         backgroundColor: '#000', color: '#fff', border: 'none',
-                                        borderRadius: '6px', padding: '8px 16px', cursor: 'pointer',
-                                        opacity: (!input.trim() || sending) ? 0.5 : 1
+                                        borderRadius: '8px', width: '38px', height: '38px',
+                                        cursor: 'pointer', display: 'flex', alignItems: 'center',
+                                        justifyContent: 'center', transition: 'opacity 0.2s',
+                                        opacity: (!input.trim() || sending) ? 0.4 : 1
                                     }}
                                 >
-                                    ↑
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                                 </button>
                             </div>
                         )}
@@ -538,29 +544,29 @@ export default function ChatWidget({ userId }: Props) {
             <button
                 onClick={() => setOpen(!open)}
                 style={{
-                    width: '56px', height: '56px', borderRadius: '50%',
+                    width: '60px', height: '60px', borderRadius: '50%',
                     backgroundColor: '#000', color: '#fff', border: 'none',
                     cursor: 'pointer', display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    position: 'relative', transition: 'transform 0.2s'
+                    justifyContent: 'center', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                    position: 'relative', transition: 'transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
                 {open ? (
-                    <span style={{ fontSize: '20px' }}>✕</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 ) : (
-                    <span style={{ fontSize: '24px' }}>💬</span>
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 )}
 
                 {/* UNREAD BADGE */}
                 {!open && unread > 0 && (
                     <div style={{
-                        position: 'absolute', top: '-4px', right: '-4px',
+                        position: 'absolute', top: '-2px', right: '-2px',
                         backgroundColor: '#ef4444', color: '#fff', fontSize: '10px',
-                        fontWeight: 700, width: '20px', height: '20px', borderRadius: '50%',
+                        fontWeight: 800, minWidth: '22px', height: '22px', borderRadius: '11px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        border: '2px solid #fff'
+                        border: '3px solid #fff', padding: '0 4px'
                     }}>
                         {unread > 9 ? '9+' : unread}
                     </div>
@@ -568,9 +574,9 @@ export default function ChatWidget({ userId }: Props) {
             </button>
 
             <style>{`
-                @keyframes chatFadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
+                @keyframes chatSlideIn {
+                    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
                 }
             `}</style>
         </div>
