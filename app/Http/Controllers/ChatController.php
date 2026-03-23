@@ -11,6 +11,10 @@ use Illuminate\Support\Facades\Log;
 
 class ChatController extends Controller
 {
+    /**
+     * Load full conversation history.
+     * Triggered when the user clicks to open the widget.
+     */
     public function conversation()
     {
         $user = Auth::user();
@@ -30,12 +34,6 @@ class ChatController extends Controller
                 'created_at'  => $m->created_at->toISOString(),
             ]);
 
-        // Mark admin messages as read when user opens chat
-        $conversation->messages()
-            ->where('sender_type', 'admin')
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
-
         return response()->json([
             'conversation_id' => $conversation->id,
             'status'          => $conversation->status,
@@ -43,6 +41,9 @@ class ChatController extends Controller
         ]);
     }
 
+    /**
+     * Store and broadcast a new message.
+     */
     public function send(Request $request)
     {
         $request->validate([
@@ -60,7 +61,6 @@ class ChatController extends Controller
             $conversation->update(['status' => 'open']);
         }
 
-        // Save message to DB first — always succeeds regardless of Pusher
         $message = ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender_type'     => 'user',
@@ -70,29 +70,21 @@ class ChatController extends Controller
 
         $conversation->update(['last_message_at' => now()]);
 
-        // Broadcast via Pusher — wrapped in try/catch so a Pusher failure
-        // never prevents the message from being saved to the DB
         try {
             broadcast(new ChatMessageSent($message, $conversation->load('user')));
         } catch (\Throwable $e) {
-            Log::warning('Chat broadcast failed', [
-                'conversation_id' => $conversation->id,
-                'error'           => $e->getMessage(),
-            ]);
+            Log::warning('Chat broadcast failed: ' . $e->getMessage());
         }
 
         return response()->json(['ok' => true, 'id' => $message->id]);
     }
 
     /**
-     * Mark all admin messages in the user's conversation as read.
-     * Called by the frontend when the chat is opened or when an admin
-     * message arrives while the chat window is already open.
+     * Mark all admin messages as read.
      */
     public function markRead()
     {
         $user = Auth::user();
-
         $conversation = ChatConversation::where('user_id', $user->id)->first();
 
         if ($conversation) {
@@ -105,19 +97,27 @@ class ChatController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    /**
+     * Returns unread count AND conversation_id for immediate subscription.
+     */
     public function unread()
     {
         $user = Auth::user();
 
-        $conversation = ChatConversation::where('user_id', $user->id)->first();
+        // Ensure ID exists so frontend can subscribe on page load
+        $conversation = ChatConversation::firstOrCreate(
+            ['user_id' => $user->id],
+            ['status' => 'open', 'last_message_at' => now()]
+        );
 
-        $count = $conversation
-            ? $conversation->messages()
-                ->where('sender_type', 'admin')
-                ->whereNull('read_at')
-                ->count()
-            : 0;
+        $count = $conversation->messages()
+            ->where('sender_type', 'admin')
+            ->whereNull('read_at')
+            ->count();
 
-        return response()->json(['unread' => $count]);
+        return response()->json([
+            'unread' => $count,
+            'conversation_id' => $conversation->id
+        ]);
     }
 }
