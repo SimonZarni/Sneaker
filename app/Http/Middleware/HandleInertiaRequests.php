@@ -41,6 +41,13 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                 ] : null,
+                // Active order count — shown as badge beside My Orders in navbar.
+                // Only counts Pending/Processing/Shipped — not Delivered/Cancelled.
+                'activeOrderCount' => Auth::check()
+                    ? \App\Models\Order::where('user_id', Auth::id())
+                    ->whereIn('delivery_status', ['Pending', 'Processing', 'Shipped'])
+                    ->count()
+                    : 0,
             ],
 
             // 1. Cart — only include items whose variant and product still exist and are active.
@@ -49,16 +56,25 @@ class HandleInertiaRequests extends Middleware
             'cart' => Auth::check()
                 ? (function () {
                     $cart = \App\Models\Cart::with([
-                        'items' => fn($q) => $q->whereHas('productVariant', fn($q) =>
-                            $q->whereHas('product', fn($q) =>
+                        'items' => fn($q) => $q->whereHas(
+                            'productVariant',
+                            fn($q) =>
+                            $q->whereHas(
+                                'product',
+                                fn($q) =>
                                 $q->where('is_active', true)
                             )
                         ),
                         // Select only columns needed by the cart drawer —
                         // excludes description (TEXT), created_by_admin_id etc.
                         'items.productVariant.product' => fn($q) => $q->select(
-                            'id', 'name', 'base_price', 'sale_price',
-                            'sale_ends_at', 'main_image_url', 'is_active'
+                            'id',
+                            'name',
+                            'base_price',
+                            'sale_price',
+                            'sale_ends_at',
+                            'main_image_url',
+                            'is_active'
                         ),
                         'items.productVariant.size'  => fn($q) => $q->select('id', 'size_value'),
                         'items.productVariant.color' => fn($q) => $q->select('id', 'name', 'hex_code'),
