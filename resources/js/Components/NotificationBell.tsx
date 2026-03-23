@@ -20,16 +20,16 @@ interface Props {
 
 export default function NotificationBell({ userId }: Props) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [open, setOpen] = useState(false);
+    const [open, setOpen]   = useState(false);
     const [toast, setToast] = useState<Notification | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const toastTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
     // ── Subscribe to Pusher private channel ───────────────────────────────────
     useEffect(() => {
-        // @ts-ignore — Echo is loaded globally via bootstrap.ts
+        // @ts-ignore
         if (typeof window.Echo === 'undefined') return;
 
         // @ts-ignore
@@ -47,7 +47,6 @@ export default function NotificationBell({ userId }: Props) {
                     received_at:     new Date().toISOString(),
                     read:            false,
                 };
-
                 setNotifications(prev => [notification, ...prev].slice(0, 20));
                 showToast(notification);
             });
@@ -70,9 +69,24 @@ export default function NotificationBell({ userId }: Props) {
     }, []);
 
     const showToast = useCallback((notification: Notification) => {
+        // Clear any existing timer first
+        if (toastTimer.current) {
+            clearTimeout(toastTimer.current);
+            toastTimer.current = null;
+        }
         setToast(notification);
-        if (toastTimer.current) clearTimeout(toastTimer.current);
-        toastTimer.current = setTimeout(() => setToast(null), 5000);
+        // Use a longer delay — 6000ms so the full 5s is visible after render
+        toastTimer.current = setTimeout(() => {
+            setToast(null);
+            toastTimer.current = null;
+        }, 6000);
+    }, []);
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (toastTimer.current) clearTimeout(toastTimer.current);
+        };
     }, []);
 
     const markRead = (id: string) => {
@@ -86,7 +100,14 @@ export default function NotificationBell({ userId }: Props) {
     const handleNotificationClick = (notification: Notification) => {
         markRead(notification.id);
         setOpen(false);
-        router.visit(`/orders/${notification.order_id}`);
+        // Use window.location for navigation to avoid Inertia 500 on direct visit
+        window.location.href = `/orders/${notification.order_id}`;
+    };
+
+    const handleToastClick = (notification: Notification) => {
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+        setToast(null);
+        window.location.href = `/orders/${notification.order_id}`;
     };
 
     const timeAgo = (iso: string) => {
@@ -101,7 +122,7 @@ export default function NotificationBell({ userId }: Props) {
 
     return (
         <>
-            {/* Bell button */}
+            {/* ── Bell button ── */}
             <div ref={dropdownRef} style={{ position: 'relative' }}>
                 <button
                     onClick={() => setOpen(v => !v)}
@@ -129,7 +150,7 @@ export default function NotificationBell({ userId }: Props) {
                     )}
                 </button>
 
-                {/* Dropdown */}
+                {/* ── Dropdown ── */}
                 {open && (
                     <div style={{
                         position: 'absolute', right: 0, top: 'calc(100% + 12px)',
@@ -138,7 +159,6 @@ export default function NotificationBell({ userId }: Props) {
                         boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                         zIndex: 100,
                     }}>
-                        {/* Header */}
                         <div style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                             padding: '12px 16px', borderBottom: '1px solid #f0f0f0',
@@ -147,16 +167,12 @@ export default function NotificationBell({ userId }: Props) {
                                 Notifications
                             </span>
                             {unreadCount > 0 && (
-                                <button
-                                    onClick={markAllRead}
-                                    style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(45,50,62,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}
-                                >
+                                <button onClick={markAllRead} style={{ fontSize: '9px', fontWeight: 700, color: 'rgba(45,50,62,0.5)', background: 'none', border: 'none', cursor: 'pointer' }}>
                                     Mark all read
                                 </button>
                             )}
                         </div>
 
-                        {/* List */}
                         <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
                             {notifications.length === 0 ? (
                                 <div style={{ padding: '32px 16px', textAlign: 'center', color: 'rgba(45,50,62,0.3)', fontSize: '11px', fontWeight: 600 }}>
@@ -176,16 +192,13 @@ export default function NotificationBell({ userId }: Props) {
                                         onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#fafafa')}
                                         onMouseLeave={e => (e.currentTarget.style.backgroundColor = n.read ? '#fff' : 'rgba(59,130,246,0.04)')}
                                     >
-                                        {/* Unread dot */}
                                         <div style={{ paddingTop: '6px', flexShrink: 0 }}>
                                             <div style={{
                                                 width: '7px', height: '7px', borderRadius: '50%',
                                                 backgroundColor: n.read ? 'transparent' : '#3b82f6',
                                             }} />
                                         </div>
-                                        {/* Icon */}
                                         <div style={{ fontSize: '20px', flexShrink: 0 }}>{n.icon}</div>
-                                        {/* Body */}
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <p style={{ fontSize: '11px', fontWeight: 700, color: '#0a0a0a', marginBottom: '2px' }}>{n.title}</p>
                                             <p style={{ fontSize: '10px', color: 'rgba(45,50,62,0.6)', lineHeight: 1.5 }}>{n.message}</p>
@@ -196,9 +209,8 @@ export default function NotificationBell({ userId }: Props) {
                             )}
                         </div>
 
-                        {/* Footer */}
                         <div
-                            onClick={() => { setOpen(false); router.visit('/orders'); }}
+                            onClick={() => { setOpen(false); window.location.href = '/orders'; }}
                             style={{
                                 padding: '10px 16px', textAlign: 'center',
                                 fontSize: '9px', fontWeight: 900, textTransform: 'uppercase',
@@ -214,23 +226,28 @@ export default function NotificationBell({ userId }: Props) {
                 )}
             </div>
 
-            {/* Toast popup */}
+            {/* ── Toast popup ── */}
             {toast && (
-                <div style={{
-                    position: 'fixed', bottom: '24px', right: '24px',
-                    backgroundColor: '#0a0a0a', color: '#fff',
-                    padding: '14px 16px', zIndex: 9999,
-                    display: 'flex', alignItems: 'flex-start', gap: '12px',
-                    maxWidth: '320px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-                    animation: 'slideUp 0.3s ease',
-                }}>
+                <div
+                    onClick={() => handleToastClick(toast)}
+                    style={{
+                        position: 'fixed', bottom: '24px', right: '24px',
+                        backgroundColor: '#0a0a0a', color: '#fff',
+                        padding: '14px 16px', zIndex: 9999,
+                        display: 'flex', alignItems: 'flex-start', gap: '12px',
+                        maxWidth: '320px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                        cursor: 'pointer',
+                        animation: 'slideUp 0.3s ease',
+                    }}
+                >
                     <span style={{ fontSize: '20px', flexShrink: 0 }}>{toast.icon}</span>
                     <div style={{ flex: 1 }}>
                         <p style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>{toast.title}</p>
                         <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>{toast.message}</p>
+                        <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', marginTop: '3px' }}>Click to view order →</p>
                     </div>
                     <button
-                        onClick={() => setToast(null)}
+                        onClick={e => { e.stopPropagation(); if (toastTimer.current) clearTimeout(toastTimer.current); setToast(null); }}
                         style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '16px', flexShrink: 0, padding: 0 }}
                     >
                         ✕
