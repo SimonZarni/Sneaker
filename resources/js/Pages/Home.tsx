@@ -849,6 +849,10 @@ export default function Home({ featured }: any) {
             <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
             <Footer />
+
+            {/* Floating chat widget — only for logged in users */}
+            {auth?.user && <ChatWidget userId={auth.user.id} />}
+            
         </div>
     );
 }
