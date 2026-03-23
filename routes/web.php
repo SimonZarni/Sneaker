@@ -14,12 +14,12 @@ use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminCustomerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\Admin\AdminChatController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
-// ── Broadcasting auth route ───────────────────────────────────────────────────
-// Required for private Pusher channels — authenticates the user before
-// allowing them to subscribe to their orders.{userId} channel.
+// Broadcasting auth
 Broadcast::routes(['middleware' => ['web', 'auth']]);
 
 Route::middleware('auth')->group(function () {
@@ -60,6 +60,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/wishlist',              [WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/toggle',      [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::delete('/wishlist/{id}',      [WishlistController::class, 'destroy'])->name('wishlist.destroy');
+
+    // Chat
+    Route::get('/chat/conversation',   [ChatController::class, 'conversation'])->name('chat.conversation');
+    Route::post('/chat/send',          [ChatController::class, 'send'])->name('chat.send');
+    Route::get('/chat/unread',         [ChatController::class, 'unread'])->name('chat.unread');
 
     // Reviews
     Route::post('/reviews',              [ReviewController::class, 'store'])->name('reviews.store');
@@ -106,6 +111,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Reviews
         Route::get('/reviews',                [AdminReviewController::class, 'index'])->name('reviews.index');
         Route::delete('/reviews/{id}',        [AdminReviewController::class, 'reject'])->name('reviews.reject');
+
+        // Chat
+        Route::get('/chat',                      [AdminChatController::class, 'index'])->name('chat.index');
+        Route::get('/chat/{id}/messages',        [AdminChatController::class, 'messages'])->name('chat.messages');
+        Route::post('/chat/{id}/send',           [AdminChatController::class, 'send'])->name('chat.send');
+        Route::patch('/chat/{id}/close',         [AdminChatController::class, 'close'])->name('chat.close');
+        Route::get('/chat/unread',               [AdminChatController::class, 'unread'])->name('chat.unread');
 
         // Customers
         Route::get('/customers',                     [AdminCustomerController::class, 'index'])->name('customers.index');
