@@ -84,6 +84,27 @@ class ChatController extends Controller
         return response()->json(['ok' => true, 'id' => $message->id]);
     }
 
+    /**
+     * Mark all admin messages in the user's conversation as read.
+     * Called by the frontend when the chat is opened or when an admin
+     * message arrives while the chat window is already open.
+     */
+    public function markRead()
+    {
+        $user = Auth::user();
+
+        $conversation = ChatConversation::where('user_id', $user->id)->first();
+
+        if ($conversation) {
+            $conversation->messages()
+                ->where('sender_type', 'admin')
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
     public function unread()
     {
         $user = Auth::user();

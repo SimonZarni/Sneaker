@@ -70,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
     // Chat
     Route::get('/chat/conversation',   [ChatController::class, 'conversation'])->name('chat.conversation');
     Route::post('/chat/send',          [ChatController::class, 'send'])->name('user.chat.send');
+    Route::post('/chat/read',          [ChatController::class, 'markRead'])->name('chat.markRead');
     Route::get('/chat/unread',         [ChatController::class, 'unread'])->name('chat.unread');
 
     // Reviews

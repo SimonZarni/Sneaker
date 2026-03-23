@@ -57,8 +57,13 @@ export default function ChatWidget({ userId }: Props) {
                         body:        data.body,
                         created_at:  data.created_at,
                     }]);
-                    // If chat is closed, increment unread badge
-                    if (!open) setUnread(u => u + 1);
+                    if (open) {
+                        // Chat is open — mark as read in DB immediately
+                        axios.post('/chat/read').catch(() => {});
+                    } else {
+                        // Chat is closed — increment unread badge
+                        setUnread(u => u + 1);
+                    }
                 }
             });
 
@@ -73,13 +78,18 @@ export default function ChatWidget({ userId }: Props) {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Focus input when opened
+    // Focus input when opened + mark messages as read in DB
     useEffect(() => {
         if (open) {
             setTimeout(() => inputRef.current?.focus(), 100);
             setUnread(0);
+            // Mark all admin messages as read in the DB every time chat opens.
+            // This ensures the poll never resurfaces old counts after reading.
+            if (conversationId) {
+                axios.post('/chat/read').catch(() => {});
+            }
         }
-    }, [open]);
+    }, [open, conversationId]);
 
     // Poll for unread when chat is closed
     useEffect(() => {
