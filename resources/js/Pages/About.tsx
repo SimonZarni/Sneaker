@@ -35,7 +35,7 @@ export default function About() {
                                     {auth.user.name}
                                 </Link>
                                 <Link href="/orders" className="hover:text-brand-slate transition-colors">
-                                    My Orders
+                                    My Orders{auth.activeOrderCount > 0 && (<span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "1px 6px", borderRadius: "9999px", fontSize: "8px", fontWeight: 900, marginLeft: "4px" }}>{auth.activeOrderCount}</span>)}
                                 </Link>
                                 <Link href="/logout" method="post" as="button"
                                     className="hover:text-brand-slate transition-colors uppercase cursor-pointer">

@@ -47,8 +47,8 @@ export default function WishlistIndex({ items }: Props) {
                         <Link href={route("shop.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
                             Shop
                         </Link>
-                        <Link href={route("orders.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
-                            Orders
+                       <Link href={route("orders.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
+                            My Orders{auth.activeOrderCount > 0 && (<span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "1px 6px", borderRadius: "9999px", fontSize: "8px", fontWeight: 900, marginLeft: "4px" }}>{auth.activeOrderCount}</span>)}
                         </Link>
                         <span className="border-b-2 border-brand-charcoal pb-0.5">Wishlist</span>
                     </div>
