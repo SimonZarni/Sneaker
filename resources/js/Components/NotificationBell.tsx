@@ -1,63 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { router } from '@inertiajs/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNotifications } from '@/Contexts/NotificationContext';
 
-interface Notification {
-    id: string;
-    order_id: number;
-    order_number: string;
-    type: string;
-    title: string;
-    message: string;
-    icon: string;
-    delivery_status: string;
-    received_at: string;
-    read: boolean;
-}
+export default function NotificationBell({ userId }: { userId: number }) {
+    const { notifications, toast, unreadCount, markRead, markAllRead, dismissToast } = useNotifications();
+    const [open, setOpen] = useState(false);
+    const dropdownRef     = useRef<HTMLDivElement>(null);
 
-interface Props {
-    userId: number;
-}
-
-export default function NotificationBell({ userId }: Props) {
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [open, setOpen]   = useState(false);
-    const [toast, setToast] = useState<Notification | null>(null);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-    const toastTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    // ── Subscribe to Pusher private channel ───────────────────────────────────
-    useEffect(() => {
-        // @ts-ignore
-        if (typeof window.Echo === 'undefined') return;
-
-        // @ts-ignore
-        const channel = window.Echo.private(`orders.${userId}`)
-            .listen('.order.status.changed', (data: any) => {
-                const notification: Notification = {
-                    id:              `${data.id}-${data.type}-${Date.now()}`,
-                    order_id:        data.id,
-                    order_number:    data.order_number,
-                    type:            data.type,
-                    title:           data.title,
-                    message:         data.message,
-                    icon:            data.icon,
-                    delivery_status: data.delivery_status,
-                    received_at:     new Date().toISOString(),
-                    read:            false,
-                };
-                setNotifications(prev => [notification, ...prev].slice(0, 20));
-                showToast(notification);
-            });
-
-        return () => {
-            // @ts-ignore
-            window.Echo.leave(`orders.${userId}`);
-        };
-    }, [userId]);
-
-    // ── Close dropdown on outside click ──────────────────────────────────────
+    // Close dropdown on outside click
     useEffect(() => {
         const handler = (e: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -68,45 +17,14 @@ export default function NotificationBell({ userId }: Props) {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    const showToast = useCallback((notification: Notification) => {
-        // Clear any existing timer first
-        if (toastTimer.current) {
-            clearTimeout(toastTimer.current);
-            toastTimer.current = null;
-        }
-        setToast(notification);
-        // Use a longer delay — 6000ms so the full 5s is visible after render
-        toastTimer.current = setTimeout(() => {
-            setToast(null);
-            toastTimer.current = null;
-        }, 6000);
-    }, []);
-
-    // Cleanup timer on unmount
-    useEffect(() => {
-        return () => {
-            if (toastTimer.current) clearTimeout(toastTimer.current);
-        };
-    }, []);
-
-    const markRead = (id: string) => {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    };
-
-    const markAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    };
-
-    const handleNotificationClick = (notification: Notification) => {
+    const handleNotificationClick = (notification: typeof notifications[0]) => {
         markRead(notification.id);
         setOpen(false);
-        // Use window.location for navigation to avoid Inertia 500 on direct visit
         window.location.href = `/orders/${notification.order_id}`;
     };
 
-    const handleToastClick = (notification: Notification) => {
-        if (toastTimer.current) clearTimeout(toastTimer.current);
-        setToast(null);
+    const handleToastClick = (notification: typeof notifications[0]) => {
+        dismissToast();
         window.location.href = `/orders/${notification.order_id}`;
     };
 
@@ -122,7 +40,7 @@ export default function NotificationBell({ userId }: Props) {
 
     return (
         <>
-            {/* ── Bell button ── */}
+            {/* Bell button */}
             <div ref={dropdownRef} style={{ position: 'relative' }}>
                 <button
                     onClick={() => setOpen(v => !v)}
@@ -150,7 +68,7 @@ export default function NotificationBell({ userId }: Props) {
                     )}
                 </button>
 
-                {/* ── Dropdown ── */}
+                {/* Dropdown */}
                 {open && (
                     <div style={{
                         position: 'absolute', right: 0, top: 'calc(100% + 12px)',
@@ -226,7 +144,7 @@ export default function NotificationBell({ userId }: Props) {
                 )}
             </div>
 
-            {/* ── Toast popup ── */}
+            {/* Toast popup */}
             {toast && (
                 <div
                     onClick={() => handleToastClick(toast)}
@@ -236,8 +154,7 @@ export default function NotificationBell({ userId }: Props) {
                         padding: '14px 16px', zIndex: 9999,
                         display: 'flex', alignItems: 'flex-start', gap: '12px',
                         maxWidth: '320px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-                        cursor: 'pointer',
-                        animation: 'slideUp 0.3s ease',
+                        cursor: 'pointer', animation: 'slideUp 0.3s ease',
                     }}
                 >
                     <span style={{ fontSize: '20px', flexShrink: 0 }}>{toast.icon}</span>
@@ -247,11 +164,9 @@ export default function NotificationBell({ userId }: Props) {
                         <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.35)', marginTop: '3px' }}>Click to view order →</p>
                     </div>
                     <button
-                        onClick={e => { e.stopPropagation(); if (toastTimer.current) clearTimeout(toastTimer.current); setToast(null); }}
+                        onClick={e => { e.stopPropagation(); dismissToast(); }}
                         style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '16px', flexShrink: 0, padding: 0 }}
-                    >
-                        ✕
-                    </button>
+                    >✕</button>
                     <style>{`@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
                 </div>
             )}
