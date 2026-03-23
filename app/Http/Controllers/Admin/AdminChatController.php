@@ -8,6 +8,7 @@ use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class AdminChatController extends Controller
@@ -98,9 +99,16 @@ class AdminChatController extends Controller
 
         $conversation->update(['last_message_at' => now()]);
 
-        broadcast(new ChatMessageSent($message, $conversation));
+        try {
+            broadcast(new ChatMessageSent($message, $conversation));
+        } catch (\Throwable $e) {
+            Log::warning('Admin chat broadcast failed', [
+                'conversation_id' => $conversation->id,
+                'error'           => $e->getMessage(),
+            ]);
+        }
 
-        return response()->json(['ok' => true]);
+        return response()->json(['ok' => true, 'id' => $message->id]);
     }
 
     /**

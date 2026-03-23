@@ -69,7 +69,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Chat
     Route::get('/chat/conversation',   [ChatController::class, 'conversation'])->name('chat.conversation');
-    Route::post('/chat/send',          [ChatController::class, 'send'])->name('chat.send');
+    Route::post('/chat/send',          [ChatController::class, 'send'])->name('user.chat.send');
     Route::get('/chat/unread',         [ChatController::class, 'unread'])->name('chat.unread');
 
     // Reviews
@@ -118,12 +118,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/reviews',                [AdminReviewController::class, 'index'])->name('reviews.index');
         Route::delete('/reviews/{id}',        [AdminReviewController::class, 'reject'])->name('reviews.reject');
 
-        // Chat
+        // Chat — unread must come before {id} routes to avoid wildcard capture
         Route::get('/chat',                      [AdminChatController::class, 'index'])->name('chat.index');
+        Route::get('/chat/unread',               [AdminChatController::class, 'unread'])->name('admin.chat.unread');
         Route::get('/chat/{id}/messages',        [AdminChatController::class, 'messages'])->name('chat.messages');
-        Route::post('/chat/{id}/send',           [AdminChatController::class, 'send'])->name('chat.send');
+        Route::post('/chat/{id}/send',           [AdminChatController::class, 'send'])->name('admin.chat.send');
         Route::patch('/chat/{id}/close',         [AdminChatController::class, 'close'])->name('chat.close');
-        Route::get('/chat/unread',               [AdminChatController::class, 'unread'])->name('chat.unread');
 
         // Customers
         Route::get('/customers',                     [AdminCustomerController::class, 'index'])->name('customers.index');

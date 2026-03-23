@@ -7,13 +7,10 @@ use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ChatController extends Controller
 {
-    /**
-     * Get or create the authenticated user's conversation.
-     * Returns conversation id + last 50 messages.
-     */
     public function conversation()
     {
         $user = Auth::user();
@@ -33,7 +30,7 @@ class ChatController extends Controller
                 'created_at'  => $m->created_at->toISOString(),
             ]);
 
-        // Mark all admin messages as read when user opens chat
+        // Mark admin messages as read when user opens chat
         $conversation->messages()
             ->where('sender_type', 'admin')
             ->whereNull('read_at')
@@ -46,9 +43,6 @@ class ChatController extends Controller
         ]);
     }
 
-    /**
-     * Send a message from the user.
-     */
     public function send(Request $request)
     {
         $request->validate([
@@ -62,11 +56,11 @@ class ChatController extends Controller
             ['status' => 'open', 'last_message_at' => now()]
         );
 
-        // Reopen closed conversations when user sends a new message
         if ($conversation->status === 'closed') {
             $conversation->update(['status' => 'open']);
         }
 
+        // Save message to DB first — always succeeds regardless of Pusher
         $message = ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender_type'     => 'user',
@@ -76,14 +70,20 @@ class ChatController extends Controller
 
         $conversation->update(['last_message_at' => now()]);
 
-        broadcast(new ChatMessageSent($message, $conversation->load('user')));
+        // Broadcast via Pusher — wrapped in try/catch so a Pusher failure
+        // never prevents the message from being saved to the DB
+        try {
+            broadcast(new ChatMessageSent($message, $conversation->load('user')));
+        } catch (\Throwable $e) {
+            Log::warning('Chat broadcast failed', [
+                'conversation_id' => $conversation->id,
+                'error'           => $e->getMessage(),
+            ]);
+        }
 
-        return response()->json(['ok' => true]);
+        return response()->json(['ok' => true, 'id' => $message->id]);
     }
 
-    /**
-     * Unread count — how many admin messages the user hasn't read.
-     */
     public function unread()
     {
         $user = Auth::user();
