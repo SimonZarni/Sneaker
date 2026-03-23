@@ -73,27 +73,45 @@ export default function ChatWidget({ userId }: Props) {
         };
     }, [conversationId]);
 
-    // Scroll to bottom whenever messages change
+    // Scroll to bottom whenever messages change (new message arrives)
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (messages.length > 0) {
+            bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+        }
     }, [messages]);
 
-    // Focus input when opened + mark messages as read in DB
+    // Scroll to bottom immediately when chat opens (DOM just mounted)
+    // Use a small delay so the messages div has fully painted before scrolling.
+    useEffect(() => {
+        if (!open) return;
+        const timer = setTimeout(() => {
+            bottomRef.current?.scrollIntoView({ behavior: 'auto' });
+        }, 80);
+        return () => clearTimeout(timer);
+    }, [open]);
+
+    // Focus input when opened
     useEffect(() => {
         if (open) {
             setTimeout(() => inputRef.current?.focus(), 100);
-            setUnread(0);
-            // Mark all admin messages as read in the DB every time chat opens.
-            // This ensures the poll never resurfaces old counts after reading.
-            if (conversationId) {
-                axios.post('/chat/read').catch(() => {});
-            }
         }
+    }, [open]);
+
+    // Mark messages as read in DB + clear badge whenever chat is open
+    // Runs when: chat opens (open changes to true) OR conversationId first loads
+    // while chat is already open. Does NOT run when chat is closed.
+    useEffect(() => {
+        if (!open || !conversationId) return;
+        setUnread(0);
+        axios.post('/chat/read').catch(() => {});
     }, [open, conversationId]);
 
-    // Poll for unread when chat is closed
+    // Poll for unread when chat is closed — fetch immediately on mount/close,
+    // then every 30 seconds. This ensures the badge shows correctly right away.
     useEffect(() => {
         if (open || !conversationId) return;
+        // Fetch immediately when chat closes or conversationId first loads
+        axios.get('/chat/unread').then(r => setUnread(r.data.unread));
         const interval = setInterval(() => {
             axios.get('/chat/unread').then(r => setUnread(r.data.unread));
         }, 30000);
