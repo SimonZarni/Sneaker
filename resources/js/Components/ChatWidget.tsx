@@ -25,6 +25,11 @@ export default function ChatWidget({ userId }: Props) {
     const inputRef                          = useRef<HTMLInputElement>(null);
     const loadedRef                         = useRef(false);
 
+    // Fetch unread count on mount so badge shows without needing to open chat first
+    useEffect(() => {
+        axios.get('/chat/unread').then(r => setUnread(r.data.unread)).catch(() => {});
+    }, []);
+
     // Load conversation when widget first opens
     useEffect(() => {
         if (!open || loadedRef.current) return;
@@ -106,17 +111,15 @@ export default function ChatWidget({ userId }: Props) {
         axios.post('/chat/read').catch(() => {});
     }, [open, conversationId]);
 
-    // Poll for unread when chat is closed — fetch immediately on mount/close,
-    // then every 30 seconds. This ensures the badge shows correctly right away.
+    // Poll for unread when chat is closed — runs regardless of whether
+    // chat has ever been opened so badge always reflects current state.
     useEffect(() => {
-        if (open || !conversationId) return;
-        // Fetch immediately when chat closes or conversationId first loads
-        axios.get('/chat/unread').then(r => setUnread(r.data.unread));
+        if (open) return;
         const interval = setInterval(() => {
-            axios.get('/chat/unread').then(r => setUnread(r.data.unread));
+            axios.get('/chat/unread').then(r => setUnread(r.data.unread)).catch(() => {});
         }, 30000);
         return () => clearInterval(interval);
-    }, [open, conversationId]);
+    }, [open]);
 
     const sendMessage = async () => {
         if (!input.trim() || sending) return;
