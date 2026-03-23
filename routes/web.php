@@ -19,8 +19,14 @@ use App\Http\Controllers\Admin\AdminChatController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
-// Broadcasting auth
+// Broadcasting auth for regular users
 Broadcast::routes(['middleware' => ['web', 'auth']]);
+
+// Broadcasting auth for admins — uses admin middleware so admins can
+// subscribe to the private admin-chat channel
+Route::post('/broadcasting/auth/admin', function () {
+    return \Illuminate\Support\Facades\Broadcast::auth(request());
+})->middleware(['web', 'admin'])->name('broadcasting.auth.admin');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
