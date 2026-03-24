@@ -435,12 +435,12 @@ import Footer from "@/Components/Footer";
 export default function Home({ featured }: any) {
     const { navigation, cart, auth }: any = usePage().props;
 
-    // State to track which top-level item is being hovered
     const [activeMenu, setActiveMenu] = useState<{
         type: "gender" | "brand";
         id: number;
     } | null>(null);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const cartCount =
         cart?.items?.reduce(
@@ -452,49 +452,139 @@ export default function Home({ featured }: any) {
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
             <Head title="SNEAKER.DRP — The Vault" />
 
-            {/* NAVIGATION WRAPPER */}
-            <nav
-                className="fixed top-0 w-full z-50 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md"
-                onMouseLeave={() => setActiveMenu(null)} // Close menu when leaving the whole nav area
+            {/* MOBILE SIDEBAR OVERLAY */}
+            <div
+                className={`fixed inset-0 z-[60] transition-all duration-300 ${isMobileMenuOpen ? "visible" : "invisible"}`}
             >
-                {/* Tier 1: Identity & Utility */}
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
-                    <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
+                {/* Backdrop */}
+                <div
+                    className={`absolute inset-0 bg-brand-charcoal/60 backdrop-blur-sm transition-opacity duration-300 ${isMobileMenuOpen ? "opacity-100" : "opacity-0"}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+
+                {/* Drawer */}
+                <div
+                    className={`absolute top-0 right-0 h-full w-72 bg-brand-white flex flex-col transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}
+                >
+                    {/* Drawer Header */}
+                    <div className="flex items-center justify-between px-6 py-6 border-b border-brand-surface">
+                        <span className="text-xs font-black uppercase tracking-widest">Menu</span>
+                        <button
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="p-1 hover:opacity-50 transition-opacity"
+                        >
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Drawer Nav Links */}
+                    <nav className="flex flex-col flex-1 px-6 py-8 gap-1 overflow-y-auto">
                         <Link
                             href="/shop"
-                            className="hover:text-brand-slate transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
                         >
                             The Archive
                         </Link>
                         <Link
                             href={route("about")}
-                            className="hover:text-brand-slate transition-colors"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
                         >
+                            About Us
+                        </Link>
+
+                        {auth?.user ? (
+                            <>
+                                <Link
+                                    href="/profile"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
+                                >
+                                    {auth.user.name}
+                                </Link>
+                                <Link
+                                    href="/orders"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
+                                >
+                                    My Orders
+                                </Link>
+                                <Link
+                                    href="/logout"
+                                    method="post"
+                                    as="button"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="text-left text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors cursor-pointer"
+                                >
+                                    Log Out
+                                </Link>
+                            </>
+                        ) : (
+                            <Link
+                                href="/login"
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
+                            >
+                                Login
+                            </Link>
+                        )}
+
+                        {/* Vault / Cart */}
+                        <button
+                            onClick={() => { setIsMobileMenuOpen(false); setIsCartOpen(true); }}
+                            className="flex items-center justify-between text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
+                        >
+                            <span>Vault</span>
+                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">
+                                {cartCount}
+                            </span>
+                        </button>
+                    </nav>
+
+                    {/* Drawer Footer */}
+                    <div className="px-6 py-6 border-t border-brand-surface">
+                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-slate/30">
+                            SNEAKER.DRP © 2026
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* NAVIGATION WRAPPER */}
+            <nav
+                className="fixed top-0 w-full z-50 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md"
+                onMouseLeave={() => setActiveMenu(null)}
+            >
+                {/* Tier 1: Identity & Utility */}
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
+                    {/* Desktop left links */}
+                    <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
+                        <Link href="/shop" className="hover:text-brand-slate transition-colors">
+                            The Archive
+                        </Link>
+                        <Link href={route("about")} className="hover:text-brand-slate transition-colors">
                             About Us
                         </Link>
                     </div>
 
-                    <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
+                    {/* Logo — centred on mobile, normal on desktop */}
+                    <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0 lg:flex-shrink">
                         <Link href="/">SNEAKER.DRP</Link>
                     </h1>
-                    <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+
+                    {/* Desktop right links */}
+                    <div className="flex-1 hidden lg:flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
                         {auth?.user ? (
                             <>
-                                {/* User is Logged In */}
-                                <Link
-                                    href="/profile"
-                                    className="hover:text-brand-slate transition-colors"
-                                >
+                                <Link href="/profile" className="hover:text-brand-slate transition-colors">
                                     {auth.user.name}
                                 </Link>
-
-                                <Link
-                                    href="/orders"
-                                    className="hover:text-brand-slate transition-colors"
-                                >
+                                <Link href="/orders" className="hover:text-brand-slate transition-colors">
                                     My Orders
                                 </Link>
-
                                 <Link
                                     href="/logout"
                                     method="post"
@@ -506,16 +596,10 @@ export default function Home({ featured }: any) {
                                 <NotificationBell userId={auth.user.id} />
                             </>
                         ) : (
-                            /* User is Guest */
-                            <Link
-                                href="/login"
-                                className="hover:text-brand-slate transition-colors"
-                            >
+                            <Link href="/login" className="hover:text-brand-slate transition-colors">
                                 Login
                             </Link>
                         )}
-
-                        {/* Vault / Cart */}
                         <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 group">
                             <span>Vault</span>
                             <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px] group-hover:bg-brand-slate transition-colors">
@@ -523,10 +607,30 @@ export default function Home({ featured }: any) {
                             </span>
                         </button>
                     </div>
+
+                    {/* Mobile right controls: bell + cart count + hamburger */}
+                    <div className="flex lg:hidden items-center gap-4 ml-auto">
+                        {auth?.user && <NotificationBell userId={auth.user.id} />}
+                        <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
+                            <span>Vault</span>
+                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">
+                                {cartCount}
+                            </span>
+                        </button>
+                        <button
+                            onClick={() => setIsMobileMenuOpen(true)}
+                            className="p-1 hover:opacity-50 transition-opacity"
+                            aria-label="Open menu"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
-                {/* Tier 2: Discovery Taps */}
-                <div className="border-t border-brand-surface relative">
+                {/* Tier 2: Discovery Taps — hidden on mobile */}
+                <div className="hidden md:block border-t border-brand-surface relative">
                     <div className="mx-auto max-w-7xl px-4 flex justify-center gap-10 py-4">
                         {/* Genders Loop */}
                         {navigation.genders.map((gender: any) => (
@@ -641,7 +745,7 @@ export default function Home({ featured }: any) {
             </nav>
 
             {/* Hero Section */}
-            <section className="pt-48 pb-20 px-4">
+            <section className="pt-28 md:pt-48 pb-20 px-4">
                 <div className="mx-auto max-w-7xl">
                     <div className="relative overflow-hidden bg-brand-surface h-[70vh] flex items-center group">
                         <div className="absolute inset-0 z-0">
@@ -655,7 +759,7 @@ export default function Home({ featured }: any) {
                             <span className="text-xs font-black uppercase tracking-[0.4em] text-brand-white">
                                 Season 2026 // Archive
                             </span>
-                            <h2 className="text-7xl lg:text-9xl font-black text-brand-white uppercase leading-[0.85] tracking-tightest">
+                            <h2 className="text-5xl sm:text-7xl lg:text-9xl font-black text-brand-white uppercase leading-[0.85] tracking-tightest">
                                 The New <br /> Standard.
                             </h2>
                             <Link
@@ -852,7 +956,7 @@ export default function Home({ featured }: any) {
 
             {/* Floating chat widget — only for logged in users */}
             {auth?.user && <ChatWidget userId={auth.user.id} />}
-            
+
         </div>
     );
 }

@@ -45,15 +45,14 @@ export default function ShopIndex({ products, filters }: Props) {
     const { auth, cart, navigation }: any = usePage().props;
     const cartCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
-    // Get brands/categories/genders from shared navigation prop
-    // instead of fetching them separately on every request
     const brands     = navigation?.brands     ?? [];
     const categories = navigation?.categories ?? [];
     const genders    = navigation?.genders    ?? [];
 
-    const [search,      setSearch]      = useState(filters.search ?? "");
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isCartOpen,  setIsCartOpen]  = useState(false);
+    const [search,          setSearch]          = useState(filters.search ?? "");
+    const [sidebarOpen,     setSidebarOpen]     = useState(false);
+    const [isCartOpen,      setIsCartOpen]      = useState(false);
+    const [mobileMenuOpen,  setMobileMenuOpen]  = useState(false);
     const searchRef = useRef<HTMLInputElement>(null);
 
     const activeBrand    = filters.brand    ?? "";
@@ -86,13 +85,76 @@ export default function ShopIndex({ products, filters }: Props) {
         <div style={{ minHeight: "100vh", backgroundColor: "#fff", fontFamily: "inherit" }}>
             <Head title="Shop — SNEAKER.DRP" />
 
+            {/* ── MOBILE NAV SIDEBAR OVERLAY ── */}
+            <div style={{ position: "fixed", inset: 0, zIndex: 60, pointerEvents: mobileMenuOpen ? "auto" : "none" }}>
+                {/* Backdrop */}
+                <div
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)", backdropFilter: "blur(4px)", opacity: mobileMenuOpen ? 1 : 0, transition: "opacity 0.3s" }}
+                />
+                {/* Drawer */}
+                <div style={{ position: "absolute", top: 0, right: 0, height: "100%", width: "288px", backgroundColor: "#fff", display: "flex", flexDirection: "column", transform: mobileMenuOpen ? "translateX(0)" : "translateX(100%)", transition: "transform 0.3s ease-in-out" }}>
+                    {/* Header */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px", borderBottom: "1px solid #f0f0f0" }}>
+                        <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em" }}>Menu</span>
+                        <button onClick={() => setMobileMenuOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    {/* Links */}
+                    <nav style={{ display: "flex", flexDirection: "column" as const, flex: 1, padding: "32px 24px", gap: "0", overflowY: "auto" as const }}>
+                        {[
+                            { label: "Shop", href: route("shop.index") },
+                            { label: "About Us", href: route("about") },
+                        ].map((item) => (
+                            <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
+                                style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", padding: "14px 0", borderBottom: "1px solid #f0f0f0", color: "#0A0A0A", textDecoration: "none" }}>
+                                {item.label}
+                            </Link>
+                        ))}
+                        {auth?.user ? (
+                            <>
+                                <Link href={route("orders.index")} onClick={() => setMobileMenuOpen(false)}
+                                    style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", padding: "14px 0", borderBottom: "1px solid #f0f0f0", color: "#0A0A0A", textDecoration: "none" }}>
+                                    My Orders
+                                </Link>
+                                <Link href={route("wishlist.index")} onClick={() => setMobileMenuOpen(false)}
+                                    style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", padding: "14px 0", borderBottom: "1px solid #f0f0f0", color: "#0A0A0A", textDecoration: "none" }}>
+                                    Wishlist
+                                </Link>
+                                <Link href="/logout" method="post" as="button" onClick={() => setMobileMenuOpen(false)}
+                                    style={{ textAlign: "left" as const, fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", padding: "14px 0", borderBottom: "1px solid #f0f0f0", color: "rgba(45,50,62,0.5)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" } as any}>
+                                    Log Out
+                                </Link>
+                            </>
+                        ) : (
+                            <Link href="/login" onClick={() => setMobileMenuOpen(false)}
+                                style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", padding: "14px 0", borderBottom: "1px solid #f0f0f0", color: "#0A0A0A", textDecoration: "none" }}>
+                                Login
+                            </Link>
+                        )}
+                        <button onClick={() => { setMobileMenuOpen(false); setIsCartOpen(true); }}
+                            style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", padding: "14px 0", borderBottom: "1px solid #f0f0f0", color: "#0A0A0A", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" } as any}>
+                            <span>Vault</span>
+                            <span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "2px 6px", borderRadius: "9999px", fontSize: "8px" }}>{cartCount}</span>
+                        </button>
+                    </nav>
+                    {/* Footer */}
+                    <div style={{ padding: "24px", borderTop: "1px solid #f0f0f0" }}>
+                        <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.3em", color: "rgba(45,50,62,0.3)" }}>SNEAKER.DRP © 2026</p>
+                    </div>
+                </div>
+            </div>
+
             {/* ── NAV ── */}
             <nav style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: 0, zIndex: 50 }}>
-                <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#0A0A0A", textDecoration: "none" }}>
+                <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 16px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#0A0A0A", textDecoration: "none", flexShrink: 0 }}>
                         SNEAKER.DRP
                     </Link>
-                    <div style={{ display: "flex", alignItems: "center", gap: "32px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
+
+                    {/* Desktop links */}
+                    <div className="hidden-mobile" style={{ display: "flex", alignItems: "center", gap: "32px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
                         <Link href={route("shop.index")} style={{ color: "#0A0A0A", textDecoration: "none", borderBottom: "2px solid #0A0A0A", paddingBottom: "2px" }}>Shop</Link>
                         <Link href={route("about")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>About Us</Link>
                         {auth.user ? (
@@ -112,15 +174,27 @@ export default function ShopIndex({ products, filters }: Props) {
                             <span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "2px 6px", borderRadius: "9999px", fontSize: "8px" }}>{cartCount}</span>
                         </button>
                     </div>
+
+                    {/* Mobile right controls */}
+                    <div className="show-mobile" style={{ display: "none", alignItems: "center", gap: "16px" }}>
+                        {auth?.user && <NotificationBell userId={auth.user.id} />}
+                        <button onClick={() => setIsCartOpen(true)} style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#0A0A0A" }}>
+                            Vault
+                            <span style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "2px 6px", borderRadius: "9999px", fontSize: "8px" }}>{cartCount}</span>
+                        </button>
+                        <button onClick={() => setMobileMenuOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        </button>
+                    </div>
                 </div>
             </nav>
 
             {/* ── PAGE HEADER ── */}
-            <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "48px 32px 32px" }}>
-                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+            <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "32px 16px 24px" }}>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
                     <div>
                         <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.4em", color: "rgba(45,50,62,0.3)", marginBottom: "8px" }}>The Collection</p>
-                        <h1 style={{ fontSize: "48px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", lineHeight: 1 }}>All Drops</h1>
+                        <h1 style={{ fontSize: "clamp(32px, 8vw, 48px)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", lineHeight: 1 }}>All Drops</h1>
                     </div>
                     <p style={{ fontSize: "11px", fontWeight: 600, color: "rgba(45,50,62,0.4)", fontStyle: "italic" }}>
                         {products.from ?? 0}–{products.to ?? 0} of {products.total} products
@@ -129,8 +203,9 @@ export default function ShopIndex({ products, filters }: Props) {
             </div>
 
             {/* ── SEARCH + SORT BAR ── */}
-            <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px 24px" }}>
-                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 16px 24px" }}>
+                {/* Row 1: search input + search button */}
+                <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
                     <div style={{ flex: 1, position: "relative" }}>
                         <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "rgba(45,50,62,0.3)", pointerEvents: "none" }}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -150,33 +225,39 @@ export default function ShopIndex({ products, filters }: Props) {
                             </button>
                         )}
                     </div>
-                    <button onClick={() => apply({ search })} style={{ padding: "12px 24px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+                    <button onClick={() => apply({ search })} style={{ padding: "12px 20px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}>
                         Search
                     </button>
+                </div>
+
+                {/* Row 2: filters + sort + clear */}
+                <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                     <button
                         onClick={() => setSidebarOpen((v) => !v)}
-                        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 20px", border: `1px solid ${sidebarOpen || activeFilterCount > 0 ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: sidebarOpen || activeFilterCount > 0 ? "#0A0A0A" : "#fff", color: sidebarOpen || activeFilterCount > 0 ? "#fff" : "#0A0A0A", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", cursor: "pointer", whiteSpace: "nowrap" }}
+                        style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 16px", border: `1px solid ${sidebarOpen || activeFilterCount > 0 ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: sidebarOpen || activeFilterCount > 0 ? "#0A0A0A" : "#fff", color: sidebarOpen || activeFilterCount > 0 ? "#fff" : "#0A0A0A", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", cursor: "pointer", whiteSpace: "nowrap" }}
                     >
                         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
                         Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
                     </button>
-                    <select value={activeSort} onChange={(e) => apply({ sort: e.target.value })} style={{ padding: "12px 16px", border: "1px solid #e5e7eb", backgroundColor: "#fff", fontSize: "10px", fontWeight: 700, outline: "none", cursor: "pointer" }}>
+                    <select value={activeSort} onChange={(e) => apply({ sort: e.target.value })} style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #e5e7eb", backgroundColor: "#fff", fontSize: "10px", fontWeight: 700, outline: "none", cursor: "pointer" }}>
                         {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                     {isFiltered && (
-                        <button onClick={clearAll} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "12px 16px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "1px solid #fecaca", backgroundColor: "#fef2f2", color: "#dc2626", cursor: "pointer", whiteSpace: "nowrap" }}>
+                        <button onClick={clearAll} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "10px 14px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "1px solid #fecaca", backgroundColor: "#fef2f2", color: "#dc2626", cursor: "pointer", whiteSpace: "nowrap" }}>
                             <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-                            Clear All
+                            Clear
                         </button>
                     )}
                 </div>
 
                 {/* ── FILTER PANEL ── */}
                 {sidebarOpen && (
-                    <div style={{ marginTop: "12px", backgroundColor: "#fafafa", border: "1px solid #f0f0f0", padding: "24px 28px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "32px" }}>
-                        <FilterGroup label="Brand"    items={brands}     active={activeBrand}    onSelect={(v) => apply({ brand: v })} />
-                        <FilterGroup label="Category" items={categories} active={activeCategory} onSelect={(v) => apply({ category: v })} />
-                        <FilterGroup label="Gender"   items={genders}    active={activeGender}   onSelect={(v) => apply({ gender: v })} />
+                    <div style={{ marginTop: "12px", backgroundColor: "#fafafa", border: "1px solid #f0f0f0", padding: "20px" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "24px" }}>
+                            <FilterGroup label="Brand"    items={brands}     active={activeBrand}    onSelect={(v) => apply({ brand: v })} />
+                            <FilterGroup label="Category" items={categories} active={activeCategory} onSelect={(v) => apply({ category: v })} />
+                            <FilterGroup label="Gender"   items={genders}    active={activeGender}   onSelect={(v) => apply({ gender: v })} />
+                        </div>
                     </div>
                 )}
 
@@ -192,7 +273,7 @@ export default function ShopIndex({ products, filters }: Props) {
             </div>
 
             {/* ── PRODUCT GRID ── */}
-            <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px 80px" }}>
+            <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 16px 80px" }}>
                 {products.data.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "80px 0", border: "1px solid #f5f5f7", backgroundColor: "#fafafa" }}>
                         <p style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(45,50,62,0.2)", marginBottom: "16px" }}>No sneakers found</p>
@@ -202,7 +283,7 @@ export default function ShopIndex({ products, filters }: Props) {
                     </div>
                 ) : (
                     <>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1px", backgroundColor: "#f0f0f0", border: "1px solid #f0f0f0", overflow: "hidden" }}>
+                        <div className="product-grid" style={{ display: "grid", gap: "1px", backgroundColor: "#f0f0f0", border: "1px solid #f0f0f0", overflow: "hidden" }}>
                             {products.data.map((product) => (
                                 <ProductCard key={product.id} product={product} auth={auth} />
                             ))}
@@ -216,6 +297,23 @@ export default function ShopIndex({ products, filters }: Props) {
                     </>
                 )}
             </div>
+
+            {/* Responsive styles */}
+            <style>{`
+                .product-grid { grid-template-columns: repeat(2, 1fr); }
+                .hidden-mobile { display: flex !important; }
+                .show-mobile   { display: none !important; }
+                @media (min-width: 768px) {
+                    .product-grid { grid-template-columns: repeat(3, 1fr); }
+                }
+                @media (min-width: 1024px) {
+                    .product-grid { grid-template-columns: repeat(4, 1fr); }
+                }
+                @media (max-width: 767px) {
+                    .hidden-mobile { display: none !important; }
+                    .show-mobile   { display: flex !important; }
+                }
+            `}</style>
 
             <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
         </div>
