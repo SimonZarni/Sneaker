@@ -71,8 +71,11 @@ export default function NotificationBell({ userId }: { userId: number }) {
                 {/* Dropdown */}
                 {open && (
                     <div style={{
-                        position: 'absolute', right: 0, top: 'calc(100% + 12px)',
-                        width: '320px', backgroundColor: '#fff',
+                        position: 'absolute',
+                        right: 0,
+                        top: 'calc(100% + 12px)',
+                        width: 'min(320px, calc(100vw - 16px))',
+                        backgroundColor: '#fff',
                         border: '1px solid #f0f0f0',
                         boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                         zIndex: 100,
@@ -149,11 +152,12 @@ export default function NotificationBell({ userId }: { userId: number }) {
                 <div
                     onClick={() => handleToastClick(toast)}
                     style={{
-                        position: 'fixed', bottom: '24px', right: '24px',
+                        position: 'fixed', bottom: '24px', right: '12px', left: '12px',
                         backgroundColor: '#0a0a0a', color: '#fff',
                         padding: '14px 16px', zIndex: 9999,
                         display: 'flex', alignItems: 'flex-start', gap: '12px',
-                        maxWidth: '320px', boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                        maxWidth: '320px', marginLeft: 'auto',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
                         cursor: 'pointer', animation: 'slideUp 0.3s ease',
                     }}
                 >
