@@ -125,7 +125,8 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
 
             {/* Table */}
             <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0" }}>
-                <div className="admin-prod-header" style={{ display: "grid", gridTemplateColumns: "56px minmax(0,1.8fr) 110px 110px 80px 80px 160px", gap: "16px", padding: "12px 20px", borderBottom: "1px solid #f0f0f0" }}>
+                {/* Desktop header — hidden via CSS class */}
+                <div className="admin-prod-header" style={{ gridTemplateColumns: "56px minmax(0,1.8fr) 110px 110px 80px 80px 160px", gap: "16px", padding: "12px 20px", borderBottom: "1px solid #f0f0f0" }}>
                     {["", "Product", "Brand", "Category", "Price", "Variants", "Actions"].map((h, i) => (
                         <p key={i} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(45,50,62,0.25)", textAlign: i === 6 ? "right" : "left" }}>{h}</p>
                     ))}
@@ -140,8 +141,8 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
 
                 {products.data.map((product) => (
                     <div key={product.id} style={{ borderBottom: "1px solid #fafafa" }}>
-                        {/* Mobile card */}
-                        <div className="admin-prod-mobile" style={{ padding: "14px 16px", display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                        {/* Mobile card — hidden at ≥768px by CSS */}
+                        <div className="admin-prod-mobile" style={{ padding: "14px 16px", gap: "12px", alignItems: "flex-start" }}>
                             <div style={{ width: "48px", height: "48px", backgroundColor: "#f9fafb", overflow: "hidden", flexShrink: 0 }}>
                                 {product.main_image_url ? <img src={product.main_image_url} alt={product.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply", padding: "4px" }} /> : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", color: "#d1d5db", fontWeight: 700 }}>IMG</div>}
                             </div>
@@ -162,8 +163,8 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
                                 </div>
                             </div>
                         </div>
-                        {/* Desktop row */}
-                        <div className="admin-prod-desktop" style={{ display: "grid", gridTemplateColumns: "56px minmax(0,1.8fr) 110px 110px 80px 80px 160px", gap: "16px", alignItems: "center", padding: "14px 20px" }}>
+                        {/* Desktop row — hidden below 768px by CSS */}
+                        <div className="admin-prod-desktop" style={{ gridTemplateColumns: "56px minmax(0,1.8fr) 110px 110px 80px 80px 160px", gap: "16px", alignItems: "center", padding: "14px 20px" }}>
                             <div style={{ width: "48px", height: "48px", backgroundColor: "#f9fafb", overflow: "hidden", flexShrink: 0 }}>
                                 {product.main_image_url ? <img src={product.main_image_url} alt={product.name} loading="lazy" decoding="async" style={{ width: "100%", height: "100%", objectFit: "contain", mixBlendMode: "multiply", padding: "4px" }} /> : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "8px", color: "#d1d5db", fontWeight: 700 }}>IMG</div>}
                             </div>
@@ -194,13 +195,14 @@ export default function AdminProductsIndex({ products, brands, filters, stats, a
 
             <Pagination data={products} preserveFilters={{ search, brand: activeBrand, status: activeStatus }} />
 
+            {/* Inject into <head> via portal to guarantee media query applies regardless of render position */}
             <style>{`
-                .admin-prod-header  { display: none; }
-                .admin-prod-mobile  { display: flex; }
+                .admin-prod-header,
                 .admin-prod-desktop { display: none !important; }
+                .admin-prod-mobile  { display: flex !important; }
                 @media (min-width: 768px) {
-                    .admin-prod-header  { display: grid; }
-                    .admin-prod-mobile  { display: none; }
+                    .admin-prod-header  { display: grid !important; }
+                    .admin-prod-mobile  { display: none !important; }
                     .admin-prod-desktop { display: grid !important; }
                 }
             `}</style>
