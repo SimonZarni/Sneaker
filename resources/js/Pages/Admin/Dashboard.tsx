@@ -132,7 +132,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
             <Head title="Admin — SNEAKER.DRP" />
 
             {/* ── TOP STAT CARDS ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px", marginBottom: "24px" }}>
 
                 {/* Revenue — dark card */}
                 <div style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "28px", gridColumn: "span 1" }}>
@@ -195,7 +195,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
             </div>
 
             {/* ── DELIVERY BREAKDOWN ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "16px", marginBottom: "24px" }}>
                 {[
                     { label: "Pending",    value: orderStats.pending },
                     { label: "Processing", value: orderStats.processing },
@@ -360,7 +360,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                     return (
                         <div style={{ display: "flex", flexDirection: "column" as const, gap: "1px", backgroundColor: "#f5f5f5" }}>
                             {/* Header */}
-                            <div style={{ display: "grid", gridTemplateColumns: "120px 1fr 100px 80px", gap: "16px", alignItems: "center", padding: "8px 16px", backgroundColor: "#fafafa" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 90px 60px", gap: "12px", alignItems: "center", padding: "8px 16px", backgroundColor: "#fafafa" }}>
                                 {["Month", "", "Revenue", "Orders"].map(h => (
                                     <p key={h} style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.25)" }}>{h}</p>
                                 ))}
@@ -369,7 +369,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                 const isCurrentMonth = i === monthlyRevenue.length - 1;
                                 const barW = m.revenue > 0 ? Math.max((m.revenue / maxRevenue) * 100, 2) : 0;
                                 return (
-                                    <div key={m.key} style={{ display: "grid", gridTemplateColumns: "120px 1fr 100px 80px", gap: "16px", alignItems: "center", padding: "14px 16px", backgroundColor: "#fff" }}>
+                                    <div key={m.key} style={{ display: "grid", gridTemplateColumns: "100px 1fr 90px 60px", gap: "12px", alignItems: "center", padding: "14px 16px", backgroundColor: "#fff" }}>
                                         <p style={{ fontSize: "11px", fontWeight: isCurrentMonth ? 900 : 700, color: isCurrentMonth ? "#0A0A0A" : "rgba(45,50,62,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
                                             {m.label}
                                             {isCurrentMonth && <span style={{ fontSize: "7px", fontWeight: 900, color: "rgba(45,50,62,0.3)", marginLeft: "6px", letterSpacing: "0.1em" }}>MTD</span>}
@@ -419,7 +419,8 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                     </div>
 
                     {/* Column headers */}
-                    <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 80px 100px", gap: "16px", padding: "10px 24px", borderBottom: "1px solid #fde68a", backgroundColor: "#fef3c7" }}>
+                    <div style={{ overflowX: "auto" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 80px 100px", gap: "16px", padding: "10px 24px", borderBottom: "1px solid #fde68a", backgroundColor: "#fef3c7", minWidth: "500px" }}>
                         {["Product", "Color", "Size", "Stock", ""].map(h => (
                             <p key={h} style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "#92400e" }}>{h}</p>
                         ))}
@@ -430,7 +431,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                         {lowStock.map(v => (
                             <div
                                 key={v.id}
-                                style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 80px 100px", gap: "16px", alignItems: "center", padding: "14px 24px", backgroundColor: "#fffbeb" }}
+                                style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr 80px 100px", gap: "16px", alignItems: "center", padding: "14px 24px", backgroundColor: "#fffbeb", minWidth: "500px" }}
                             >
                                 {/* Product name */}
                                 <p style={{ fontSize: "12px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "-0.01em", color: "#0A0A0A", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>
@@ -471,6 +472,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                             </div>
                         ))}
                     </div>
+                    </div>{/* end overflowX */}
                 </div>
             )}
 
@@ -498,8 +500,9 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                     </div>
                 ) : (
                     <>
+                        <div style={{ overflowX: "auto" }}>
                         {/* Column headers */}
-                        <div style={{ display: "grid", gridTemplateColumns: "32px 1fr 100px 100px 120px", gap: "16px", padding: "10px 32px", borderBottom: "1px solid #fafafa", backgroundColor: "#fafafa" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "28px 1fr 80px 80px 100px", gap: "12px", padding: "10px 20px", borderBottom: "1px solid #fafafa", backgroundColor: "#fafafa", minWidth: "480px" }}>
                             {["#", "Product", "Brand", "Units Sold", "Revenue"].map(h => (
                                 <p key={h} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.25)" }}>{h}</p>
                             ))}
@@ -513,7 +516,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                 <Link
                                     key={p.product_id}
                                     href={route("admin.products.edit", p.product_id)}
-                                    style={{ display: "grid", gridTemplateColumns: "32px 1fr 100px 100px 120px", gap: "16px", alignItems: "center", padding: "14px 32px", borderBottom: "1px solid #fafafa", textDecoration: "none", color: "inherit", backgroundColor: "transparent" }}
+                                    style={{ display: "grid", gridTemplateColumns: "28px 1fr 80px 80px 100px", gap: "12px", alignItems: "center", padding: "14px 20px", borderBottom: "1px solid #fafafa", textDecoration: "none", color: "inherit", backgroundColor: "transparent", minWidth: "480px" }}
                                 >
                                     {/* Rank */}
                                     <span style={{
@@ -551,6 +554,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                 </Link>
                             );
                         })}
+                        </div>{/* end overflowX */}
                     </>
                 )}
             </div>
@@ -573,7 +577,8 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                 </div>
 
                 {/* Column headers */}
-                <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr 1fr", gap: "16px", padding: "12px 32px", borderBottom: "1px solid #fafafa" }}>
+                <div style={{ overflowX: "auto" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr 1fr", gap: "16px", padding: "12px 20px", borderBottom: "1px solid #fafafa", minWidth: "560px" }}>
                     {["Order", "Customer", "Date", "Delivery", "Payment", "Total"].map((h) => (
                         <p key={h} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(45,50,62,0.25)" }}>
                             {h}
@@ -590,7 +595,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                         <Link
                             key={order.id}
                             href={route("admin.orders.show", order.id)}
-                            style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr 1fr", gap: "16px", alignItems: "center", padding: "16px 32px", borderBottom: "1px solid #fafafa", textDecoration: "none", color: "inherit", backgroundColor: "transparent" }}
+                            style={{ display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr 1fr 1fr", gap: "16px", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid #fafafa", textDecoration: "none", color: "inherit", backgroundColor: "transparent", minWidth: "560px" }}
                         >
                             <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{order.order_number}</p>
                             <p style={{ fontSize: "12px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.customer_name}</p>
@@ -601,6 +606,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                         </Link>
                     ))
                 )}
+                </div>{/* end overflowX */}
             </div>
         </AdminLayout>
     );
