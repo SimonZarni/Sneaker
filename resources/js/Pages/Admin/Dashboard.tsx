@@ -132,10 +132,10 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
             <Head title="Admin — SNEAKER.DRP" />
 
             {/* ── TOP STAT CARDS ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+            <div className="admin-stat-grid" style={{ gap: "16px", marginBottom: "24px" }}>
 
-                {/* Revenue — dark card */}
-                <div style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "28px", gridColumn: "span 1" }}>
+                {/* Revenue — dark card, always full width on mobile */}
+                <div className="admin-revenue-card" style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "24px" }}>
                     <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(255,255,255,0.3)", marginBottom: "12px" }}>
                         Total Revenue
                     </p>
@@ -195,7 +195,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
             </div>
 
             {/* ── DELIVERY BREAKDOWN ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+            <div className="admin-delivery-grid" style={{ gap: "16px", marginBottom: "24px" }}>
                 {[
                     { label: "Pending",    value: orderStats.pending },
                     { label: "Processing", value: orderStats.processing },
@@ -228,7 +228,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
 
 
             {/* ── WEEK vs LAST WEEK ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+            <div className="admin-week-grid" style={{ gap: "16px", marginBottom: "24px" }}>
                 {/* This week */}
                 <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "28px" }}>
                     <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.3em", color: "rgba(45,50,62,0.4)", marginBottom: "8px" }}>
@@ -360,7 +360,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                     return (
                         <div style={{ display: "flex", flexDirection: "column" as const, gap: "1px", backgroundColor: "#f5f5f5" }}>
                             {/* Header */}
-                            <div style={{ display: "grid", gridTemplateColumns: "100px 1fr 90px 60px", gap: "12px", alignItems: "center", padding: "8px 16px", backgroundColor: "#fafafa" }}>
+                            <div className="admin-month-header" style={{ padding: "8px 16px", backgroundColor: "#fafafa" }}>
                                 {["Month", "", "Revenue", "Orders"].map(h => (
                                     <p key={h} style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.25)" }}>{h}</p>
                                 ))}
@@ -369,7 +369,7 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                                 const isCurrentMonth = i === monthlyRevenue.length - 1;
                                 const barW = m.revenue > 0 ? Math.max((m.revenue / maxRevenue) * 100, 2) : 0;
                                 return (
-                                    <div key={m.key} style={{ display: "grid", gridTemplateColumns: "100px 1fr 90px 60px", gap: "12px", alignItems: "center", padding: "14px 16px", backgroundColor: "#fff" }}>
+                                    <div key={m.key} className="admin-month-row" style={{ padding: "14px 16px", backgroundColor: "#fff" }}>
                                         <p style={{ fontSize: "11px", fontWeight: isCurrentMonth ? 900 : 700, color: isCurrentMonth ? "#0A0A0A" : "rgba(45,50,62,0.6)", textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>
                                             {m.label}
                                             {isCurrentMonth && <span style={{ fontSize: "7px", fontWeight: 900, color: "rgba(45,50,62,0.3)", marginLeft: "6px", letterSpacing: "0.1em" }}>MTD</span>}
@@ -608,6 +608,61 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
                 )}
                 </div>{/* end overflowX */}
             </div>
+
+            {/* ── RESPONSIVE STYLES ── */}
+            <style>{`
+                /* Stat cards: 1 col mobile → 2 col sm → 4 col desktop */
+                .admin-stat-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                }
+                .admin-revenue-card { grid-column: 1 / -1; }
+
+                /* Delivery breakdown: always 2×2 */
+                .admin-delivery-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                }
+
+                /* Week comparison: stack on mobile */
+                .admin-week-grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                }
+
+                /* Monthly revenue: simple 3-col (label, revenue, orders) on mobile, add bar on md+ */
+                .admin-month-header, .admin-month-row {
+                    display: grid;
+                    grid-template-columns: 1fr 80px 50px;
+                    gap: 12px;
+                    align-items: center;
+                }
+                /* Hide the bar column on mobile */
+                .admin-month-header > p:nth-child(2),
+                .admin-month-row > div:nth-child(2) {
+                    display: none;
+                }
+
+                @media (min-width: 640px) {
+                    .admin-stat-grid   { grid-template-columns: repeat(2, 1fr); }
+                    .admin-revenue-card { grid-column: span 1; }
+                    .admin-week-grid   { grid-template-columns: repeat(2, 1fr); }
+                    /* Show bar column */
+                    .admin-month-header, .admin-month-row {
+                        grid-template-columns: 120px 1fr 90px 60px;
+                    }
+                    .admin-month-header > p:nth-child(2),
+                    .admin-month-row > div:nth-child(2) {
+                        display: block;
+                    }
+                }
+
+                @media (min-width: 1024px) {
+                    .admin-stat-grid   { grid-template-columns: repeat(4, 1fr); }
+                    .admin-revenue-card { grid-column: span 1; }
+                }
+            `}</style>
+
         </AdminLayout>
     );
 }
