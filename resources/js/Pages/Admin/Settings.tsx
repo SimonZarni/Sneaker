@@ -55,15 +55,15 @@ export default function AdminSettings({ brands, categories, genders, colors, shi
             <Head title="Admin — Settings" />
 
             {/* ── SHIPPING FEE ── */}
-            <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "28px 32px", marginBottom: "24px" }}>
+            <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "24px 20px", marginBottom: "24px" }}>
                 <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", marginBottom: "20px", paddingBottom: "12px", borderBottom: "1px solid #f5f5f5" }}>
                     Shipping Fee
                 </p>
                 <p style={{ fontSize: "10px", color: "rgba(45,50,62,0.5)", marginBottom: "16px", fontWeight: 600 }}>
                     This flat rate is added to every order at checkout. Set to 0 for free shipping.
                 </p>
-                <div style={{ display: "flex", gap: "12px", alignItems: "flex-end", maxWidth: "320px" }}>
-                    <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
+                    <div style={{ flex: 1, maxWidth: "280px" }}>
                         <label style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.2em", color: "rgba(45,50,62,0.5)", marginBottom: "6px", display: "block" }}>
                             Fee Amount (USD)
                         </label>
@@ -78,7 +78,7 @@ export default function AdminSettings({ brands, categories, genders, colors, shi
                             />
                         </div>
                     </div>
-                    <button onClick={saveShippingFee} disabled={feeSaving} style={{ ...btnPrimary, opacity: feeSaving ? 0.5 : 1 }}>
+                    <button onClick={saveShippingFee} disabled={feeSaving} style={{ ...btnPrimary, opacity: feeSaving ? 0.5 : 1, flexShrink: 0 }}>
                         {feeSaving ? "Saving..." : "Save"}
                     </button>
                 </div>
@@ -100,8 +100,8 @@ export default function AdminSettings({ brands, categories, genders, colors, shi
                 </div>
             )}
 
-            {/* 2×2 grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+            {/* Entity panels — 1 col mobile, 2 col desktop */}
+            <div className="settings-grid" style={{ gap: "20px" }}>
                 <EntityPanel<Brand>
                     title="Brands"
                     type="brand"
@@ -156,11 +156,17 @@ export default function AdminSettings({ brands, categories, genders, colors, shi
                     renderEditForm={(item, onSave, onCancel) => <ColorEditForm item={item as Color} onSave={onSave} onCancel={onCancel} />}
                 />
             </div>
+
+            <style>{`
+                .settings-grid { display: grid; grid-template-columns: 1fr; }
+                @media (min-width: 768px) {
+                    .settings-grid { grid-template-columns: 1fr 1fr; }
+                }
+            `}</style>
         </AdminLayout>
     );
 }
 
-// ── Generic Entity Panel ──────────────────────────────────────────────────────
 function EntityPanel<T extends { id: number; name: string }>({
     title, type, items, renderItem, renderAddForm, renderEditForm,
 }: {
