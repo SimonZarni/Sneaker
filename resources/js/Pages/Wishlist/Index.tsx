@@ -21,8 +21,9 @@ interface Props {
 
 export default function WishlistIndex({ items }: Props) {
     const { auth, cart }: any = usePage().props;
-    const [isCartOpen, setIsCartOpen] = useState(false);
-    const [removingId, setRemovingId] = useState<number | null>(null);
+    const [isCartOpen,     setIsCartOpen]     = useState(false);
+    const [removingId,     setRemovingId]     = useState<number | null>(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const cartCount = cart?.items?.reduce((a: number, i: any) => a + i.quantity, 0) || 0;
 
@@ -38,37 +39,84 @@ export default function WishlistIndex({ items }: Props) {
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
             <Head title="Wishlist — SNEAKER.DRP" />
 
+            {/* ── MOBILE SIDEBAR ── */}
+            <div className={`fixed inset-0 z-[60] transition-all duration-300 ${mobileMenuOpen ? "visible" : "invisible"}`}>
+                <div className={`absolute inset-0 bg-brand-charcoal/60 backdrop-blur-sm transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100" : "opacity-0"}`}
+                    onClick={() => setMobileMenuOpen(false)} />
+                <div className={`absolute top-0 right-0 h-full w-72 bg-brand-white flex flex-col transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
+                    <div className="flex items-center justify-between px-6 py-6 border-b border-brand-surface">
+                        <span className="text-xs font-black uppercase tracking-widest">Menu</span>
+                        <button onClick={() => setMobileMenuOpen(false)} className="p-1 hover:opacity-50 transition-opacity">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    <nav className="flex flex-col flex-1 px-6 py-8 overflow-y-auto">
+                        {[
+                            { label: "Shop",     href: route("shop.index") },
+                            { label: "Orders",   href: route("orders.index") },
+                            { label: "Wishlist", href: route("wishlist.index") },
+                        ].map(item => (
+                            <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
+                                className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors text-brand-charcoal">
+                                {item.label}
+                            </Link>
+                        ))}
+                        {auth?.user && (
+                            <Link href={route("profile.edit")} onClick={() => setMobileMenuOpen(false)}
+                                className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
+                                {auth.user.name}
+                            </Link>
+                        )}
+                        <button onClick={() => { setMobileMenuOpen(false); setIsCartOpen(true); }}
+                            className="flex items-center justify-between text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
+                            <span>Vault</span>
+                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">{cartCount}</span>
+                        </button>
+                    </nav>
+                    <div className="px-6 py-6 border-t border-brand-surface">
+                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-slate/30">SNEAKER.DRP © 2026</p>
+                    </div>
+                </div>
+            </div>
+
             {/* ── NAV ── */}
-            <nav className="border-b border-brand-surface py-5 sticky top-0 bg-brand-white/90 backdrop-blur-md z-50">
-                <div className="mx-auto max-w-7xl px-4 flex justify-between items-center">
-                    <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest">
-                        <Link href={route("home")} className="text-xl tracking-tightest">
-                            SNEAKER.DRP
-                        </Link>
-                        <Link href={route("shop.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
-                            Shop
-                        </Link>
-                        <Link href={route("orders.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
-                            Orders
-                        </Link>
+            <nav className="border-b border-brand-surface sticky top-0 bg-brand-white/90 backdrop-blur-md z-50">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-5">
+                    {/* Logo */}
+                    <Link href={route("home")} className="text-xl font-black tracking-tightest uppercase flex-shrink-0">
+                        SNEAKER.DRP
+                    </Link>
+
+                    {/* Desktop links */}
+                    <div className="hidden lg:flex items-center gap-8 text-[10px] font-black uppercase tracking-widest">
+                        <Link href={route("shop.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">Shop</Link>
+                        <Link href={route("orders.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">Orders</Link>
                         <span className="border-b-2 border-brand-charcoal pb-0.5">Wishlist</span>
                     </div>
 
-                    <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+                    {/* Desktop right */}
+                    <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-widest">
                         {auth?.user && (
                             <Link href={route("profile.edit")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
                                 {auth.user.name}
                             </Link>
                         )}
                         {auth?.user && <NotificationBell userId={auth.user.id} />}
-                        <button
-                            onClick={() => setIsCartOpen(true)}
-                            className="flex items-center gap-2 hover:text-brand-slate transition-colors"
-                        >
+                        <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 hover:text-brand-slate transition-colors">
                             Vault
-                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">
-                                {cartCount}
-                            </span>
+                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">{cartCount}</span>
+                        </button>
+                    </div>
+
+                    {/* Mobile right */}
+                    <div className="flex lg:hidden items-center gap-4">
+                        {auth?.user && <NotificationBell userId={auth.user.id} />}
+                        <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
+                            Vault
+                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">{cartCount}</span>
+                        </button>
+                        <button onClick={() => setMobileMenuOpen(true)} className="p-1 hover:opacity-50 transition-opacity" aria-label="Open menu">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
                         </button>
                     </div>
                 </div>
@@ -80,10 +128,10 @@ export default function WishlistIndex({ items }: Props) {
                     Your Collection
                 </p>
                 <div className="flex items-end justify-between">
-                    <h1 className="text-5xl font-black uppercase tracking-tightest leading-none">
+                    <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tightest leading-none">
                         Wishlist
                     </h1>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-slate/40 italic">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-brand-slate/40 italic shrink-0">
                         {items.length} {items.length === 1 ? "item" : "items"} saved
                     </p>
                 </div>

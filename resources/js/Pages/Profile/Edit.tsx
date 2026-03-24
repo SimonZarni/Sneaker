@@ -199,6 +199,8 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
     const [editingId,   setEditingId]       = useState<number | null>(null);
     const [deletingId,  setDeletingId]      = useState<number | null>(null);
 
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
     // Settings form
     const { data, setData, patch, processing, errors, recentlySuccessful } = useForm({
         name:  profileUser.name,
@@ -265,35 +267,73 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
         <div style={{ minHeight: "100vh", backgroundColor: "#fff", color: "#0A0A0A" }}>
             <Head title="My Account — SNEAKER.DRP" />
 
+            {/* ── MOBILE SIDEBAR ── */}
+            <div style={{ position: "fixed", inset: 0, zIndex: 60, pointerEvents: mobileMenuOpen ? "auto" : "none" }}>
+                <div onClick={() => setMobileMenuOpen(false)} style={{ position: "absolute", inset: 0, backgroundColor: "rgba(10,10,10,0.6)", backdropFilter: "blur(4px)", opacity: mobileMenuOpen ? 1 : 0, transition: "opacity 0.3s" }} />
+                <div style={{ position: "absolute", top: 0, right: 0, height: "100%", width: "288px", backgroundColor: "#fff", display: "flex", flexDirection: "column", transform: mobileMenuOpen ? "translateX(0)" : "translateX(100%)", transition: "transform 0.3s ease-in-out" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "24px", borderBottom: "1px solid #f0f0f0" }}>
+                        <span style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em" }}>Menu</span>
+                        <button onClick={() => setMobileMenuOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                    <nav style={{ display: "flex", flexDirection: "column" as const, flex: 1, padding: "32px 24px", overflowY: "auto" as const }}>
+                        {[
+                            { label: "Shop",    href: route("shop.index") },
+                            { label: "Orders",  href: route("orders.index") },
+                            { label: "Account", href: route("profile.edit") },
+                        ].map(item => (
+                            <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
+                                style={{ fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", padding: "14px 0", borderBottom: "1px solid #f0f0f0", color: "#0A0A0A", textDecoration: "none" }}>
+                                {item.label}
+                            </Link>
+                        ))}
+                        <Link href="/logout" method="post" as="button" onClick={() => setMobileMenuOpen(false)}
+                            style={{ textAlign: "left" as const, fontSize: "10px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", padding: "14px 0", borderBottom: "1px solid #f0f0f0", color: "rgba(45,50,62,0.5)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" } as any}>
+                            Log Out
+                        </Link>
+                    </nav>
+                    <div style={{ padding: "24px", borderTop: "1px solid #f0f0f0" }}>
+                        <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.3em", color: "rgba(45,50,62,0.3)" }}>SNEAKER.DRP © 2026</p>
+                    </div>
+                </div>
+            </div>
+
             {/* ── NAV ── */}
             <nav style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: 0, zIndex: 50 }}>
-                <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 32px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#0A0A0A", textDecoration: "none" }}>
+                <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 16px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#0A0A0A", textDecoration: "none", flexShrink: 0 }}>
                         SNEAKER.DRP
                     </Link>
-                    <div style={{ display: "flex", alignItems: "center", gap: "28px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
+                    {/* Desktop links */}
+                    <div className="hidden-mobile-profile" style={{ display: "flex", alignItems: "center", gap: "28px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
                         <Link href={route("shop.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Shop</Link>
                         <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Orders</Link>
                         <span style={{ color: "#0A0A0A", borderBottom: "2px solid #0A0A0A", paddingBottom: "2px" }}>Account</span>
-                        <Link
-                            href="/logout" method="post" as="button"
-                            style={{ color: "rgba(45,50,62,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}
-                        >
+                        <Link href="/logout" method="post" as="button"
+                            style={{ color: "rgba(45,50,62,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
                             Log Out
                         </Link>
                         <NotificationBell userId={auth.user.id} />
+                    </div>
+                    {/* Mobile controls */}
+                    <div className="show-mobile-profile" style={{ display: "none", alignItems: "center", gap: "16px" }}>
+                        <NotificationBell userId={auth.user.id} />
+                        <button onClick={() => setMobileMenuOpen(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: "4px" }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        </button>
                     </div>
                 </div>
             </nav>
 
             {/* ── HERO HEADER ── */}
-            <div style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "48px 32px" }}>
-                <div style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "24px" }}>
-                    <div>
+            <div style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "32px 16px" }}>
+                <div style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "20px" }}>
+                    <div style={{ minWidth: 0 }}>
                         <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.4em", color: "rgba(255,255,255,0.3)", marginBottom: "8px" }}>
                             Member Account
                         </p>
-                        <h1 style={{ fontSize: "42px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", lineHeight: 1 }}>
+                        <h1 style={{ fontSize: "clamp(28px, 7vw, 42px)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", lineHeight: 1, wordBreak: "break-word" }}>
                             {profileUser.name}
                         </h1>
                         <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "8px", fontWeight: 600 }}>
@@ -301,14 +341,14 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                         </p>
                     </div>
                     {/* Quick Stats */}
-                    <div style={{ display: "flex", gap: "32px" }}>
+                    <div style={{ display: "flex", gap: "20px", flexShrink: 0 }}>
                         {[
                             { label: "Total Orders", value: orderStats.total },
                             { label: "Delivered",    value: orderStats.delivered },
                             { label: "Total Spent",  value: fmt(orderStats.spent) },
                         ].map(s => (
                             <div key={s.label} style={{ textAlign: "right" }}>
-                                <p style={{ fontSize: "28px", fontWeight: 900, lineHeight: 1 }}>{s.value}</p>
+                                <p style={{ fontSize: "clamp(18px, 4vw, 28px)", fontWeight: 900, lineHeight: 1 }}>{s.value}</p>
                                 <p style={{ fontSize: "8px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>{s.label}</p>
                             </div>
                         ))}
@@ -317,8 +357,8 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
             </div>
 
             {/* ── TABS ── */}
-            <div style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: "60px", zIndex: 40 }}>
-                <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 32px", display: "flex", gap: "4px" }}>
+            <div style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: "60px", zIndex: 40, overflowX: "auto" }}>
+                <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 16px", display: "flex", gap: "4px", minWidth: "max-content" }}>
                     {(["overview", "orders", "addresses", "settings"] as const).map(t => (
                         <button key={t} onClick={() => setTab(t)} style={tabBtn(t)}>
                             {t === "overview" ? "Overview" : t === "orders" ? "Order History" : t === "addresses" ? "Address Book" : "Settings"}
@@ -328,14 +368,14 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
             </div>
 
             {/* ── CONTENT ── */}
-            <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "48px 32px 80px" }}>
+            <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "32px 16px 80px" }}>
 
                 {/* ── OVERVIEW TAB ── */}
                 {tab === "overview" && (
                     <div>
                         {/* Stat Cards */}
                         <Section title="Order Pipeline">
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1px", backgroundColor: "#f0f0f0", border: "1px solid #f0f0f0", marginBottom: "48px" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1px", backgroundColor: "#f0f0f0", border: "1px solid #f0f0f0", marginBottom: "48px" }}>
                                 {[
                                     { label: "In Progress", value: orderStats.pending,   color: "#d97706" },
                                     { label: "Shipped",     value: orderStats.shipped,   color: "#2563eb" },
@@ -436,16 +476,18 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                                         <Link
                                             key={order.id}
                                             href={route("orders.show", order.id)}
-                                            style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto auto", alignItems: "center", gap: "24px", backgroundColor: "#fff", padding: "18px 20px", textDecoration: "none", color: "inherit" }}
+                                            style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px", backgroundColor: "#fff", padding: "16px 20px", textDecoration: "none", color: "inherit" }}
                                         >
-                                            <div>
+                                            <div style={{ flex: "1 1 160px", minWidth: 0 }}>
                                                 <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "3px" }}>{order.order_number}</p>
                                                 <p style={{ fontSize: "10px", color: "rgba(45,50,62,0.4)", fontWeight: 600 }}>{order.preview_name} · {order.item_count} item{order.item_count !== 1 ? "s" : ""}</p>
                                             </div>
-                                            <Pill label={order.delivery_status} />
-                                            <Pill label={order.payment_status} />
-                                            <p style={{ fontSize: "12px", fontWeight: 900 }}>{fmt(order.total_amount)}</p>
-                                            <p style={{ fontSize: "9px", color: "rgba(45,50,62,0.3)", fontWeight: 600, minWidth: "90px", textAlign: "right" }}>{formatDate(order.placed_at)}</p>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                                                <Pill label={order.delivery_status} />
+                                                <Pill label={order.payment_status} />
+                                                <p style={{ fontSize: "12px", fontWeight: 900 }}>{fmt(order.total_amount)}</p>
+                                                <p style={{ fontSize: "9px", color: "rgba(45,50,62,0.3)", fontWeight: 600 }}>{formatDate(order.placed_at)}</p>
+                                            </div>
                                         </Link>
                                     ))}
                                 </div>
@@ -625,6 +667,14 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                     </div>
                 )}
             </div>
+            <style>{`
+                .hidden-mobile-profile { display: flex !important; }
+                .show-mobile-profile   { display: none !important; }
+                @media (max-width: 1023px) {
+                    .hidden-mobile-profile { display: none !important; }
+                    .show-mobile-profile   { display: flex !important; }
+                }
+            `}</style>
         </div>
     );
 }

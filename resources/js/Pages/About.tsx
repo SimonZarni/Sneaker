@@ -6,66 +6,115 @@ import NotificationBell from "@/Components/NotificationBell";
 
 export default function About() {
     const { auth, cart }: any = usePage().props;
-    const [isCartOpen, setIsCartOpen] = useState(false);
+    const [isCartOpen,     setIsCartOpen]     = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const cartCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
             <Head title="About Us — SNEAKER.DRP" />
 
-            {/* ── NAV ── */}
-            <nav className="fixed top-0 w-full z-50 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
-                    <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
-                        <Link href={route("shop.index")} className="hover:text-brand-slate transition-colors">
-                            The Archive
-                        </Link>
-                        <Link href={route("about")} className="border-b-2 border-brand-charcoal pb-0.5">
-                            About Us
-                        </Link>
+            {/* ── MOBILE SIDEBAR ── */}
+            <div className={`fixed inset-0 z-[60] transition-all duration-300 ${mobileMenuOpen ? "visible" : "invisible"}`}>
+                <div className={`absolute inset-0 bg-brand-charcoal/60 backdrop-blur-sm transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100" : "opacity-0"}`}
+                    onClick={() => setMobileMenuOpen(false)} />
+                <div className={`absolute top-0 right-0 h-full w-72 bg-brand-white flex flex-col transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
+                    <div className="flex items-center justify-between px-6 py-6 border-b border-brand-surface">
+                        <span className="text-xs font-black uppercase tracking-widest">Menu</span>
+                        <button onClick={() => setMobileMenuOpen(false)} className="p-1 hover:opacity-50 transition-opacity">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
                     </div>
-
-                    <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
-                        <Link href={route("home")}>SNEAKER.DRP</Link>
-                    </h1>
-
-                    <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+                    <nav className="flex flex-col flex-1 px-6 py-8 overflow-y-auto">
+                        {[
+                            { label: "The Archive", href: route("shop.index") },
+                            { label: "About Us",    href: route("about") },
+                        ].map(item => (
+                            <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
+                                className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors text-brand-charcoal">
+                                {item.label}
+                            </Link>
+                        ))}
                         {auth?.user ? (
                             <>
-                                <Link href="/profile" className="hover:text-brand-slate transition-colors">
+                                <Link href="/profile" onClick={() => setMobileMenuOpen(false)}
+                                    className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
                                     {auth.user.name}
                                 </Link>
-                                <Link href="/orders" className="hover:text-brand-slate transition-colors">
+                                <Link href="/orders" onClick={() => setMobileMenuOpen(false)}
+                                    className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
                                     My Orders
                                 </Link>
-                                <Link href="/logout" method="post" as="button"
-                                    className="hover:text-brand-slate transition-colors uppercase cursor-pointer">
+                                <Link href="/logout" method="post" as="button" onClick={() => setMobileMenuOpen(false)}
+                                    className="text-left text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors cursor-pointer">
                                     Log Out
                                 </Link>
-                                <NotificationBell userId={auth.user.id} />
                             </>
                         ) : (
-                            <Link href="/login" className="hover:text-brand-slate transition-colors">
+                            <Link href="/login" onClick={() => setMobileMenuOpen(false)}
+                                className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
                                 Login
                             </Link>
                         )}
+                        <button onClick={() => { setMobileMenuOpen(false); setIsCartOpen(true); }}
+                            className="flex items-center justify-between text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
+                            <span>Vault</span>
+                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">{cartCount}</span>
+                        </button>
+                    </nav>
+                    <div className="px-6 py-6 border-t border-brand-surface">
+                        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-slate/30">SNEAKER.DRP © 2026</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── NAV ── */}
+            <nav className="fixed top-0 w-full z-50 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
+                    {/* Desktop left */}
+                    <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
+                        <Link href={route("shop.index")} className="hover:text-brand-slate transition-colors">The Archive</Link>
+                        <Link href={route("about")} className="border-b-2 border-brand-charcoal pb-0.5">About Us</Link>
+                    </div>
+                    <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
+                        <Link href={route("home")}>SNEAKER.DRP</Link>
+                    </h1>
+                    {/* Desktop right */}
+                    <div className="flex-1 hidden lg:flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+                        {auth?.user ? (
+                            <>
+                                <Link href="/profile" className="hover:text-brand-slate transition-colors">{auth.user.name}</Link>
+                                <Link href="/orders" className="hover:text-brand-slate transition-colors">My Orders</Link>
+                                <Link href="/logout" method="post" as="button" className="hover:text-brand-slate transition-colors uppercase cursor-pointer">Log Out</Link>
+                                <NotificationBell userId={auth.user.id} />
+                            </>
+                        ) : (
+                            <Link href="/login" className="hover:text-brand-slate transition-colors">Login</Link>
+                        )}
                         <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 group">
                             <span>Vault</span>
-                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px] group-hover:bg-brand-slate transition-colors">
-                                {cartCount}
-                            </span>
+                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px] group-hover:bg-brand-slate transition-colors">{cartCount}</span>
+                        </button>
+                    </div>
+                    {/* Mobile right */}
+                    <div className="flex lg:hidden items-center gap-4 ml-auto">
+                        {auth?.user && <NotificationBell userId={auth.user.id} />}
+                        <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
+                            <span>Vault</span>
+                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">{cartCount}</span>
+                        </button>
+                        <button onClick={() => setMobileMenuOpen(true)} className="p-1 hover:opacity-50 transition-opacity" aria-label="Open menu">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
                         </button>
                     </div>
                 </div>
             </nav>
 
             {/* ── HERO ── */}
-            <section className="pt-40 pb-24 px-4 bg-brand-charcoal text-white">
+            <section className="pt-32 sm:pt-40 pb-24 px-4 bg-brand-charcoal text-white">
                 <div className="mx-auto max-w-7xl">
-                    <p className="text-[9px] font-black uppercase tracking-[0.5em] text-white/40 mb-6">
-                        Our Story
-                    </p>
-                    <h2 className="text-6xl lg:text-8xl font-black uppercase tracking-tightest leading-[0.85] max-w-3xl">
+                    <p className="text-[9px] font-black uppercase tracking-[0.5em] text-white/40 mb-6">Our Story</p>
+                    <h2 className="text-4xl sm:text-6xl lg:text-8xl font-black uppercase tracking-tightest leading-[0.85] max-w-3xl">
                         Built for Sneaker Culture.
                     </h2>
                     <p className="mt-10 text-base font-medium leading-loose text-white/60 max-w-xl">
