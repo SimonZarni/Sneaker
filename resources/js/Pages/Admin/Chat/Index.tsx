@@ -34,10 +34,9 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
     const [input, setInput]                     = useState('');
     const [sending, setSending]                 = useState(false);
     const [loadingMessages, setLoadingMessages] = useState(false);
-    // Mobile: 'list' shows conversation list, 'chat' shows active chat
     const [mobileView, setMobileView]           = useState<'list' | 'chat'>('list');
-    const bottomRef  = useRef<HTMLDivElement>(null);
-    const inputRef   = useRef<HTMLInputElement>(null);
+    const bottomRef   = useRef<HTMLDivElement>(null);
+    const inputRef    = useRef<HTMLInputElement>(null);
     const selectedRef = useRef<Conversation | null>(null);
 
     useEffect(() => { selectedRef.current = selected; }, [selected]);
@@ -159,7 +158,7 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
     // ── Conversation list panel ────────────────────────────────────────────────
     const ConvList = (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            <div style={{ padding: '16px', borderBottom: '1px solid #f0f0f0', flexShrink: 0 }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0', flexShrink: 0 }}>
                 <p style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#0a0a0a' }}>
                     Live Chat
                     {totalUnreadCount > 0 && (
@@ -172,28 +171,48 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
             </div>
             <div style={{ flex: 1, overflowY: 'auto' }}>
                 {conversations.length === 0 ? (
-                    <div style={{ padding: '32px 16px', textAlign: 'center', color: 'rgba(45,50,62,0.3)', fontSize: '11px' }}>
+                    <div style={{ padding: '32px 20px', textAlign: 'center', color: 'rgba(45,50,62,0.3)', fontSize: '11px' }}>
                         No conversations yet
                     </div>
                 ) : conversations.map(conv => (
                     <div key={conv.id} onClick={() => openConversation(conv)}
-                        style={{ padding: '14px 16px', cursor: 'pointer', borderBottom: '1px solid #f5f5f7', backgroundColor: selected?.id === conv.id ? '#fafafa' : '#fff', borderLeft: selected?.id === conv.id ? '3px solid #0a0a0a' : '3px solid transparent', transition: 'all 0.1s' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                            <p style={{ fontSize: '12px', fontWeight: 700, color: '#0a0a0a' }}>{conv.user_name}</p>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        style={{
+                            padding: '14px 20px',
+                            cursor: 'pointer',
+                            borderBottom: '1px solid #f5f5f7',
+                            backgroundColor: selected?.id === conv.id ? '#fafafa' : '#fff',
+                            borderLeft: selected?.id === conv.id ? '3px solid #0a0a0a' : '3px solid transparent',
+                            transition: 'all 0.1s',
+                        }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                            <p style={{
+                                fontSize: '13px',
+                                fontWeight: 700,
+                                color: '#0a0a0a',
+                                minWidth: 0,
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                                flex: 1,
+                            }}>
+                                {conv.user_name}
+                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                                 {conv.unread > 0 && (
                                     <span style={{ backgroundColor: '#ef4444', color: '#fff', fontSize: '8px', fontWeight: 900, width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {conv.unread}
                                     </span>
                                 )}
-                                <span style={{ fontSize: '9px', color: 'rgba(45,50,62,0.35)' }}>{formatDate(conv.last_message_at)}</span>
+                                <span style={{ fontSize: '10px', color: 'rgba(45,50,62,0.35)', whiteSpace: 'nowrap' }}>
+                                    {formatDate(conv.last_message_at)}
+                                </span>
                             </div>
                         </div>
-                        <p style={{ fontSize: '10px', color: 'rgba(45,50,62,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <p style={{ fontSize: '11px', color: 'rgba(45,50,62,0.5)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {conv.last_message || 'No messages yet'}
                         </p>
                         {conv.status === 'closed' && (
-                            <span style={{ fontSize: '8px', fontWeight: 700, color: 'rgba(45,50,62,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Closed</span>
+                            <span style={{ fontSize: '8px', fontWeight: 700, color: 'rgba(45,50,62,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', display: 'block', marginTop: '4px' }}>Closed</span>
                         )}
                     </div>
                 ))}
@@ -280,7 +299,6 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
         <AdminLayout adminName={admin.name} active="chat" pageTitle="Live Chat — Admin" pageLabel="Live Chat">
             <Head title="Live Chat — Admin" />
 
-            {/* ── DESKTOP: side-by-side ── MOBILE: toggled views ── */}
             <div className="chat-container" style={{ height: 'calc(100vh - 64px)', overflow: 'hidden', border: '1px solid #f0f0f0', backgroundColor: '#fff' }}>
 
                 {/* Conversation list */}
@@ -301,7 +319,7 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
                 .chat-container {
                     display: flex;
                 }
-                .chat-list-panel { width: 300px; flex-shrink: 0; height: 100%; }
+                .chat-list-panel { width: 380px; flex-shrink: 0; height: 100%; }
                 .chat-main-panel { flex: 1; height: 100%; }
                 .mobile-hidden   { display: flex !important; }
                 .chat-back-btn   { display: none !important; }
