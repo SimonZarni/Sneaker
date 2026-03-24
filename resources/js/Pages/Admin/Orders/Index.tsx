@@ -98,85 +98,77 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
             <Head title="Admin - Orders" />
 
             {/* ── STAT CARDS ── */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px", marginBottom: "24px" }}>
-                {statusTabs.map((tab) => {
-                    const isActive = activeStatus === tab.value;
-                    return (
-                        <button key={tab.value} onClick={() => apply({ status: tab.value })} style={{ padding: "20px", textAlign: "left", border: `1px solid ${isActive ? "#0A0A0A" : "#f0f0f0"}`, backgroundColor: isActive ? "#0A0A0A" : "#fff", color: isActive ? "#fff" : "#0A0A0A", cursor: "pointer", transition: "all 0.15s" }}>
-                            <p style={{ fontSize: "28px", fontWeight: 900, letterSpacing: "-0.05em", fontVariantNumeric: "tabular-nums" }}>{tab.count}</p>
-                            <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "4px", opacity: isActive ? 0.6 : 0.4 }}>{tab.label}</p>
-                        </button>
-                    );
-                })}
+            <div style={{ overflowX: "auto", marginBottom: "24px" }}>
+                <div style={{ display: "flex", gap: "12px", minWidth: "min-content" }}>
+                    {statusTabs.map((tab) => {
+                        const isActive = activeStatus === tab.value;
+                        return (
+                            <button key={tab.value} onClick={() => apply({ status: tab.value })} style={{ padding: "16px 20px", textAlign: "left", border: `1px solid ${isActive ? "#0A0A0A" : "#f0f0f0"}`, backgroundColor: isActive ? "#0A0A0A" : "#fff", color: isActive ? "#fff" : "#0A0A0A", cursor: "pointer", transition: "all 0.15s", flexShrink: 0, minWidth: "100px" }}>
+                                <p style={{ fontSize: "28px", fontWeight: 900, letterSpacing: "-0.05em", fontVariantNumeric: "tabular-nums" }}>{tab.count}</p>
+                                <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "4px", opacity: isActive ? 0.6 : 0.4 }}>{tab.label}</p>
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* ── SEARCH ROW ── */}
-            <form onSubmit={(e) => { e.preventDefault(); apply({ search }); }} style={{ display: "flex", gap: "12px", marginBottom: "12px" }}>
+            <form onSubmit={(e) => { e.preventDefault(); apply({ search }); }} style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
                 <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search order number or customer name..."
-                    style={{ ...inputStyle, flex: 1 }}
+                    style={{ ...inputStyle, flex: 1, minWidth: 0 }}
                 />
-                <button type="submit" style={{ padding: "12px 24px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer" }}>
+                <button type="submit" style={{ padding: "12px 20px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer", flexShrink: 0 }}>
                     Search
                 </button>
             </form>
 
             {/* ── DATE RANGE + PAYMENT ROW ── */}
-            <div style={{ display: "flex", gap: "12px", alignItems: "flex-end", marginBottom: "24px" }}>
-
-                {/* Date from */}
-                <div>
-                    <label style={labelStyle}>From</label>
-                    <input
-                        type="date"
-                        value={dateFrom}
-                        onChange={(e) => { setDateFrom(e.target.value); apply({ date_from: e.target.value }); }}
-                        style={{ ...inputStyle, width: "160px" }}
-                    />
-                </div>
-
-                {/* Date to */}
-                <div>
-                    <label style={labelStyle}>To</label>
-                    <input
-                        type="date"
-                        value={dateTo}
-                        min={dateFrom || undefined}
-                        onChange={(e) => { setDateTo(e.target.value); apply({ date_to: e.target.value }); }}
-                        style={{ ...inputStyle, width: "160px" }}
-                    />
-                </div>
-
-                {/* Divider */}
-                <div style={{ width: "1px", height: "44px", backgroundColor: "#e5e7eb", margin: "0 4px" }} />
-
-                {/* Payment tabs */}
-                <div style={{ display: "flex", gap: "8px" }}>
-                    {paymentTabs.map((p) => {
-                        const isActive = activePayment === p.value;
-                        return (
-                            <button key={p.value} onClick={() => apply({ payment: p.value })} style={{ padding: "12px 16px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: `1px solid ${isActive ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: isActive ? "#0A0A0A" : "#fff", color: isActive ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer" }}>
-                                {p.label}
+            <div style={{ marginBottom: "24px" }}>
+                {/* Date row */}
+                <div style={{ display: "flex", gap: "8px", marginBottom: "8px", flexWrap: "wrap" }}>
+                    <div style={{ flex: 1, minWidth: "130px" }}>
+                        <label style={labelStyle}>From</label>
+                        <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); apply({ date_from: e.target.value }); }}
+                            style={{ ...inputStyle, width: "100%", boxSizing: "border-box" }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: "130px" }}>
+                        <label style={labelStyle}>To</label>
+                        <input type="date" value={dateTo} min={dateFrom || undefined} onChange={(e) => { setDateTo(e.target.value); apply({ date_to: e.target.value }); }}
+                            style={{ ...inputStyle, width: "100%", boxSizing: "border-box" }} />
+                    </div>
+                    {isFiltered && (
+                        <div style={{ display: "flex", alignItems: "flex-end" }}>
+                            <button onClick={clearFilters} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "12px 14px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "1px solid #fecaca", backgroundColor: "#fef2f2", color: "#dc2626", cursor: "pointer" }}>
+                                <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                                Clear
                             </button>
-                        );
-                    })}
+                        </div>
+                    )}
                 </div>
-
-                {/* Clear */}
-                {isFiltered && (
-                    <button onClick={clearFilters} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "12px 16px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: "1px solid #fecaca", backgroundColor: "#fef2f2", color: "#dc2626", cursor: "pointer", marginLeft: "auto" }}>
-                        <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-                        Clear Filters
-                    </button>
-                )}
+                {/* Payment tabs — scrollable */}
+                <div style={{ overflowX: "auto" }}>
+                    <div style={{ display: "flex", gap: "8px", minWidth: "min-content" }}>
+                        {paymentTabs.map((p) => {
+                            const isActive = activePayment === p.value;
+                            return (
+                                <button key={p.value} onClick={() => apply({ payment: p.value })} style={{ padding: "10px 14px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", border: `1px solid ${isActive ? "#0A0A0A" : "#e5e7eb"}`, backgroundColor: isActive ? "#0A0A0A" : "#fff", color: isActive ? "#fff" : "rgba(45,50,62,0.5)", cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
+                                    {p.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
 
-            {/* ── TABLE ── */}
+            {/* ── TABLE (desktop) / CARDS (mobile) ── */}
             <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 0.6fr 1fr 1.2fr 1fr 1fr 0.8fr", gap: "16px", padding: "14px 24px", borderBottom: "1px solid #f0f0f0" }}>
+
+                {/* Desktop table header */}
+                <div className="admin-orders-header" style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 0.6fr 1fr 1.2fr 1fr 1fr 0.8fr", gap: "16px", padding: "14px 24px", borderBottom: "1px solid #f0f0f0" }}>
                     {["Order", "Customer", "Items", "Date", "Delivery", "Payment", "Total", "Action"].map((h, i) => (
                         <p key={h} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(45,50,62,0.25)", textAlign: i >= 6 ? "right" : "left" }}>{h}</p>
                     ))}
@@ -189,30 +181,71 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
                 )}
 
                 {orders.data.map((order) => (
-                    <div key={order.id} style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 0.6fr 1fr 1.2fr 1fr 1fr 0.8fr", gap: "16px", alignItems: "center", padding: "18px 24px", borderBottom: "1px solid #fafafa" }}>
-                        <div>
-                            <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{order.order_number}</p>
-                            {order.payment_method && <p style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.35)", marginTop: "2px" }}>{order.payment_method}</p>}
+                    <div key={order.id} style={{ borderBottom: "1px solid #fafafa" }}>
+
+                        {/* ── MOBILE CARD ── */}
+                        <div className="admin-order-mobile" style={{ padding: "16px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                                <div>
+                                    <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{order.order_number}</p>
+                                    {order.payment_method && <p style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.35)", marginTop: "2px" }}>{order.payment_method}</p>}
+                                </div>
+                                <p style={{ fontSize: "13px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>${parseFloat(order.total_amount).toFixed(2)}</p>
+                            </div>
+                            <p style={{ fontSize: "12px", fontWeight: 600, marginBottom: "2px" }}>{order.customer_name}</p>
+                            {order.customer_email && <p style={{ fontSize: "9px", color: "rgba(45,50,62,0.4)", marginBottom: "8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.customer_email}</p>}
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+                                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
+                                    <DPill label={order.delivery_status} />
+                                    <PPill label={order.payment_status} />
+                                    <span style={{ fontSize: "9px", color: "rgba(45,50,62,0.4)", fontWeight: 600 }}>{order.placed_at ? fmtDate(order.placed_at) : "—"}</span>
+                                </div>
+                                <Link href={route("admin.orders.show", order.id)} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.5)", textDecoration: "none", borderBottom: "1px solid currentColor", paddingBottom: "1px" }}>
+                                    Manage →
+                                </Link>
+                            </div>
                         </div>
-                        <div style={{ overflow: "hidden" }}>
-                            <p style={{ fontSize: "12px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.customer_name}</p>
-                            {order.customer_email && <p style={{ fontSize: "9px", color: "rgba(45,50,62,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "2px" }}>{order.customer_email}</p>}
+
+                        {/* ── DESKTOP ROW ── */}
+                        <div className="admin-order-desktop" style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 0.6fr 1fr 1.2fr 1fr 1fr 0.8fr", gap: "16px", alignItems: "center", padding: "18px 24px" }}>
+                            <div>
+                                <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{order.order_number}</p>
+                                {order.payment_method && <p style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.35)", marginTop: "2px" }}>{order.payment_method}</p>}
+                            </div>
+                            <div style={{ overflow: "hidden" }}>
+                                <p style={{ fontSize: "12px", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{order.customer_name}</p>
+                                {order.customer_email && <p style={{ fontSize: "9px", color: "rgba(45,50,62,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "2px" }}>{order.customer_email}</p>}
+                            </div>
+                            <p style={{ fontSize: "12px", fontWeight: 700, color: "rgba(45,50,62,0.6)", fontVariantNumeric: "tabular-nums" }}>{order.item_count}</p>
+                            <p style={{ fontSize: "10px", fontWeight: 600, color: "rgba(45,50,62,0.5)" }}>{order.placed_at ? fmtDate(order.placed_at) : "—"}</p>
+                            <div><DPill label={order.delivery_status} /></div>
+                            <div><PPill label={order.payment_status} /></div>
+                            <p style={{ fontSize: "12px", fontWeight: 900, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>${parseFloat(order.total_amount).toFixed(2)}</p>
+                            <div style={{ textAlign: "right" }}>
+                                <Link href={route("admin.orders.show", order.id)} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.4)", textDecoration: "none", borderBottom: "1px solid currentColor", paddingBottom: "1px" }}>
+                                    Manage →
+                                </Link>
+                            </div>
                         </div>
-                        <p style={{ fontSize: "12px", fontWeight: 700, color: "rgba(45,50,62,0.6)", fontVariantNumeric: "tabular-nums" }}>{order.item_count}</p>
-                        <p style={{ fontSize: "10px", fontWeight: 600, color: "rgba(45,50,62,0.5)" }}>{order.placed_at ? fmtDate(order.placed_at) : "—"}</p>
-                        <div><DPill label={order.delivery_status} /></div>
-                        <div><PPill label={order.payment_status} /></div>
-                        <p style={{ fontSize: "12px", fontWeight: 900, fontVariantNumeric: "tabular-nums", textAlign: "right" }}>${parseFloat(order.total_amount).toFixed(2)}</p>
-                        <div style={{ textAlign: "right" }}>
-                            <Link href={route("admin.orders.show", order.id)} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.4)", textDecoration: "none", borderBottom: "1px solid currentColor", paddingBottom: "1px" }}>
-                                Manage →
-                            </Link>
-                        </div>
+
                     </div>
                 ))}
             </div>
 
             <Pagination data={orders} preserveFilters={{ search, status: activeStatus, payment: activePayment, date_from: dateFrom, date_to: dateTo }} />
+
+            <style>{`
+                .admin-orders-header  { display: none; }
+                .admin-order-mobile   { display: block; }
+                .admin-order-desktop  { display: none !important; }
+                @media (min-width: 768px) {
+                    .admin-orders-header  { display: grid; }
+                    .admin-order-mobile   { display: none; }
+                    .admin-order-desktop  { display: grid !important; }
+                }
+            `}</style>
+
         </AdminLayout>
     );
 }
+            
