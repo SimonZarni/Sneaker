@@ -168,7 +168,7 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
             <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0" }}>
 
                 {/* Desktop table header */}
-                <div className="admin-orders-header" style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 0.6fr 1fr 1.2fr 1fr 1fr 0.8fr", gap: "16px", padding: "14px 24px", borderBottom: "1px solid #f0f0f0" }}>
+                <div className="admin-orders-header" style={{ gridTemplateColumns: "2.5fr 2fr 0.6fr 1fr 1.2fr 1fr 1fr 0.8fr", gap: "16px", padding: "14px 24px", borderBottom: "1px solid #f0f0f0" }}>
                     {["Order", "Customer", "Items", "Date", "Delivery", "Payment", "Total", "Action"].map((h, i) => (
                         <p key={h} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(45,50,62,0.25)", textAlign: i >= 6 ? "right" : "left" }}>{h}</p>
                     ))}
@@ -207,7 +207,7 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
                         </div>
 
                         {/* ── DESKTOP ROW ── */}
-                        <div className="admin-order-desktop" style={{ display: "grid", gridTemplateColumns: "2.5fr 2fr 0.6fr 1fr 1.2fr 1fr 1fr 0.8fr", gap: "16px", alignItems: "center", padding: "18px 24px" }}>
+                        <div className="admin-order-desktop" style={{ gridTemplateColumns: "2.5fr 2fr 0.6fr 1fr 1.2fr 1fr 1fr 0.8fr", gap: "16px", alignItems: "center", padding: "18px 24px" }}>
                             <div>
                                 <p style={{ fontSize: "11px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.01em" }}>{order.order_number}</p>
                                 {order.payment_method && <p style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(45,50,62,0.35)", marginTop: "2px" }}>{order.payment_method}</p>}
@@ -237,10 +237,10 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
             <style>{`
                 .admin-orders-header  { display: none; }
                 .admin-order-mobile   { display: block; }
-                .admin-order-desktop  { display: none !important; }
+                .admin-order-desktop  { display: none; }
                 @media (min-width: 768px) {
-                    .admin-orders-header  { display: grid; }
-                    .admin-order-mobile   { display: none; }
+                    .admin-orders-header  { display: grid !important; }
+                    .admin-order-mobile   { display: none !important; }
                     .admin-order-desktop  { display: grid !important; }
                 }
             `}</style>
@@ -248,4 +248,4 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
         </AdminLayout>
     );
 }
-            
+           

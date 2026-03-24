@@ -239,9 +239,9 @@ export default function AdminInventoryIndex({ variants, stats, filters, admin }:
             </div>
 
             <style>{`
-                .inv-stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); }
+                .inv-stat-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; }
                 @media (min-width: 768px) {
-                    .inv-stat-grid { grid-template-columns: repeat(4, 1fr); }
+                    .inv-stat-grid { grid-template-columns: repeat(4, 1fr) !important; }
                 }
             `}</style>
         </AdminLayout>
