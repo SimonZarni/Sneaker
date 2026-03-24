@@ -135,11 +135,11 @@ export default function AdminDashboard({ orderStats, revenueStats, totalCustomer
             <div className="admin-stat-grid" style={{ gap: "16px", marginBottom: "24px" }}>
 
                 {/* Revenue — dark card, always full width on mobile */}
-                <div className="admin-revenue-card" style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "24px" }}>
+                <div className="admin-revenue-card" style={{ backgroundColor: "#0A0A0A", color: "#fff", padding: "20px" }}>
                     <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(255,255,255,0.3)", marginBottom: "12px" }}>
                         Total Revenue
                     </p>
-                    <p style={{ fontSize: "28px", fontWeight: 900, letterSpacing: "-0.05em", fontVariantNumeric: "tabular-nums" }}>
+                    <p style={{ fontSize: "clamp(22px, 6vw, 28px)", fontWeight: 900, letterSpacing: "-0.05em", fontVariantNumeric: "tabular-nums" }}>
                         {fmt(revenueStats.total)}
                     </p>
                     <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,0.1)", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
