@@ -105,7 +105,7 @@ function DeliveryTimeline({ current }: { current: string }) {
                             <div className={`w-3 h-3 rounded-full border-2 transition-colors ${
                                 active || done ? "border-brand-charcoal bg-brand-charcoal" : "border-brand-surface bg-brand-white"
                             }`} />
-                            <span className={`mt-2 text-[8px] font-black uppercase tracking-widest whitespace-nowrap ${
+                            <span className={`mt-2 text-[7px] sm:text-[8px] font-black uppercase tracking-wider text-center ${
                                 active ? "text-brand-charcoal" : done ? "text-brand-slate/60" : "text-brand-slate/20"
                             }`}>{step}</span>
                         </div>
@@ -281,6 +281,7 @@ export default function OrdersShow({ order }: Props) {
     const { auth, cart, flash }: any = usePage().props;
     const cartCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showMobileMenu,  setShowMobileMenu]  = useState(false);
 
     const isCancelled = order.order_status === "Cancelled";
     const isCard      = order.payment_method && order.payment_method.toLowerCase() !== "cod";
@@ -296,9 +297,57 @@ export default function OrdersShow({ order }: Props) {
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
             <Head title={`${order.order_number} — SNEAKER.DRP`} />
 
+            {/* ── MOBILE NAV SIDEBAR ── */}
+            {showMobileMenu && (
+                <div className="fixed inset-0 z-[60]">
+                    <div className="absolute inset-0 bg-brand-charcoal/60 backdrop-blur-sm" onClick={() => setShowMobileMenu(false)} />
+                    <div className="absolute top-0 right-0 h-full w-72 bg-white flex flex-col">
+                        <div className="flex items-center justify-between px-6 py-6 border-b border-brand-surface">
+                            <span className="text-xs font-black uppercase tracking-widest">Menu</span>
+                            <button onClick={() => setShowMobileMenu(false)} className="p-1 hover:opacity-50 transition-opacity">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+                        <nav className="flex flex-col flex-1 px-6 py-8 overflow-y-auto">
+                            {[
+                                { label: "The Archive", href: "/shop" },
+                                { label: "About Us", href: route("about") },
+                                { label: "My Orders", href: "/orders" },
+                            ].map(item => (
+                                <Link key={item.label} href={item.href} onClick={() => setShowMobileMenu(false)}
+                                    className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors text-brand-charcoal">
+                                    {item.label}
+                                </Link>
+                            ))}
+                            {auth?.user ? (
+                                <>
+                                    <Link href="/profile" onClick={() => setShowMobileMenu(false)}
+                                        className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
+                                        {auth.user.name}
+                                    </Link>
+                                    <Link href="/logout" method="post" as="button" onClick={() => setShowMobileMenu(false)}
+                                        className="text-left text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors cursor-pointer">
+                                        Log Out
+                                    </Link>
+                                </>
+                            ) : (
+                                <Link href="/login" onClick={() => setShowMobileMenu(false)}
+                                    className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
+                                    Account
+                                </Link>
+                            )}
+                        </nav>
+                        <div className="px-6 py-6 border-t border-brand-surface">
+                            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-brand-slate/30">SNEAKER.DRP © 2026</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* ── NAV ── */}
             <nav className="fixed top-0 w-full z-40 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
+                    {/* Desktop left */}
                     <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
                         <Link href="/shop" className="hover:text-brand-slate transition-colors">The Archive</Link>
                         <Link href={route("about")} className="hover:text-brand-slate transition-colors">About Us</Link>
@@ -307,7 +356,8 @@ export default function OrdersShow({ order }: Props) {
                     <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
                         <Link href="/">SNEAKER.DRP</Link>
                     </h1>
-                    <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+                    {/* Desktop right */}
+                    <div className="flex-1 hidden lg:flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
                         {auth?.user ? (
                             <>
                                 <Link href="/profile" className="hover:text-brand-slate transition-colors">{auth.user.name}</Link>
@@ -321,6 +371,17 @@ export default function OrdersShow({ order }: Props) {
                             <span>Vault</span>
                             <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px] group-hover:bg-brand-slate transition-colors">{cartCount}</span>
                         </Link>
+                    </div>
+                    {/* Mobile right */}
+                    <div className="flex lg:hidden items-center gap-4 ml-auto">
+                        {auth?.user && <NotificationBell userId={auth.user.id} />}
+                        <Link href="/shop" className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest">
+                            <span>Vault</span>
+                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">{cartCount}</span>
+                        </Link>
+                        <button onClick={() => setShowMobileMenu(true)} className="p-1 hover:opacity-50 transition-opacity">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        </button>
                     </div>
                 </div>
             </nav>
@@ -372,7 +433,7 @@ export default function OrdersShow({ order }: Props) {
                     <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
                         <div>
                             <p className="text-[10px] font-black uppercase tracking-[0.4em] text-brand-slate/40 mb-2">Drop Receipt</p>
-                            <h2 className="text-4xl font-black tracking-tightest uppercase">{order.order_number}</h2>
+                            <h2 className="text-2xl sm:text-4xl font-black tracking-tightest uppercase break-all">{order.order_number}</h2>
                             {order.placed_at && (
                                 <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-brand-slate/40">
                                     Placed {formatDate(order.placed_at)}

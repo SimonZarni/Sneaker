@@ -50,7 +50,7 @@ export default function OrderSuccess({ order }: Props) {
             <Head title={`Order Confirmed — ${order.order_number}`} />
 
             {/* ── NAVBAR ── */}
-            <nav style={{ backgroundColor: "#0A0A0A", padding: "0 40px", height: "56px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+            <nav style={{ backgroundColor: "#0A0A0A", padding: "0 16px", height: "56px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
                 <Link href={route("home")} style={{ fontSize: "15px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#fff", textDecoration: "none" }}>
                     SNEAKER.DRP
                 </Link>
@@ -59,7 +59,7 @@ export default function OrderSuccess({ order }: Props) {
                 </Link>
             </nav>
 
-            <div style={{ maxWidth: "960px", margin: "0 auto", padding: "48px 24px 80px" }}>
+            <div style={{ maxWidth: "960px", margin: "0 auto", padding: "32px 16px 80px" }}>
 
                 {/* ── CONFIRMATION HEADER ── */}
                 <div style={{ textAlign: "center", marginBottom: "48px" }}>
@@ -88,7 +88,7 @@ export default function OrderSuccess({ order }: Props) {
                 </div>
 
                 {/* ── DELIVERY TRACKER ── */}
-                <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "32px 40px", marginBottom: "20px" }}>
+                <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0", padding: "24px 20px", marginBottom: "20px" }}>
                     <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.3em", color: "rgba(45,50,62,0.3)", marginBottom: "28px" }}>
                         Delivery Status
                     </p>
@@ -108,10 +108,10 @@ export default function OrderSuccess({ order }: Props) {
                                             transition: "all 0.2s",
                                         }} />
                                         <span style={{
-                                            marginTop: "10px", fontSize: "9px", fontWeight: 900,
-                                            textTransform: "uppercase", letterSpacing: "0.1em",
+                                            marginTop: "10px", fontSize: "8px", fontWeight: 900,
+                                            textTransform: "uppercase", letterSpacing: "0.08em",
                                             color: active ? "#0A0A0A" : done ? "rgba(45,50,62,0.5)" : "rgba(45,50,62,0.2)",
-                                            whiteSpace: "nowrap",
+                                            textAlign: "center", maxWidth: "56px", lineHeight: 1.3,
                                         }}>
                                             {step}
                                         </span>
@@ -135,7 +135,7 @@ export default function OrderSuccess({ order }: Props) {
                 </div>
 
                 {/* ── TWO-COLUMN LAYOUT ── */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "20px", alignItems: "start" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: "20px", alignItems: "start" }}>
 
                     {/* Left — order items */}
                     <div style={{ backgroundColor: "#fff", border: "1px solid #f0f0f0" }}>
