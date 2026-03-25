@@ -82,17 +82,37 @@ import('@capacitor/core').then(({ Capacitor }) => {
             PushNotifications.register();
         });
 
-        // Save the FCM device token to the server so Laravel can send native pushes
-        PushNotifications.addListener('registration', ({ value: token }) => {
+        const postFcmToken = (token: string) => {
             const xsrf = decodeURIComponent(
                 document.cookie.split('; ').find(c => c.startsWith('XSRF-TOKEN='))?.split('=')[1] ?? ''
             );
-            fetch('/push/fcm-token', {
+            return fetch('/push/fcm-token', {
                 method: 'POST',
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrf },
                 body: JSON.stringify({ token }),
-            }).catch(() => { /* silent — token will be sent on next launch */ });
+            });
+        };
+
+        // Save the FCM device token to the server so Laravel can send native pushes.
+        // Also cache it in localStorage so it can be retried after login if the user
+        // wasn't authenticated when the registration event first fired.
+        PushNotifications.addListener('registration', ({ value: token }) => {
+            try { localStorage.setItem('_fcm_pending_token', token); } catch {}
+            postFcmToken(token).then(r => {
+                if (r.ok) { try { localStorage.removeItem('_fcm_pending_token'); } catch {} }
+            }).catch(() => {});
+        });
+
+        // Retry sending a cached FCM token on every page navigation (kicks in after login)
+        import('@inertiajs/core').then(({ router }) => {
+            router.on('navigate', () => {
+                const pending = localStorage.getItem('_fcm_pending_token');
+                if (!pending) return;
+                postFcmToken(pending).then(r => {
+                    if (r.ok) { try { localStorage.removeItem('_fcm_pending_token'); } catch {} }
+                }).catch(() => {});
+            });
         });
 
         // Foreground push — feed into NotificationContext via custom event
