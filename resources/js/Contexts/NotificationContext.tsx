@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import axios from 'axios';
 
 export interface Notification {
     id: string;
@@ -36,6 +35,39 @@ export function useNotifications() {
     return useContext(NotificationContext);
 }
 
+// ── localStorage helpers ──────────────────────────────────────────────────────
+const STORAGE_KEY_PREFIX = 'sneaker_notifications_';
+const TTL_MINUTES = 60; // notifications persist for 60 minutes
+
+function storageKey(userId: number): string {
+    return `${STORAGE_KEY_PREFIX}${userId}`;
+}
+
+function loadFromStorage(userId: number): Notification[] {
+    try {
+        const raw = localStorage.getItem(storageKey(userId));
+        if (!raw) return [];
+
+        const parsed: Notification[] = JSON.parse(raw);
+        const cutoff = Date.now() - TTL_MINUTES * 60 * 1000;
+
+        // Filter out notifications older than TTL
+        return parsed.filter(n => new Date(n.received_at).getTime() > cutoff);
+    } catch {
+        return [];
+    }
+}
+
+function saveToStorage(userId: number, notifications: Notification[]): void {
+    try {
+        localStorage.setItem(storageKey(userId), JSON.stringify(notifications));
+    } catch {
+        // localStorage full or unavailable — fail silently
+    }
+}
+
+// ── Provider ──────────────────────────────────────────────────────────────────
+
 interface Props {
     userId: number | null;
     children: React.ReactNode;
@@ -43,29 +75,30 @@ interface Props {
 
 export function NotificationProvider({ userId, children }: Props) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [toast, setToast] = useState<Notification | null>(null);
-    const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const subscribedRef = useRef<number | null>(null);
+    const [toast, setToast]                 = useState<Notification | null>(null);
+    const toastTimer                        = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const subscribedRef                     = useRef<number | null>(null);
 
-    // Derived State: unreadCount is automatically recalculated whenever notifications array changes
     const unreadCount = notifications.filter(n => !n.read).length;
 
-    // ─── 1. INITIAL FETCH ───
-    // When the user logs in, pull their notification history from the database
+    // ── 1. Load from localStorage on mount / userId change ───────────────────
     useEffect(() => {
         if (!userId) {
             setNotifications([]);
             return;
         }
-
-        axios.get('/api/notifications')
-            .then(res => {
-                // Ensure the incoming data matches our Notification interface
-                setNotifications(res.data);
-            })
-            .catch(err => console.error("Could not load notification history", err));
+        // Load persisted notifications, already filtered by TTL
+        const stored = loadFromStorage(userId);
+        setNotifications(stored);
     }, [userId]);
 
+    // ── 2. Save to localStorage whenever notifications change ─────────────────
+    useEffect(() => {
+        if (!userId) return;
+        saveToStorage(userId, notifications);
+    }, [notifications, userId]);
+
+    // ── 3. Toast helper ───────────────────────────────────────────────────────
     const showToast = useCallback((notification: Notification) => {
         if (toastTimer.current) {
             clearTimeout(toastTimer.current);
@@ -78,12 +111,10 @@ export function NotificationProvider({ userId, children }: Props) {
         }, 6000);
     }, []);
 
-    // ─── 2. PUSHER SUBSCRIPTION ───
+    // ── 4. Pusher subscription ────────────────────────────────────────────────
     useEffect(() => {
         // @ts-ignore
         if (!userId || typeof window.Echo === 'undefined') return;
-
-        // Prevent duplicate subscriptions for the same user
         if (subscribedRef.current === userId) return;
         subscribedRef.current = userId;
 
@@ -91,20 +122,24 @@ export function NotificationProvider({ userId, children }: Props) {
         window.Echo.private(`orders.${userId}`)
             .listen('.order.status.changed', (data: any) => {
                 const newNotification: Notification = {
-                    id: `${data.id}-${Date.now()}`, // Unique ID for React keys
-                    order_id: data.id,
-                    order_number: data.order_number,
-                    type: data.type,
-                    title: data.title,
-                    message: data.message,
-                    icon: data.icon,
+                    id:              String(data.id) + '-' + data.type,
+                    order_id:        data.id,
+                    order_number:    data.order_number,
+                    type:            data.type,
+                    title:           data.title,
+                    message:         data.message,
+                    icon:            data.icon,
                     delivery_status: data.delivery_status,
-                    received_at: new Date().toISOString(),
-                    read: false,
+                    received_at:     new Date().toISOString(),
+                    read:            false,
                 };
 
-                // Prepend new notification to the top of the list
-                setNotifications(prev => [newNotification, ...prev].slice(0, 20));
+                setNotifications(prev => {
+                    // Avoid duplicates — same order + same type
+                    const exists = prev.some(n => n.id === newNotification.id);
+                    if (exists) return prev;
+                    return [newNotification, ...prev].slice(0, 20);
+                });
                 showToast(newNotification);
             });
 
@@ -115,33 +150,23 @@ export function NotificationProvider({ userId, children }: Props) {
         };
     }, [userId, showToast]);
 
-    // ─── 3. ACTIONS ───
+    // Cleanup toast timer on unmount
+    useEffect(() => {
+        return () => {
+            if (toastTimer.current) clearTimeout(toastTimer.current);
+        };
+    }, []);
 
-    const markRead = useCallback(async (id: string) => {
-        // OPTIMISTIC UPDATE: Change UI state immediately so dots disappear instantly
+    // ── 5. Actions ────────────────────────────────────────────────────────────
+    const markRead = useCallback((id: string) => {
         setNotifications(prev =>
             prev.map(n => n.id === id ? { ...n, read: true } : n)
         );
-
-        // SYNC WITH BACKEND: Send the update to Laravel
-        try {
-            await axios.post(`/api/notifications/${id}/read`);
-        } catch (err) {
-            console.error("Failed to mark notification as read in DB", err);
-            // Optional: Rollback UI state if the request fails
-        }
+        // localStorage is updated automatically via the useEffect above
     }, []);
 
-    const markAllRead = useCallback(async () => {
-        // OPTIMISTIC UPDATE
+    const markAllRead = useCallback(() => {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-
-        // SYNC WITH BACKEND
-        try {
-            await axios.post('/api/notifications/read-all');
-        } catch (err) {
-            console.error("Failed to mark all as read in DB", err);
-        }
     }, []);
 
     const dismissToast = useCallback(() => {
@@ -156,7 +181,7 @@ export function NotificationProvider({ userId, children }: Props) {
             unreadCount,
             markRead,
             markAllRead,
-            dismissToast
+            dismissToast,
         }}>
             {children}
         </NotificationContext.Provider>
