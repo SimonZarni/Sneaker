@@ -19,7 +19,22 @@ class GoogleAuthController extends Controller
      */
     public function redirect(Request $request)
     {
-        if ($request->query('source') === 'capacitor') {
+        $isCapacitor = $request->query('source') === 'capacitor';
+
+        // Chrome Custom Tabs share cookies with the Chrome browser, so an existing
+        // Chrome session arrives here even when the user is logging in via the native app.
+        if (Auth::check()) {
+            if ($isCapacitor) {
+                // Already authenticated — skip OAuth and issue a deep-link token directly.
+                $token = Str::random(64);
+                Cache::put("oauth_app_token:{$token}", Auth::id(), now()->addMinutes(5));
+                return redirect("com.sneaker.drp://auth/callback?token={$token}");
+            }
+            // Authenticated web user — behave like guest middleware normally would.
+            return redirect('/');
+        }
+
+        if ($isCapacitor) {
             session(['oauth_source' => 'capacitor']);
         }
 

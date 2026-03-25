@@ -13,9 +13,12 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 // ── Google OAuth ──────────────────────────────────────────────────────────────
+// These routes intentionally bypass guest middleware because Chrome Custom Tabs
+// share cookies with Chrome browser — an existing Chrome session must not block
+// the native app OAuth flow. Authentication state is handled in the controller.
+Route::get('auth/google',          [GoogleAuthController::class, 'redirect'])->name('auth.google');
+Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
 Route::middleware('guest')->group(function () {
-    Route::get('auth/google',          [GoogleAuthController::class, 'redirect'])->name('auth.google');
-    Route::get('auth/google/callback', [GoogleAuthController::class, 'callback'])->name('auth.google.callback');
     Route::get('auth/app-verify',      [GoogleAuthController::class, 'appVerify'])->name('auth.app.verify');
 });
 
