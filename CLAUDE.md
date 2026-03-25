@@ -49,6 +49,12 @@ Two separate guard systems co-exist:
 - `cart` — current cart with items
 - `activeOrders` — user's in-progress orders
 
+### PWA (Progressive Web App)
+- Configured for native-like install experience on mobile and desktop
+- `usePwa.ts` (`resources/js/hooks/`) handles the `beforeinstallprompt` event and exposes install trigger
+- Service worker and manifest registered for offline support and home screen install
+- Web Push notifications via VAPID (`PushNotificationService.php`) tie into the PWA flow
+
 ### Real-time (Pusher + Laravel Echo)
 - Configured in `resources/js/bootstrap.ts`
 - Events: `ChatMessageSent`, `OrderStatusChanged`
@@ -83,6 +89,10 @@ Two separate guard systems co-exist:
 - Pages use `AuthenticatedLayout`, `GuestLayout`, or `AdminLayout` as wrappers
 - Inertia's `useForm` hook is used for form submissions (handles CSRF, redirects, validation errors automatically)
 - TypeScript strict mode enabled
+
+### Environments
+- **Production URL:** https://zarnidev.online
+- **Admin panel:** https://zarnidev.online/admin
 
 ### Test Accounts (after seeding)
 - Customer: `test@example.com` / `password`

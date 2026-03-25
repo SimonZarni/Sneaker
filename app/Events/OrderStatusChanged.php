@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Order;
+use App\Services\FcmService;
 use App\Services\PushNotificationService;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
@@ -40,6 +41,22 @@ class OrderStatusChanged implements ShouldBroadcastNow
             'tag'      => "order-{$order->id}",
             'order_id' => $order->id,
         ]);
+
+        // Send native FCM push to the Android app (if device token registered)
+        if ($order->user->fcm_token) {
+            app(FcmService::class)->sendToToken(
+                $order->user->fcm_token,
+                $this->title,
+                $this->message,
+                [
+                    'order_id'        => (string) $order->id,
+                    'order_number'    => $order->order_number,
+                    'type'            => $type,
+                    'delivery_status' => $order->delivery_status,
+                    'url'             => "/orders/{$order->id}",
+                ]
+            );
+        }
     }
 
     /**

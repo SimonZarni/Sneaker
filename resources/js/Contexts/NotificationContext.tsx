@@ -113,6 +113,24 @@ export function NotificationProvider({ userId, children }: Props) {
         }, 6000);
     }, []);
 
+    // ── 4a. Capacitor native push listener ───────────────────────────────────
+    useEffect(() => {
+        if (!userId) return;
+
+        const handler = (e: Event) => {
+            const notification = (e as CustomEvent<Notification>).detail;
+            setNotifications(prev => {
+                const exists = prev.some(n => n.id === notification.id);
+                if (exists) return prev;
+                return [notification, ...prev].slice(0, 20);
+            });
+            showToast(notification);
+        };
+
+        window.addEventListener('capacitor-notification', handler);
+        return () => window.removeEventListener('capacitor-notification', handler);
+    }, [userId, showToast]);
+
     // ── 4. Pusher subscription ────────────────────────────────────────────────
     useEffect(() => {
         // @ts-ignore

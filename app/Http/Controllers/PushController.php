@@ -6,6 +6,7 @@ use App\Models\PushSubscription;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Illuminate\Http\Response;
 
 class PushController extends Controller
 {
@@ -36,6 +37,21 @@ class PushController extends Controller
         );
 
         return response()->json(['status' => 'subscribed']);
+    }
+
+    /**
+     * Store (or update) the FCM device token for the authenticated user.
+     * Called from the Capacitor app on every launch after push permission is granted.
+     */
+    public function storeFcmToken(Request $request): Response
+    {
+        $validated = $request->validate([
+            'token' => 'required|string|max:500',
+        ]);
+
+        $request->user()->update(['fcm_token' => $validated['token']]);
+
+        return response()->noContent();
     }
 
     /**

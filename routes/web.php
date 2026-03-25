@@ -142,6 +142,7 @@ Route::get('/offline', [PushController::class, 'offline'])->name('offline');
 Route::middleware('auth')->group(function () {
     Route::post('/push/subscribe',   [PushController::class, 'subscribe'])->name('push.subscribe');
     Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])->name('push.unsubscribe');
+    Route::post('/push/fcm-token',   [PushController::class, 'storeFcmToken'])->name('push.fcm-token');
 });
 
 require __DIR__.'/auth.php';
