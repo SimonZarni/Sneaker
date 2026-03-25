@@ -21,21 +21,20 @@ class GoogleAuthController extends Controller
     {
         $isCapacitor = $request->query('source') === 'capacitor';
 
-        // Chrome Custom Tabs share cookies with the Chrome browser, so an existing
-        // Chrome session arrives here even when the user is logging in via the native app.
-        if (Auth::check()) {
-            if ($isCapacitor) {
-                // Already authenticated — skip OAuth and issue a deep-link token directly.
-                $token = Str::random(64);
-                Cache::put("oauth_app_token:{$token}", Auth::id(), now()->addMinutes(5));
-                return redirect("com.sneaker.drp://auth/callback?token={$token}");
-            }
-            // Authenticated web user — behave like guest middleware normally would.
+        // Web-only: authenticated web users don't need to go through OAuth again.
+        // For native (Capacitor) we never skip OAuth — Chrome Custom Tabs shares Chrome's
+        // cookie jar, so Auth::check() can be true even for a fresh native login attempt.
+        // Skipping OAuth would silently reuse the existing session and never show the
+        // Google account chooser.
+        if (Auth::check() && !$isCapacitor) {
             return redirect('/');
         }
 
         if ($isCapacitor) {
             session(['oauth_source' => 'capacitor']);
+            // Force Google to show the account chooser on every native login so the user
+            // can pick which account to use, even when Chrome has a stored Google session.
+            return Socialite::driver('google')->with(['prompt' => 'select_account'])->redirect();
         }
 
         return Socialite::driver('google')->redirect();
