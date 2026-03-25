@@ -212,6 +212,7 @@
 
 import React, { useState } from "react";
 import { Head, Link, useForm } from "@inertiajs/react";
+import { Capacitor } from "@capacitor/core";
 
 export default function Login({
     status,
@@ -292,8 +293,18 @@ export default function Login({
                     <form onSubmit={submit} className="space-y-8">
 
                         {/* ── Google OAuth ── */}
-                        <a
-                            href="/auth/google"
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const url = '/auth/google' + (Capacitor.isNativePlatform() ? '?source=capacitor' : '');
+                                if (Capacitor.isNativePlatform()) {
+                                    import('@capacitor/browser').then(({ Browser }) =>
+                                        Browser.open({ url: `https://zarnidev.online${url}` })
+                                    );
+                                } else {
+                                    window.location.href = url;
+                                }
+                            }}
                             className="flex items-center justify-center gap-3 w-full border-2 border-brand-surface hover:border-brand-charcoal py-4 text-[10px] font-black uppercase tracking-[0.3em] text-brand-charcoal transition-colors group"
                         >
                             <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -303,7 +314,7 @@ export default function Login({
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                             </svg>
                             Continue with Google
-                        </a>
+                        </button>
 
                         {/* Divider */}
                         <div className="flex items-center gap-4">

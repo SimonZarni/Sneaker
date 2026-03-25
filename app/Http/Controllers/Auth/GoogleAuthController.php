@@ -4,16 +4,24 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class GoogleAuthController extends Controller
 {
     /**
      * Redirect the user to Google's OAuth page.
+     * Stores 'capacitor' source in session so callback can detect native app flow.
      */
-    public function redirect()
+    public function redirect(Request $request)
     {
+        if ($request->query('source') === 'capacitor') {
+            session(['oauth_source' => 'capacitor']);
+        }
+
         return Socialite::driver('google')->redirect();
     }
 
@@ -62,9 +70,42 @@ class GoogleAuthController extends Controller
         }
 
         Auth::login($user, remember: true);
-
         request()->session()->regenerate();
 
+        // Native app flow: redirect back via deep link with a one-time token
+        if (session()->pull('oauth_source') === 'capacitor') {
+            $token = Str::random(64);
+            Cache::put("oauth_app_token:{$token}", $user->id, now()->addMinutes(5));
+            return redirect("com.sneaker.drp://auth/callback?token={$token}");
+        }
+
         return redirect()->intended('/');
+    }
+
+    /**
+     * Verify a one-time OAuth token from the native app deep link and log the user in.
+     * The WebView navigates here after receiving the deep link.
+     */
+    public function appVerify(Request $request)
+    {
+        $token  = $request->query('token', '');
+        $userId = Cache::pull("oauth_app_token:{$token}");
+
+        if (!$userId) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Login link expired or invalid. Please try again.']);
+        }
+
+        $user = User::find($userId);
+
+        if (!$user || !$user->is_active) {
+            return redirect()->route('login')
+                ->withErrors(['email' => 'Account not found or suspended.']);
+        }
+
+        Auth::login($user, remember: true);
+        request()->session()->regenerate();
+
+        return redirect('/');
     }
 }

@@ -58,6 +58,23 @@ import('@capacitor/core').then(({ Capacitor }) => {
         });
     });
 
+    // Step 6b — Google OAuth deep link handler
+    // After Google OAuth, the server redirects to com.sneaker.drp://auth/callback?token=TOKEN
+    // We receive it here, close any open browser, then navigate the WebView to /auth/app-verify
+    import('@capacitor/app').then(({ App: CapApp }) => {
+        CapApp.addListener('appUrlOpen', ({ url }) => {
+            if (url.startsWith('com.sneaker.drp://auth/callback')) {
+                const token = new URL(url).searchParams.get('token');
+                if (token) {
+                    // Close the Chrome Custom Tab if still open
+                    import('@capacitor/browser').then(({ Browser }) => Browser.close()).catch(() => {});
+                    // Navigate the WebView to the verify endpoint — Laravel will log in and redirect to /
+                    window.location.href = `/auth/app-verify?token=${encodeURIComponent(token)}`;
+                }
+            }
+        });
+    });
+
     // Step 7 — Native push notifications
     import('@capacitor/push-notifications').then(({ PushNotifications }) => {
         PushNotifications.requestPermissions().then(({ receive }) => {
