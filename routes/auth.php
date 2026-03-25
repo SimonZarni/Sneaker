@@ -19,6 +19,9 @@ Route::middleware('guest')->group(function () {
     Route::get('auth/app-verify',      [GoogleAuthController::class, 'appVerify'])->name('auth.app.verify');
 });
 
+// Native app Google Sign-In (no browser — receives ID token directly from the device)
+Route::post('auth/google/native', [GoogleAuthController::class, 'nativeCallback'])->name('auth.google.native');
+
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');

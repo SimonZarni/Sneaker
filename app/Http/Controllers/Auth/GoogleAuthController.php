@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
@@ -80,6 +81,72 @@ class GoogleAuthController extends Controller
         }
 
         return redirect()->intended('/');
+    }
+
+    /**
+     * Verify a Google ID token sent directly from the native app (no browser flow).
+     * Used by @codetrix-studio/capacitor-google-auth on Android.
+     */
+    public function nativeCallback(Request $request)
+    {
+        $idToken = $request->input('id_token', '');
+
+        if (!$idToken) {
+            return response()->json(['error' => 'Missing token'], 422);
+        }
+
+        // Verify the ID token with Google's tokeninfo endpoint
+        $response = Http::get('https://oauth2.googleapis.com/tokeninfo', ['id_token' => $idToken]);
+
+        if (!$response->ok()) {
+            return response()->json(['error' => 'Invalid Google token'], 401);
+        }
+
+        $googleData = $response->json();
+
+        // Ensure the token was issued for our app
+        $clientId = config('services.google.client_id');
+        if (($googleData['aud'] ?? '') !== $clientId) {
+            return response()->json(['error' => 'Token audience mismatch'], 401);
+        }
+
+        $googleId = $googleData['sub'];
+        $email    = $googleData['email'] ?? null;
+        $name     = $googleData['name']  ?? $email;
+
+        if (!$email) {
+            return response()->json(['error' => 'Google account has no email'], 422);
+        }
+
+        // Reuse the same find-or-create logic as the web callback
+        $user = User::where('google_id', $googleId)->first();
+
+        if (!$user) {
+            $user = User::where('email', $email)->first();
+
+            if ($user) {
+                $user->google_id = $googleId;
+                $user->save();
+            } else {
+                $user = new User();
+                $user->name              = $name;
+                $user->email             = $email;
+                $user->google_id         = $googleId;
+                $user->email_verified_at = now();
+                $user->password          = null;
+                $user->is_active         = true;
+                $user->save();
+            }
+        }
+
+        if (!$user->is_active) {
+            return response()->json(['error' => 'Your account has been suspended. Please contact support.'], 403);
+        }
+
+        Auth::login($user, remember: true);
+        $request->session()->regenerate();
+
+        return response()->json(['success' => true]);
     }
 
     /**
