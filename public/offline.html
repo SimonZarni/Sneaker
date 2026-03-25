@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SNEAKER.DRP — Offline</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #0A0A0A;
+            color: #F5F5F7;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .wordmark {
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: .25em;
+            text-transform: uppercase;
+            color: #F5F5F7;
+            margin-bottom: 56px;
+            opacity: .5;
+        }
+
+        .icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        p {
+            font-size: 14px;
+            color: rgba(245,245,247,.5);
+            line-height: 1.6;
+            text-align: center;
+            max-width: 280px;
+            margin-bottom: 40px;
+        }
+
+        .retry-btn {
+            background: #F5F5F7;
+            color: #0A0A0A;
+            border: none;
+            padding: 14px 32px;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .15em;
+            text-transform: uppercase;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity .2s;
+        }
+
+        .retry-btn:hover { opacity: .8; }
+
+        .status {
+            margin-top: 20px;
+            font-size: 11px;
+            color: rgba(245,245,247,.3);
+            letter-spacing: .05em;
+        }
+    </style>
+</head>
+<body>
+    <div class="wordmark">SNEAKER.DRP</div>
+
+    <div class="icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="rgba(245,245,247,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23"/>
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+            <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <line x1="12" y1="20" x2="12.01" y2="20"/>
+        </svg>
+    </div>
+
+    <h1>You're offline</h1>
+    <p>Check your connection and try again. Your cart and wishlist are saved for when you're back.</p>
+
+    <button class="retry-btn" onclick="window.location.reload()">Try again</button>
+    <div class="status" id="status"></div>
+
+    <script>
+        // Auto-retry when connection is restored
+        window.addEventListener('online', () => {
+            document.getElementById('status').textContent = 'Connection restored — reloading...';
+            setTimeout(() => window.location.href = '/', 800);
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('status').textContent = 'Still offline';
+        });
+    </script>
+</body>
+</html>

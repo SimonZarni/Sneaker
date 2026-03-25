@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Order;
+use App\Services\PushNotificationService;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -30,6 +31,15 @@ class OrderStatusChanged implements ShouldBroadcastNow
         ];
 
         [$this->icon, $this->title, $this->message] = $map[$type] ?? ['🔔', 'Order Update', "Order {$order->order_number} was updated."];
+
+        // Send Web Push to all subscribed devices (for installed PWA / closed browser)
+        app(PushNotificationService::class)->sendToUser($order->user, [
+            'title'    => $this->title,
+            'body'     => $this->message,
+            'url'      => "/orders/{$order->id}",
+            'tag'      => "order-{$order->id}",
+            'order_id' => $order->id,
+        ]);
     }
 
     /**

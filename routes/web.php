@@ -9,6 +9,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Admin\AdminReviewController;
@@ -132,6 +133,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/customers/{id}',                [AdminCustomerController::class, 'show'])->name('customers.show');
         Route::patch('/customers/{id}/toggle-active',[AdminCustomerController::class, 'toggleActive'])->name('customers.toggleActive');
     });
+});
+
+// Public — offline page served by SW
+Route::get('/offline', [PushController::class, 'offline'])->name('offline');
+
+// Authenticated — push subscription management
+Route::middleware('auth')->group(function () {
+    Route::post('/push/subscribe',   [PushController::class, 'subscribe'])->name('push.subscribe');
+    Route::post('/push/unsubscribe', [PushController::class, 'unsubscribe'])->name('push.unsubscribe');
 });
 
 require __DIR__.'/auth.php';

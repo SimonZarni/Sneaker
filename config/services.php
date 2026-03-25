@@ -18,7 +18,7 @@ return [
         'key' => env('POSTMARK_API_KEY'),
     ],
 
-     'resend' => [
+    'resend' => [
         'key' => env('RESEND_API_KEY'),
         'url' => 'https://api.resend.com',
     ],
@@ -40,5 +40,10 @@ return [
         'client_id'     => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect'      => env('GOOGLE_REDIRECT_URI'),
+    ],
+    'vapid' => [
+        'subject'     => env('VAPID_SUBJECT', 'mailto:hello@sneaker.drp'),
+        'public_key'  => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
     ],
 ];

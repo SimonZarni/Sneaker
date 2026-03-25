@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Head, Link, router, useForm, usePage } from "@inertiajs/react";
 import NotificationBell from "@/Components/NotificationBell";
+import PushNotificationToggle from '@/Components/PushNotificationToggle';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -616,6 +617,13 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                                 >
                                     Save Changes
                                 </button>
+                            </div>
+                        </Section>
+
+                         {/* Notifications */}
+                        <Section title="Notifications">
+                            <div style={{ border: "1px solid #f0f0f0", padding: "4px 20px" }}>
+                                <PushNotificationToggle />
                             </div>
                         </Section>
 
