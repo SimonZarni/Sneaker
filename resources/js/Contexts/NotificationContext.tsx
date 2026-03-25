@@ -20,6 +20,7 @@ interface NotificationContextType {
     markRead: (id: string) => void;
     markAllRead: () => void;
     dismissToast: () => void;
+    deleteAll: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType>({
@@ -29,6 +30,7 @@ const NotificationContext = createContext<NotificationContextType>({
     markRead: () => {},
     markAllRead: () => {},
     dismissToast: () => {},
+    deleteAll: () => {},
 });
 
 export function useNotifications() {
@@ -169,6 +171,14 @@ export function NotificationProvider({ userId, children }: Props) {
         setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     }, []);
 
+    const deleteAll = useCallback(() => {
+        setNotifications([]);
+        // Clear from localStorage immediately
+        if (userId) {
+            try { localStorage.removeItem(storageKey(userId)); } catch {}
+        }
+    }, [userId]);
+
     const dismissToast = useCallback(() => {
         if (toastTimer.current) clearTimeout(toastTimer.current);
         setToast(null);
@@ -182,6 +192,7 @@ export function NotificationProvider({ userId, children }: Props) {
             markRead,
             markAllRead,
             dismissToast,
+            deleteAll,
         }}>
             {children}
         </NotificationContext.Provider>

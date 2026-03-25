@@ -12,7 +12,8 @@ export default function NotificationBell({ userId }: Props) {
         unreadCount,
         markRead,
         markAllRead,
-        dismissToast
+        dismissToast,
+        deleteAll
     } = useNotifications();
 
     const [open, setOpen] = useState(false);
@@ -127,9 +128,27 @@ export default function NotificationBell({ userId }: Props) {
                     }}>
                         <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' }}>Notifications</span>
-                            {unreadCount > 0 && (
-                                <button onClick={markAllRead} style={{ fontSize: '10px', color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Mark all read</button>
-                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {unreadCount > 0 && (
+                                    <button onClick={markAllRead} style={{ fontSize: '10px', color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Mark all read</button>
+                                )}
+                                {notifications.length > 0 && (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); deleteAll(); }}
+                                        title="Delete all notifications"
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', color: '#9ca3af' }}
+                                        onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
+                                        onMouseLeave={e => (e.currentTarget.style.color = '#9ca3af')}
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="3 6 5 6 21 6" />
+                                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                                            <path d="M10 11v6M14 11v6" />
+                                            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
                         </div>
                         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                             {notifications.length === 0 ? (
