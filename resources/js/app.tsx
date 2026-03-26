@@ -58,6 +58,15 @@ import('@capacitor/core').then(({ Capacitor }) => {
         });
     });
 
+    // Step 5b — Google Auth initialisation (must run before any GoogleAuth.signIn() call)
+    import('@codetrix-studio/capacitor-google-auth').then(({ GoogleAuth }) => {
+        GoogleAuth.initialize({
+            clientId: '941450594198-g9jagh4gnesi6sk4ghis5frcumfeg4dv.apps.googleusercontent.com',
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: false,
+        });
+    });
+
     // Step 6b — Google OAuth deep link handler
     // After Google OAuth, the server redirects to com.sneaker.drp://auth/callback?token=TOKEN
     // We receive it here, close any open browser, then navigate the WebView to /auth/app-verify
