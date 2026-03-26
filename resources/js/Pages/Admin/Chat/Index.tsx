@@ -157,7 +157,7 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
 
     // ── Conversation list panel ────────────────────────────────────────────────
     const ConvList = (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
             <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f0f0', flexShrink: 0 }}>
                 <p style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.15em', color: '#0a0a0a' }}>
                     Live Chat
