@@ -4,7 +4,11 @@
     "type": "module",
     "scripts": {
         "build": "tsc && vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "cap:assets": "npx capacitor-assets generate",
+        "cap:sync:android": "npx cap sync android",
+        "android:icon:refresh": "npm run cap:assets && npm run cap:sync:android",
+        "android:prepare": "npm run build && npm run android:icon:refresh"
     },
     "devDependencies": {
         "@capacitor/assets": "^3.0.5",
