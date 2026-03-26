@@ -181,7 +181,7 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
                             cursor: 'pointer',
                             borderBottom: '1px solid #f5f5f7',
                             backgroundColor: selected?.id === conv.id ? '#fafafa' : '#fff',
-                            borderLeft: selected?.id === conv.id ? '3px solid #0a0a0a' : '3px solid transparent',
+                            boxShadow: selected?.id === conv.id ? 'inset 3px 0 0 #0a0a0a' : 'none',
                             transition: 'all 0.1s',
                         }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
