@@ -299,14 +299,12 @@ export default function Login({
                             onClick={async () => {
                                 setGoogleError(null);
                                 if (Capacitor.isNativePlatform()) {
-                                    // Use Chrome Custom Tab so we avoid native plugin crashes.
-                                    // The server will redirect to the deep link after auth,
-                                    // which app.tsx's appUrlOpen listener will handle.
-                                    const { Browser } = await import('@capacitor/browser');
-                                    await Browser.open({
-                                        url: 'https://zarnidev.online/auth/google?source=capacitor',
-                                        presentationStyle: 'popover',
-                                    });
+                                    try {
+                                        const { googleNativeLogin } = await import('@/utils/googleAuth');
+                                        await googleNativeLogin();
+                                    } catch (err: any) {
+                                        setGoogleError(err.message ?? 'Google sign-in failed. Please try again.');
+                                    }
                                 } else {
                                     window.location.href = '/auth/google';
                                 }
