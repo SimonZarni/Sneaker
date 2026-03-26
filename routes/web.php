@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/shop', [ProductController::class, 'index'])->name('shop.index');
 Route::get('/about', fn() => inertia('About'))->name('about');
+Route::get('/privacy-policy', fn() => inertia('PrivacyPolicy'))->name('privacy');
 Route::get('/shop/{id}', [ProductController::class, 'show'])->name('shop.show');
 Route::get('/', [HomeController::class, 'index'])->name('home');
 

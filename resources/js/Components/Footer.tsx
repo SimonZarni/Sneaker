@@ -41,10 +41,10 @@ export default function Footer() {
                         </p>
                         <ul className="space-y-4">
                             {[
-                                { label: "All Drops",   href: route("shop.index") },
+                                { label: "All Drops",    href: route("shop.index") },
                                 { label: "New Arrivals", href: route("shop.index") + "?sort=latest" },
-                                { label: "Wishlist",    href: route("wishlist.index") },
-                                { label: "My Orders",   href: route("orders.index") },
+                                { label: "Wishlist",     href: route("wishlist.index") },
+                                { label: "My Orders",    href: route("orders.index") },
                             ].map(item => (
                                 <li key={item.label}>
                                     <Link href={item.href}
@@ -63,9 +63,9 @@ export default function Footer() {
                         </p>
                         <ul className="space-y-4">
                             {[
-                                { label: "Sign In",     href: route("login") },
-                                { label: "Register",    href: route("register") },
-                                { label: "My Profile",  href: route("profile.edit") },
+                                { label: "Sign In",       href: route("login") },
+                                { label: "Register",      href: route("register") },
+                                { label: "My Profile",    href: route("profile.edit") },
                                 { label: "Order History", href: route("orders.index") },
                             ].map(item => (
                                 <li key={item.label}>
@@ -127,12 +127,13 @@ export default function Footer() {
                     </div>
 
                     <div className="flex items-center gap-6">
-                        {["Privacy Policy", "Terms of Use"].map(item => (
-                            <span key={item}
-                                className="text-[8px] font-bold uppercase tracking-widest text-white/20 cursor-default">
-                                {item}
-                            </span>
-                        ))}
+                        <Link href={route("privacy")}
+                            className="text-[8px] font-bold uppercase tracking-widest text-white/20 hover:text-white/50 transition-colors">
+                            Privacy Policy
+                        </Link>
+                        <span className="text-[8px] font-bold uppercase tracking-widest text-white/20 cursor-default">
+                            Terms of Use
+                        </span>
                     </div>
                 </div>
             </div>
