@@ -303,13 +303,13 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
 
                 {/* Conversation list */}
                 <div className={`chat-list-panel${mobileView === 'chat' ? ' mobile-hidden' : ''}`}
-                    style={{ borderRight: '1px solid #f0f0f0', overflow: 'hidden' }}>
+                    style={{ borderRight: '1px solid #f0f0f0', overflow: 'hidden', width: '380px', flexShrink: 0 }}>
                     {ConvList}
                 </div>
 
                 {/* Chat panel */}
                 <div className={`chat-main-panel${mobileView === 'list' && !selected ? ' mobile-hidden' : ''}`}
-                    style={{ overflow: 'hidden' }}>
+                    style={{ overflow: 'hidden', flex: 1, minWidth: 0 }}>
                     {ChatPanel}
                 </div>
             </div>
