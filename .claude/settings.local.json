@@ -5,7 +5,8 @@
       "Bash(find android:*)",
       "Bash(npm run:*)",
       "Bash(npx cap:*)",
-      "Bash(./gradlew assembleDebug)"
+      "Bash(./gradlew assembleDebug)",
+      "Bash(./gradlew assembleRelease)"
     ]
   }
 }
