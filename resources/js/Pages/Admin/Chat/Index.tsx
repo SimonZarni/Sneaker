@@ -169,7 +169,7 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
                 </p>
                 <p style={{ fontSize: '10px', color: 'rgba(45,50,62,0.4)', marginTop: '2px' }}>{conversations.length} conversations</p>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto' }}>
+            <div style={{ flex: 1, overflowY: 'auto', width: '100%' }}>
                 {conversations.length === 0 ? (
                     <div style={{ padding: '32px 20px', textAlign: 'center', color: 'rgba(45,50,62,0.3)', fontSize: '11px' }}>
                         No conversations yet
@@ -177,6 +177,8 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
                 ) : conversations.map(conv => (
                     <div key={conv.id} onClick={() => openConversation(conv)}
                         style={{
+                            width: '100%',
+                            boxSizing: 'border-box',
                             padding: '14px 20px',
                             cursor: 'pointer',
                             borderBottom: '1px solid #f5f5f7',
