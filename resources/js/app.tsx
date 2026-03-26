@@ -65,6 +65,16 @@ import('@capacitor/core').then(({ Capacitor }) => {
             scopes: ['profile', 'email'],
             grantOfflineAccess: false,
         });
+
+        // Sign out of Google when the user logs out so the next signIn() shows the account picker
+        import('@inertiajs/core').then(({ router }) => {
+            router.on('before', (event) => {
+                const url = (event.detail.visit as any)?.url;
+                if (url && String(url).includes('/logout')) {
+                    GoogleAuth.signOut().catch(() => {});
+                }
+            });
+        });
     });
 
     // Step 6b — Google OAuth deep link handler
