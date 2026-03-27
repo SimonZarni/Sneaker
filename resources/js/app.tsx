@@ -39,17 +39,16 @@ createInertiaApp({
 import('@capacitor/core').then(({ Capacitor }) => {
     if (!Capacitor.isNativePlatform()) return;
 
-    // Hide splash once the first page has fully rendered.
-    // launchAutoHide:false keeps the splash up until we call hide() here,
-    // eliminating the black flash between splash dismissal and first paint.
+    // Hide splash once the WebView has painted the first frame.
+    // We use a short timeout after DOMContentLoaded as the most reliable
+    // trigger — router.on('finish') can miss the very first navigation.
     import('@capacitor/splash-screen').then(({ SplashScreen }) => {
-        import('@inertiajs/core').then(({ router }) => {
-            const hideSplash = () => {
-                SplashScreen.hide({ fadeOutDuration: 200 });
-            };
-            // 'finish' fires when Inertia completes its first page load
-            router.on('finish', hideSplash);
-        });
+        const hide = () => SplashScreen.hide({ fadeOutDuration: 200 });
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => setTimeout(hide, 300));
+        } else {
+            setTimeout(hide, 300);
+        }
     });
 
     // Hide splash screen once the webview has fully loaded and rendered.
