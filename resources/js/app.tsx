@@ -61,7 +61,7 @@ import('@capacitor/core').then(({ Capacitor }) => {
     // Step 5b — Google Auth initialisation (must run before any GoogleAuth.signIn() call)
     import('@codetrix-studio/capacitor-google-auth').then(({ GoogleAuth }) => {
         GoogleAuth.initialize({
-            clientId: '941450594198-g9jagh4gnesi6sk4ghis5frcumfeg4dv.apps.googleusercontent.com',
+            clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID as string,
             scopes: ['profile', 'email'],
             grantOfflineAccess: false,
         });
