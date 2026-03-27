@@ -20,7 +20,11 @@ export async function googleNativeLogin(): Promise<void> {
     });
 
     if (res.ok) {
-        window.location.href = '/';
+        // Use Inertia router for a smooth SPA transition instead of a
+        // full page reload via window.location.href which causes a flash
+        // back to the login screen before navigating to home.
+        const { router } = await import('@inertiajs/core');
+        router.visit('/', { replace: true });
     } else {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? 'Google sign-in failed');
