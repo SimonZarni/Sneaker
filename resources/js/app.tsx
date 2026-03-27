@@ -39,6 +39,31 @@ createInertiaApp({
 import('@capacitor/core').then(({ Capacitor }) => {
     if (!Capacitor.isNativePlatform()) return;
 
+    // Hide splash once the first page has fully rendered.
+    // launchAutoHide:false keeps the splash up until we call hide() here,
+    // eliminating the black flash between splash dismissal and first paint.
+    import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+        import('@inertiajs/core').then(({ router }) => {
+            const hideSplash = () => {
+                SplashScreen.hide({ fadeOutDuration: 200 });
+            };
+            // 'finish' fires when Inertia completes its first page load
+            router.on('finish', hideSplash);
+        });
+    });
+
+    // Hide splash screen once the webview has fully loaded and rendered.
+    // We wait for the Inertia page to finish navigating before hiding so
+    // there's no flash of unstyled content — the branded splash stays up
+    // until the actual page is painted and ready.
+    import('@capacitor/splash-screen').then(({ SplashScreen }) => {
+        import('@inertiajs/core').then(({ router }) => {
+            router.on('finish', () => {
+                SplashScreen.hide({ fadeOutDuration: 300 });
+            });
+        });
+    });
+
     // Step 5 — Status bar branding
     Promise.all([
         import('@capacitor/status-bar'),

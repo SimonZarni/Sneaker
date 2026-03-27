@@ -13,7 +13,11 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 0,
+      launchShowDuration: 3000,  // fallback auto-hide if finish event never fires
+      launchAutoHide: false,     // hide manually once page is painted
+      backgroundColor: '#0A0A0A',
+      splashFullScreen: true,
+      splashImmersive: true,
     },
     GoogleAuth: {
       scopes: ['profile', 'email'],
