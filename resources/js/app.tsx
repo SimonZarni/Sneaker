@@ -43,11 +43,11 @@ import('@capacitor/core').then(({ Capacitor }) => {
     // We use a short timeout after DOMContentLoaded as the most reliable
     // trigger — router.on('finish') can miss the very first navigation.
     import('@capacitor/splash-screen').then(({ SplashScreen }) => {
-        const hide = () => SplashScreen.hide({ fadeOutDuration: 200 });
+        const hide = () => SplashScreen.hide({ fadeOutDuration: 100 });
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => setTimeout(hide, 300));
+            document.addEventListener('DOMContentLoaded', () => setTimeout(hide, 150));
         } else {
-            setTimeout(hide, 300);
+            setTimeout(hide, 150);
         }
     });
 
