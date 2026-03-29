@@ -115,25 +115,39 @@ import('@capacitor/core').then(({ Capacitor }) => {
 
         // Use axios — reads XSRF-TOKEN cookie lazily at request time,
         // avoiding the race condition on cold launch with raw fetch.
-        const postFcmToken = (token: string) =>
-            axios.post('/push/fcm-token', { token });
+        // Returns true on success so callers can clear the pending token.
+        const postFcmToken = (token: string): Promise<boolean> =>
+            axios.post('/push/fcm-token', { token })
+                .then(() => true)
+                .catch(() => false);
+
+        // Shared helper: flush the pending token if one is stored.
+        // Guards against concurrent in-flight requests with a simple flag.
+        let _fcmSending = false;
+        const flushPendingToken = () => {
+            if (_fcmSending) return;
+            const pending = localStorage.getItem('_fcm_pending_token');
+            if (!pending) return;
+            _fcmSending = true;
+            postFcmToken(pending).then((ok) => {
+                _fcmSending = false;
+                if (ok) { try { localStorage.removeItem('_fcm_pending_token'); } catch {} }
+            });
+        };
 
         PushNotifications.addListener('registration', ({ value: token }) => {
+            // Always persist first — if the POST succeeds immediately, great.
+            // If not (session not yet established), the retry listeners pick it up.
             try { localStorage.setItem('_fcm_pending_token', token); } catch {}
-            postFcmToken(token)
-                .then(() => { try { localStorage.removeItem('_fcm_pending_token'); } catch {} })
-                .catch(() => {});
+            flushPendingToken();
         });
 
-        // Retry on every navigation (after login / session established)
+        // Retry on page finish (fires after the very first Inertia page fully
+        // loads — critical for cold-launch where registration fires during splash)
+        // AND on every navigation (covers the post-login redirect case).
         import('@inertiajs/core').then(({ router }) => {
-            router.on('navigate', () => {
-                const pending = localStorage.getItem('_fcm_pending_token');
-                if (!pending) return;
-                postFcmToken(pending)
-                    .then(() => { try { localStorage.removeItem('_fcm_pending_token'); } catch {} })
-                    .catch(() => {});
-            });
+            router.on('finish',   flushPendingToken);
+            router.on('navigate', flushPendingToken);
         });
 
         // Foreground push — feed into NotificationContext via custom event

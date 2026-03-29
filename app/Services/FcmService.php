@@ -23,14 +23,45 @@ class FcmService
 
         // On Railway (and any ephemeral host), the JSON file cannot be committed to git.
         // Set FIREBASE_CREDENTIALS_JSON in Railway Variables to the full JSON content.
-        // The file is written once per request and is safe — storage/ is writable.
+        // The file is written once and is safe — storage/ is writable.
         $credentialsJson = env('FIREBASE_CREDENTIALS_JSON');
+
         if ($credentialsJson && ! file_exists($credentialsPath)) {
+            // Validate the JSON is well-formed before writing —
+            // a malformed env value would cause a cryptic Kreait error later.
+            $decoded = json_decode($credentialsJson, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('[FCM] FIREBASE_CREDENTIALS_JSON is not valid JSON — cannot write credentials file', [
+                    'json_error' => json_last_error_msg(),
+                ]);
+                return;
+            }
+
+            // Sanity-check it looks like a service account (not google-services.json).
+            // A common mistake is pasting google-services.json instead of the
+            // service account key from Firebase Console → Project Settings →
+            // Service Accounts → Generate New Private Key.
+            if (empty($decoded['private_key']) || empty($decoded['client_email'])) {
+                Log::error('[FCM] FIREBASE_CREDENTIALS_JSON is missing private_key or client_email. ' .
+                    'Use the SERVICE ACCOUNT key (Firebase Console → Project Settings → ' .
+                    'Service Accounts → Generate New Private Key), NOT google-services.json.');
+                return;
+            }
+
             @file_put_contents($credentialsPath, $credentialsJson);
         }
 
+        // Diagnostic log — safe to remove once confirmed working in production.
+        Log::debug('[FCM] Credentials check', [
+            'env_var_set' => ! empty($credentialsJson),
+            'file_exists' => file_exists($credentialsPath),
+            'path'        => $credentialsPath,
+        ]);
+
         if (! file_exists($credentialsPath)) {
-            Log::warning('[FCM] firebase-credentials.json not found — skipping native push');
+            Log::warning('[FCM] firebase-credentials.json not found — skipping native push. ' .
+                'Set FIREBASE_CREDENTIALS_JSON in your Railway environment variables.');
             return;
         }
 
@@ -39,7 +70,7 @@ class FcmService
                 ->withServiceAccount($credentialsPath)
                 ->createMessaging();
 
-            // FCM data payload values must all be strings
+            // FCM data payload values must all be strings.
             $stringData = array_map('strval', $data);
 
             $message = CloudMessage::withTarget('token', $fcmToken)
