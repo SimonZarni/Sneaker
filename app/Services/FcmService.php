@@ -21,8 +21,16 @@ class FcmService
     {
         $credentialsPath = storage_path('app/firebase-credentials.json');
 
+        // On Railway (and any ephemeral host), the JSON file cannot be committed to git.
+        // Set FIREBASE_CREDENTIALS_JSON in Railway Variables to the full JSON content.
+        // The file is written once per request and is safe — storage/ is writable.
+        $credentialsJson = env('FIREBASE_CREDENTIALS_JSON');
+        if ($credentialsJson && ! file_exists($credentialsPath)) {
+            @file_put_contents($credentialsPath, $credentialsJson);
+        }
+
         if (! file_exists($credentialsPath)) {
-            Log::warning('[FCM] firebase-credentials.json not found — skipping native push');
+            Log::warning('[FCM] No Firebase credentials available (set FIREBASE_CREDENTIALS_JSON env var on Railway)');
             return;
         }
 

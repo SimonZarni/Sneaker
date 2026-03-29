@@ -24,6 +24,12 @@ const config: CapacitorConfig = {
       serverClientId: '941450594198-g9jagh4gnesi6sk4ghis5frcumfeg4dv.apps.googleusercontent.com',
       forceCodeForRefreshToken: false,
     },
+    PushNotifications: {
+      // Show the notification alert/badge/sound while the app is in the foreground.
+      // Without this, foreground FCM messages are silently delivered to the listener
+      // but never shown as a system notification on Android.
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
   },
 };
 

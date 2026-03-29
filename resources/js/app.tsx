@@ -4,8 +4,17 @@ import './bootstrap';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
+import axios from 'axios';
 import { NotificationProvider } from '@/Contexts/NotificationContext';
 import type { Notification } from '@/Contexts/NotificationContext';
+
+// ── Bug 5 fix: buffer native push events that arrive before NotificationContext mounts ──
+// The Capacitor push listener fires before React renders. If a notification arrives
+// during the ~200ms splash/first-paint window it would be dispatched before
+// NotificationContext's useEffect has attached its listener — and be silently lost.
+// We hold events here; NotificationContext drains & clears this queue on mount,
+// after which all subsequent events are dispatched live directly to window.
+(window as any).__pendingCapacitorNotifications = [] as CustomEvent[];
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -125,40 +134,42 @@ import('@capacitor/core').then(({ Capacitor }) => {
             PushNotifications.register();
         });
 
-        const postFcmToken = (token: string) => {
-            const xsrf = decodeURIComponent(
-                document.cookie.split('; ').find(c => c.startsWith('XSRF-TOKEN='))?.split('=')[1] ?? ''
-            );
-            return fetch('/push/fcm-token', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrf },
-                body: JSON.stringify({ token }),
-            });
-        };
+        // Bug 3 fix: use axios instead of raw fetch.
+        // In Capacitor remote-server mode the XSRF-TOKEN cookie may not be set yet when
+        // the registration event fires (cold launch). Manually extracting the cookie and
+        // setting X-XSRF-TOKEN with fetch races against the cookie being written.
+        // Axios reads the cookie lazily at request time and handles encoding correctly —
+        // so the token POST always succeeds as long as the user has a session.
+        const postFcmToken = (token: string) =>
+            axios.post('/push/fcm-token', { token });
 
         // Save the FCM device token to the server so Laravel can send native pushes.
         // Also cache it in localStorage so it can be retried after login if the user
-        // wasn't authenticated when the registration event first fired.
+        // wasn't authenticated when the registration event first fired (axios rejects on 401/419).
         PushNotifications.addListener('registration', ({ value: token }) => {
             try { localStorage.setItem('_fcm_pending_token', token); } catch {}
-            postFcmToken(token).then(r => {
-                if (r.ok) { try { localStorage.removeItem('_fcm_pending_token'); } catch {} }
-            }).catch(() => {});
+            postFcmToken(token)
+                .then(() => { try { localStorage.removeItem('_fcm_pending_token'); } catch {} })
+                .catch(() => {}); // will retry on next navigate (see below)
         });
 
-        // Retry sending a cached FCM token on every page navigation (kicks in after login)
+        // Retry sending a cached FCM token on every page navigation (kicks in after login
+        // or once the XSRF cookie is available after a fresh session is established).
         import('@inertiajs/core').then(({ router }) => {
             router.on('navigate', () => {
                 const pending = localStorage.getItem('_fcm_pending_token');
                 if (!pending) return;
-                postFcmToken(pending).then(r => {
-                    if (r.ok) { try { localStorage.removeItem('_fcm_pending_token'); } catch {} }
-                }).catch(() => {});
+                postFcmToken(pending)
+                    .then(() => { try { localStorage.removeItem('_fcm_pending_token'); } catch {} })
+                    .catch(() => {});
             });
         });
 
-        // Foreground push — feed into NotificationContext via custom event
+        // Foreground push — feed into NotificationContext via custom event.
+        // Bug 5 fix: if NotificationContext hasn't mounted yet (splash screen still showing),
+        // queue the event rather than dispatching it live. NotificationContext drains the queue
+        // on its first useEffect run, then sets __pendingCapacitorNotifications to null to
+        // signal that all subsequent events should be dispatched directly.
         PushNotifications.addListener('pushNotificationReceived', (push) => {
             const data = push.data ?? {};
             const notification: Notification = {
@@ -173,7 +184,15 @@ import('@capacitor/core').then(({ Capacitor }) => {
                 received_at:     new Date().toISOString(),
                 read:            false,
             };
-            window.dispatchEvent(new CustomEvent<Notification>('capacitor-notification', { detail: notification }));
+            const evt = new CustomEvent<Notification>('capacitor-notification', { detail: notification });
+            const queue = (window as any).__pendingCapacitorNotifications;
+            if (Array.isArray(queue)) {
+                // NotificationContext hasn't mounted yet — buffer for later
+                queue.push(evt);
+            } else {
+                // Context is live — dispatch directly
+                window.dispatchEvent(evt);
+            }
         });
 
         // Tap on background/killed push — navigate to URL in payload

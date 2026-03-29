@@ -128,6 +128,16 @@ export function NotificationProvider({ userId, children }: Props) {
         };
 
         window.addEventListener('capacitor-notification', handler);
+
+        // Bug 5 fix: drain any notifications that arrived before this component mounted
+        // (e.g. during the splash screen / first-paint window). Once drained, set the
+        // queue to null so app.tsx knows to dispatch future events directly to window.
+        const queue = (window as any).__pendingCapacitorNotifications;
+        if (Array.isArray(queue)) {
+            (window as any).__pendingCapacitorNotifications = null; // switch to live mode
+            queue.forEach((evt: CustomEvent) => handler(evt));
+        }
+
         return () => window.removeEventListener('capacitor-notification', handler);
     }, [userId, showToast]);
 
