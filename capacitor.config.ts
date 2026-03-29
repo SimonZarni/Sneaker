@@ -13,8 +13,8 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1500,  // fallback auto-hide if finish event never fires
-      launchAutoHide: false,     // hide manually once page is painted
+      launchShowDuration: 1500,
+      launchAutoHide: false,
       backgroundColor: '#0A0A0A',
       splashFullScreen: true,
       splashImmersive: true,
@@ -25,9 +25,6 @@ const config: CapacitorConfig = {
       forceCodeForRefreshToken: false,
     },
     PushNotifications: {
-      // Show the notification alert/badge/sound while the app is in the foreground.
-      // Without this, foreground FCM messages are silently delivered to the listener
-      // but never shown as a system notification on Android.
       presentationOptions: ['badge', 'sound', 'alert'],
     },
   },

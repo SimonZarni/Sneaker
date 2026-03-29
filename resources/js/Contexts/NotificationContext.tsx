@@ -39,7 +39,7 @@ export function useNotifications() {
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
 const STORAGE_KEY_PREFIX = 'sneaker_notifications_';
-const TTL_MINUTES = 60; // notifications persist for 60 minutes
+const TTL_MINUTES = 60;
 
 function storageKey(userId: number): string {
     return `${STORAGE_KEY_PREFIX}${userId}`;
@@ -49,11 +49,8 @@ function loadFromStorage(userId: number): Notification[] {
     try {
         const raw = localStorage.getItem(storageKey(userId));
         if (!raw) return [];
-
         const parsed: Notification[] = JSON.parse(raw);
         const cutoff = Date.now() - TTL_MINUTES * 60 * 1000;
-
-        // Filter out notifications older than TTL
         return parsed.filter(n => new Date(n.received_at).getTime() > cutoff);
     } catch {
         return [];
@@ -63,9 +60,7 @@ function loadFromStorage(userId: number): Notification[] {
 function saveToStorage(userId: number, notifications: Notification[]): void {
     try {
         localStorage.setItem(storageKey(userId), JSON.stringify(notifications));
-    } catch {
-        // localStorage full or unavailable — fail silently
-    }
+    } catch {}
 }
 
 // ── Provider ──────────────────────────────────────────────────────────────────
@@ -89,7 +84,6 @@ export function NotificationProvider({ userId, children }: Props) {
             setNotifications([]);
             return;
         }
-        // Load persisted notifications, already filtered by TTL
         const stored = loadFromStorage(userId);
         setNotifications(stored);
     }, [userId]);
@@ -129,19 +123,17 @@ export function NotificationProvider({ userId, children }: Props) {
 
         window.addEventListener('capacitor-notification', handler);
 
-        // Bug 5 fix: drain any notifications that arrived before this component mounted
-        // (e.g. during the splash screen / first-paint window). Once drained, set the
-        // queue to null so app.tsx knows to dispatch future events directly to window.
+        // Drain any notifications that arrived before this component mounted
         const queue = (window as any).__pendingCapacitorNotifications;
         if (Array.isArray(queue)) {
-            (window as any).__pendingCapacitorNotifications = null; // switch to live mode
+            (window as any).__pendingCapacitorNotifications = null;
             queue.forEach((evt: CustomEvent) => handler(evt));
         }
 
         return () => window.removeEventListener('capacitor-notification', handler);
     }, [userId, showToast]);
 
-    // ── 4. Pusher subscription ────────────────────────────────────────────────
+    // ── 4b. Pusher subscription ───────────────────────────────────────────────
     useEffect(() => {
         // @ts-ignore
         if (!userId || typeof window.Echo === 'undefined') return;
@@ -165,7 +157,6 @@ export function NotificationProvider({ userId, children }: Props) {
                 };
 
                 setNotifications(prev => {
-                    // Avoid duplicates — same order + same type
                     const exists = prev.some(n => n.id === newNotification.id);
                     if (exists) return prev;
                     return [newNotification, ...prev].slice(0, 20);
@@ -192,7 +183,6 @@ export function NotificationProvider({ userId, children }: Props) {
         setNotifications(prev =>
             prev.map(n => n.id === id ? { ...n, read: true } : n)
         );
-        // localStorage is updated automatically via the useEffect above
     }, []);
 
     const markAllRead = useCallback(() => {
@@ -201,7 +191,6 @@ export function NotificationProvider({ userId, children }: Props) {
 
     const deleteAll = useCallback(() => {
         setNotifications([]);
-        // Clear from localStorage immediately
         if (userId) {
             try { localStorage.removeItem(storageKey(userId)); } catch {}
         }

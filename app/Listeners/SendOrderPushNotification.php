@@ -34,7 +34,6 @@ class SendOrderPushNotification
                     $event->title,
                     $event->message,
                     [
-                        // 'id' must match the dedup key used in NotificationContext (order_id + '-' + type)
                         'id'              => (string) $order->id . '-' . $event->type,
                         'order_id'        => (string) $order->id,
                         'order_number'    => $order->order_number,
