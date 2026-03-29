@@ -9,9 +9,6 @@ import { NotificationProvider } from '@/Contexts/NotificationContext';
 import type { Notification } from '@/Contexts/NotificationContext';
 
 // Buffer native push events that arrive before NotificationContext mounts.
-// The Capacitor push listener fires before React renders. If a notification
-// arrives during the splash/first-paint window it would be lost.
-// NotificationContext drains & clears this queue on mount.
 (window as any).__pendingCapacitorNotifications = [] as CustomEvent[];
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -113,16 +110,11 @@ import('@capacitor/core').then(({ Capacitor }) => {
             PushNotifications.register();
         });
 
-        // Use axios — reads XSRF-TOKEN cookie lazily at request time,
-        // avoiding the race condition on cold launch with raw fetch.
-        // Returns true on success so callers can clear the pending token.
         const postFcmToken = (token: string): Promise<boolean> =>
             axios.post('/push/fcm-token', { token })
                 .then(() => true)
                 .catch(() => false);
 
-        // Shared helper: flush the pending token if one is stored.
-        // Guards against concurrent in-flight requests with a simple flag.
         let _fcmSending = false;
         const flushPendingToken = () => {
             if (_fcmSending) return;
@@ -131,61 +123,68 @@ import('@capacitor/core').then(({ Capacitor }) => {
             _fcmSending = true;
             postFcmToken(pending).then((ok) => {
                 _fcmSending = false;
-                if (ok) { try { localStorage.removeItem('_fcm_pending_token'); } catch {} }
+                if (ok) {
+                    try { localStorage.removeItem('_fcm_pending_token'); } catch {}
+                }
             });
         };
 
         PushNotifications.addListener('registration', ({ value: token }) => {
-            // Always persist first — if the POST succeeds immediately, great.
-            // If not (session not yet established), the retry listeners pick it up.
             try { localStorage.setItem('_fcm_pending_token', token); } catch {}
             flushPendingToken();
         });
 
-        // Retry on page finish (fires after the very first Inertia page fully
-        // loads — critical for cold-launch where registration fires during splash)
-        // AND on every navigation (covers the post-login redirect case).
         import('@inertiajs/core').then(({ router }) => {
-            router.on('finish',   flushPendingToken);
+            router.on('finish', flushPendingToken);
             router.on('navigate', flushPendingToken);
         });
 
-        // Foreground push — feed into NotificationContext via custom event.
-        // NOTE: data-only FCM messages do NOT populate push.title / push.body.
-        // Both fields arrive inside push.data, so we always prefer data fields.
+        // Shared helper for both foreground receive and tapped background/killed push.
+        // Both listeners call this — ensures foreground and background pushes are
+        // handled identically and NotificationContext is always updated.
         //
         // ID strategy: data.id is the canonical "{order_id}-{type}" key set by
-        // SendOrderPushNotification. It MUST be used as-is — never fall back to
-        // Date.now(). Pusher and FCM arrive milliseconds apart; a timestamp
-        // fallback gives them two different IDs so the gatekeeper lets both
-        // through and the notification appears twice. If data.id is somehow
-        // absent (non-order push), we derive the same format from data fields
-        // so the ID is still deterministic and stable across channels.
-        PushNotifications.addListener('pushNotificationReceived', (push) => {
-            const data = push.data ?? {};
+        // SendOrderPushNotification. Never fall back to Date.now() — Pusher and
+        // FCM arrive milliseconds apart and would get different timestamp IDs,
+        // defeating the gatekeeper in NotificationContext.
+        const dispatchNativeNotification = (payload: any) => {
+            const data = payload?.data ?? {};
+
             const notification: Notification = {
                 id:              data.id ?? (data.order_id && data.type ? `${data.order_id}-${data.type}` : `unknown-${data.order_id ?? 'push'}`),
                 order_id:        Number(data.order_id ?? 0),
                 order_number:    data.order_number ?? '',
                 type:            data.type ?? 'push',
-                title:           data.title  ?? push.title ?? '',
-                message:         data.body   ?? push.body  ?? data.message ?? '',
-                icon:            data.icon   ?? '📦',
+                title:           data.title ?? payload?.title ?? '',
+                message:         data.body  ?? payload?.body  ?? data.message ?? '',
+                icon:            data.icon  ?? '📦',
                 delivery_status: data.delivery_status ?? '',
                 received_at:     new Date().toISOString(),
                 read:            false,
             };
+
             const evt = new CustomEvent<Notification>('capacitor-notification', { detail: notification });
             const queue = (window as any).__pendingCapacitorNotifications;
+
             if (Array.isArray(queue)) {
                 queue.push(evt);
             } else {
                 window.dispatchEvent(evt);
             }
+        };
+
+        // Foreground push — app is open when notification arrives
+        PushNotifications.addListener('pushNotificationReceived', (push) => {
+            dispatchNativeNotification(push);
         });
 
-        // Tap on background/killed push — navigate to order
+        // Background / killed push tap — user taps system tray notification.
+        // pushNotificationReceived does NOT fire in this case, only this one does.
+        // Without feeding NotificationContext here, the in-app bell never updates
+        // for any push that arrived while the app was backgrounded or killed.
         PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+            dispatchNativeNotification(action.notification);
+
             const url = action.notification.data?.url;
             if (url) {
                 window.location.href = url;

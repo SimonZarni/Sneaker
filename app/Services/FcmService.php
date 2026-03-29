@@ -71,7 +71,17 @@ class FcmService
                 ->createMessaging();
 
             // FCM data payload values must all be strings.
-            $stringData = array_map('strval', $data);
+            // title and body are merged into the data map IN ADDITION to the
+            // notification payload. withNotification() drives the Android system
+            // tray display (background / killed app). The data map is what
+            // Capacitor's pushNotificationReceived exposes as push.data — and
+            // that listener is the only way in-app notifications are populated.
+            // Without title/body in data, push.data.title is undefined and the
+            // in-app NotificationContext receives empty notifications.
+            $stringData = array_map('strval', array_merge([
+                'title' => $title,
+                'body'  => $body,
+            ], $data));
 
             $message = CloudMessage::withTarget('token', $fcmToken)
                 ->withNotification(Notification::create($title, $body))
