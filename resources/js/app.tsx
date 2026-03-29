@@ -150,9 +150,7 @@ import('@capacitor/core').then(({ Capacitor }) => {
             router.on('navigate', flushPendingToken);
         });
 
-        // Foreground push — feed into NotificationContext via custom event.
-        // NOTE: data-only FCM messages do NOT populate push.title / push.body.
-        // Both fields arrive inside push.data, so we always prefer data fields.
+        // Foreground push — feed into NotificationContext via custom event
         PushNotifications.addListener('pushNotificationReceived', (push) => {
             const data = push.data ?? {};
             const notification: Notification = {
@@ -160,9 +158,9 @@ import('@capacitor/core').then(({ Capacitor }) => {
                 order_id:        Number(data.order_id ?? 0),
                 order_number:    data.order_number ?? '',
                 type:            data.type ?? 'push',
-                title:           data.title  ?? push.title ?? '',
-                message:         data.body   ?? push.body  ?? data.message ?? '',
-                icon:            data.icon   ?? '📦',
+                title:           push.title ?? data.title ?? '',
+                message:         push.body  ?? data.message ?? '',
+                icon:            data.icon  ?? '📦',
                 delivery_status: data.delivery_status ?? '',
                 received_at:     new Date().toISOString(),
                 read:            false,

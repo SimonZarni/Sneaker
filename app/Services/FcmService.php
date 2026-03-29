@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification;
 
 class FcmService
 {
@@ -69,25 +70,11 @@ class FcmService
                 ->withServiceAccount($credentialsPath)
                 ->createMessaging();
 
-            // Data-only FCM message — NO notification payload.
-            //
-            // Why: when ->withNotification() is used, Android auto-displays the
-            // notification via the FCM SDK (system tray) REGARDLESS of app state.
-            // Capacitor's pushNotificationReceived listener ALSO fires and shows the
-            // in-app toast, causing every notification to appear twice.
-            //
-            // With a data-only message the OS never auto-displays anything.
-            // Capacitor receives the push, fires pushNotificationReceived, and our
-            // NotificationContext handles display exclusively — one notification, always.
-            //
-            // title and body are folded into the data map so the JS side can read them
-            // from push.data (push.title / push.body would be empty for data-only pushes).
-            $stringData = array_map('strval', array_merge([
-                'title' => $title,
-                'body'  => $body,
-            ], $data));
+            // FCM data payload values must all be strings.
+            $stringData = array_map('strval', $data);
 
             $message = CloudMessage::withTarget('token', $fcmToken)
+                ->withNotification(Notification::create($title, $body))
                 ->withData($stringData);
 
             $messaging->send($message);
