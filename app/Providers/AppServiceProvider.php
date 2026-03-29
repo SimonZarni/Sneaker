@@ -2,9 +2,6 @@
 
 namespace App\Providers;
 
-use App\Events\OrderStatusChanged;
-use App\Listeners\SendOrderPushNotification;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -24,7 +21,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Event::listen(OrderStatusChanged::class, SendOrderPushNotification::class);
+        // REMOVED:
+        // Event::listen(OrderStatusChanged::class, SendOrderPushNotification::class);
+        //
+        // Why:
+        // In Laravel 11+ / newer app structure, listeners in app/Listeners
+        // are discovered automatically. Keeping manual registration here can
+        // make SendOrderPushNotification run twice, which sends duplicate FCM
+        // pushes to the native app.
 
         Vite::prefetch(concurrency: 3);
 
