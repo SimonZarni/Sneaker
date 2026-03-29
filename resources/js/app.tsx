@@ -150,17 +150,27 @@ import('@capacitor/core').then(({ Capacitor }) => {
             router.on('navigate', flushPendingToken);
         });
 
-        // Foreground push — feed into NotificationContext via custom event
+        // Foreground push — feed into NotificationContext via custom event.
+        // NOTE: data-only FCM messages do NOT populate push.title / push.body.
+        // Both fields arrive inside push.data, so we always prefer data fields.
+        //
+        // ID strategy: data.id is the canonical "{order_id}-{type}" key set by
+        // SendOrderPushNotification. It MUST be used as-is — never fall back to
+        // Date.now(). Pusher and FCM arrive milliseconds apart; a timestamp
+        // fallback gives them two different IDs so the gatekeeper lets both
+        // through and the notification appears twice. If data.id is somehow
+        // absent (non-order push), we derive the same format from data fields
+        // so the ID is still deterministic and stable across channels.
         PushNotifications.addListener('pushNotificationReceived', (push) => {
             const data = push.data ?? {};
             const notification: Notification = {
-                id:              data.id ?? String(Date.now()),
+                id:              data.id ?? (data.order_id && data.type ? `${data.order_id}-${data.type}` : `unknown-${data.order_id ?? 'push'}`),
                 order_id:        Number(data.order_id ?? 0),
                 order_number:    data.order_number ?? '',
                 type:            data.type ?? 'push',
-                title:           push.title ?? data.title ?? '',
-                message:         push.body  ?? data.message ?? '',
-                icon:            data.icon  ?? '📦',
+                title:           data.title  ?? push.title ?? '',
+                message:         data.body   ?? push.body  ?? data.message ?? '',
+                icon:            data.icon   ?? '📦',
                 delivery_status: data.delivery_status ?? '',
                 received_at:     new Date().toISOString(),
                 read:            false,

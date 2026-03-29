@@ -51,7 +51,13 @@ class PushNotificationService
                 ],
             ]);
 
+            // 'id' must be forwarded from the payload — it is the canonical
+            // deduplication key shared with the FCM channel (format: "{order_id}-{type}").
+            // Without it the frontend sees every web push as a new notification
+            // (no ID to match against) and the gatekeeper in NotificationContext
+            // cannot discard the cross-channel duplicate.
             $jsonPayload = json_encode([
+                'id'       => $payload['id']       ?? null,
                 'title'    => $payload['title']    ?? 'SNEAKER.DRP',
                 'body'     => $payload['body']     ?? $payload['message'] ?? '',
                 'icon'     => $payload['icon']     ?? '/icons/icon-192.png',
