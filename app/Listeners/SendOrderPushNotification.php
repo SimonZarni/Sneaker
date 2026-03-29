@@ -12,25 +12,31 @@ class SendOrderPushNotification
     public function handle(OrderStatusChanged $event): void
     {
         $order = $event->order;
+        $user  = $order->user;
 
-        // Web Push — for PWA / browser subscribers
-        try {
-            app(PushNotificationService::class)->sendToUser($order->user, [
-                'title'    => $event->title,
-                'body'     => $event->message,
-                'url'      => "/orders/{$order->id}",
-                'tag'      => "order-{$order->id}",
-                'order_id' => $order->id,
-            ]);
-        } catch (\Throwable $e) {
-            Log::warning('[Push] Web push failed', ['error' => $e->getMessage()]);
+        // Web Push — PWA/browser only.
+        // Skip if the user has an FCM token (native app) — FCM handles the
+        // notification for them. Sending both causes duplicate system notifications
+        // because the Android WebView service worker also receives the web push.
+        if (! $user->fcm_token) {
+            try {
+                app(PushNotificationService::class)->sendToUser($user, [
+                    'title'    => $event->title,
+                    'body'     => $event->message,
+                    'url'      => "/orders/{$order->id}",
+                    'tag'      => "order-{$order->id}",
+                    'order_id' => $order->id,
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('[Push] Web push failed', ['error' => $e->getMessage()]);
+            }
         }
 
-        // FCM Native — for Android app
-        if ($order->user->fcm_token) {
+        // FCM Native — Android app.
+        if ($user->fcm_token) {
             try {
                 app(FcmService::class)->sendToToken(
-                    $order->user->fcm_token,
+                    $user->fcm_token,
                     $event->title,
                     $event->message,
                     [
@@ -47,7 +53,7 @@ class SendOrderPushNotification
                 Log::warning('[FCM] Native push failed', ['error' => $e->getMessage()]);
             }
         } else {
-            Log::info('[FCM] Skipped — no FCM token for user', ['user_id' => $order->user_id]);
+            Log::info('[FCM] Skipped — no FCM token for user', ['user_id' => $user->id]);
         }
     }
 }
