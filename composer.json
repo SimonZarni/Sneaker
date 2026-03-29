@@ -78,9 +78,7 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": [
-                "kreait/laravel-firebase"
-            ]
+            "dont-discover": []
         }
     },
     "config": {
