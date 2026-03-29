@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePwa } from '@/hooks/usePwa';
 
 interface Props {
@@ -10,6 +10,19 @@ export default function PushNotificationToggle({ initialSubscribed = false }: Pr
     const { isPushSupported, pushSubscribed, subscribeToPush, unsubscribeFromPush } = usePwa();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isNative, setIsNative] = useState(false);
+
+    // Detect native platform to hide this toggle entirely.
+    // On native (Android/iOS), FCM handles push notifications — the web push
+    // subscription toggle is irrelevant and showing it would confuse users.
+    useEffect(() => {
+        import('@capacitor/core')
+            .then(({ Capacitor }) => setIsNative(Capacitor.isNativePlatform()))
+            .catch(() => {});
+    }, []);
+
+    // Hide on native — FCM notifications are always-on and managed by the OS.
+    if (isNative) return null;
 
     const isOn = pushSubscribed || initialSubscribed;
 
@@ -29,7 +42,7 @@ export default function PushNotificationToggle({ initialSubscribed = false }: Pr
         }
     };
 
-    // iOS Safari doesn't support push yet (pre-16.4)
+    // Browser doesn't support web push (e.g. iOS Safari pre-16.4)
     if (!isPushSupported) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0' }}>

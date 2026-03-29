@@ -16,6 +16,15 @@ interface PwaState {
 // ── VAPID public key from env ──────────────────────────────────────────────
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined;
 
+// ── Native platform detection ──────────────────────────────────────────────
+// Resolved once at module load — avoids async Capacitor import inside the hook.
+// On native (Android/iOS) we skip web push entirely; FCM handles notifications.
+// The service worker is still registered for offline/caching purposes.
+let _isNative = false;
+import('@capacitor/core')
+    .then(({ Capacitor }) => { _isNative = Capacitor.isNativePlatform(); })
+    .catch(() => {});
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -35,14 +44,29 @@ export function usePwa(): PwaState {
     const [isInstallable, setIsInstallable] = useState(false);
     const [isInstalled, setIsInstalled] = useState(false);
     const [pushSubscribed, setPushSubscribed] = useState(false);
+    const [isNative, setIsNative] = useState(_isNative);
 
+    // Sync _isNative once Capacitor resolves (handles the async module load).
+    useEffect(() => {
+        import('@capacitor/core')
+            .then(({ Capacitor }) => setIsNative(Capacitor.isNativePlatform()))
+            .catch(() => {});
+    }, []);
+
+    // Web push is only meaningful on non-native platforms.
+    // On native the app receives pushes via FCM; a web push subscription
+    // would cause every notification to appear twice (once via FCM, once via
+    // the service worker's push event handler).
     const isPushSupported =
+        !isNative &&
         typeof window !== 'undefined' &&
         'serviceWorker' in navigator &&
         'PushManager' in window &&
         !!VAPID_PUBLIC_KEY;
 
     // ── Register service worker ────────────────────────────────────────────
+    // Always register — the SW is needed for offline caching regardless of
+    // whether web push is supported or the platform is native.
     useEffect(() => {
         if (!('serviceWorker' in navigator)) return;
 
@@ -111,6 +135,10 @@ export function usePwa(): PwaState {
 
     // ── Subscribe to push ──────────────────────────────────────────────────
     const subscribeToPush = useCallback(async () => {
+        // Guard: native app uses FCM — creating a web push subscription here
+        // would result in duplicate system notifications (one from FCM, one
+        // from the service worker's push handler).
+        if (isNative) return;
         if (!isPushSupported || !VAPID_PUBLIC_KEY) return;
 
         try {
@@ -131,10 +159,11 @@ export function usePwa(): PwaState {
         } catch (err) {
             console.warn('[PWA] Push subscription failed:', err);
         }
-    }, [isPushSupported]);
+    }, [isPushSupported, isNative]);
 
     // ── Unsubscribe from push ──────────────────────────────────────────────
     const unsubscribeFromPush = useCallback(async () => {
+        if (isNative) return;
         if (!isPushSupported) return;
 
         try {
@@ -152,7 +181,7 @@ export function usePwa(): PwaState {
         } catch (err) {
             console.warn('[PWA] Push unsubscribe failed:', err);
         }
-    }, [isPushSupported]);
+    }, [isPushSupported, isNative]);
 
     return {
         isInstallable,
