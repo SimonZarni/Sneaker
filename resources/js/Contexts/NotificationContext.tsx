@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core'; // ✅ ADDED: detect native platform
 
 export interface Notification {
     id: string;
@@ -37,7 +38,6 @@ export function useNotifications() {
     return useContext(NotificationContext);
 }
 
-// ── localStorage helpers ──────────────────────────────────────────────────────
 const STORAGE_KEY_PREFIX = 'sneaker_notifications_';
 const TTL_MINUTES = 60;
 
@@ -63,8 +63,6 @@ function saveToStorage(userId: number, notifications: Notification[]): void {
     } catch {}
 }
 
-// ── Provider ──────────────────────────────────────────────────────────────────
-
 interface Props {
     userId: number | null;
     children: React.ReactNode;
@@ -72,30 +70,36 @@ interface Props {
 
 export function NotificationProvider({ userId, children }: Props) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [toast, setToast]                 = useState<Notification | null>(null);
-    const toastTimer                        = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const subscribedRef                     = useRef<number | null>(null);
-    const processedIds                      = useRef<Set<string>>(new Set());
+    const [toast, setToast] = useState<Notification | null>(null);
+    const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const subscribedRef = useRef<number | null>(null);
+    const processedIds = useRef<Set<string>>(new Set());
+
+    const isNative = Capacitor.isNativePlatform();
+    // ✅ ADDED: detect if app is native (Android/iOS)
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
-    // ── 1. Load from localStorage on mount / userId change ───────────────────
+    // Load stored notifications
     useEffect(() => {
         if (!userId) {
             setNotifications([]);
             return;
         }
         const stored = loadFromStorage(userId);
+
+        processedIds.current = new Set(stored.map(n => n.id));
+        // ✅ ADDED: Prevent duplicates after reload
+
         setNotifications(stored);
     }, [userId]);
 
-    // ── 2. Save to localStorage whenever notifications change ─────────────────
+    // Save notifications
     useEffect(() => {
         if (!userId) return;
         saveToStorage(userId, notifications);
     }, [notifications, userId]);
 
-    // ── 3. Toast helper ───────────────────────────────────────────────────────
     const showToast = useCallback((notification: Notification) => {
         if (toastTimer.current) {
             clearTimeout(toastTimer.current);
@@ -108,13 +112,9 @@ export function NotificationProvider({ userId, children }: Props) {
         }, 6000);
     }, []);
 
-    // ── 3b. Gatekeeper — single entry point for all incoming notifications ────
-    // Deduplicates across both delivery channels (Pusher + FCM). If Pusher and
-    // FCM both deliver the same notification ID, the second arrival is dropped.
-    // processedIds is a ref (not state) so checks are synchronous and never
-    // cause a re-render. The Set is capped at 50 entries to prevent memory leaks.
     const addNotification = useCallback((notif: Notification) => {
         if (processedIds.current.has(notif.id)) return;
+        // ✅ ADDED: Prevent duplicate notifications
 
         processedIds.current.add(notif.id);
 
@@ -127,7 +127,7 @@ export function NotificationProvider({ userId, children }: Props) {
         showToast(notif);
     }, [showToast]);
 
-    // ── 4a. Capacitor native push listener ───────────────────────────────────
+    // Capacitor / Native notifications
     useEffect(() => {
         if (!userId) return;
 
@@ -138,7 +138,6 @@ export function NotificationProvider({ userId, children }: Props) {
 
         window.addEventListener('capacitor-notification', handler);
 
-        // Drain any notifications that arrived before this component mounted
         const queue = (window as any).__pendingCapacitorNotifications;
         if (Array.isArray(queue)) {
             (window as any).__pendingCapacitorNotifications = null;
@@ -148,8 +147,14 @@ export function NotificationProvider({ userId, children }: Props) {
         return () => window.removeEventListener('capacitor-notification', handler);
     }, [userId, addNotification]);
 
-    // ── 4b. Pusher subscription ───────────────────────────────────────────────
+    // Pusher / Web notifications
     useEffect(() => {
+        if (isNative) return;
+        // ❗❗❗ MAIN FIX:
+        // Native app should NOT subscribe to Pusher
+        // Native already receives FCM push notifications
+        // Without this line, native receives both Pusher + FCM = duplicates
+
         // @ts-ignore
         if (!userId || typeof window.Echo === 'undefined') return;
         if (subscribedRef.current === userId) return;
@@ -159,16 +164,16 @@ export function NotificationProvider({ userId, children }: Props) {
         window.Echo.private(`orders.${userId}`)
             .listen('.order.status.changed', (data: any) => {
                 const newNotification: Notification = {
-                    id:              String(data.id) + '-' + data.type,
-                    order_id:        data.id,
-                    order_number:    data.order_number,
-                    type:            data.type,
-                    title:           data.title,
-                    message:         data.message,
-                    icon:            data.icon,
+                    id: `${data.id}-${data.type}`,
+                    order_id: Number(data.id),
+                    order_number: data.order_number,
+                    type: data.type,
+                    title: data.title,
+                    message: data.message,
+                    icon: data.icon,
                     delivery_status: data.delivery_status,
-                    received_at:     new Date().toISOString(),
-                    read:            false,
+                    received_at: new Date().toISOString(),
+                    read: false,
                 };
 
                 addNotification(newNotification);
@@ -179,16 +184,14 @@ export function NotificationProvider({ userId, children }: Props) {
             window.Echo.leave(`orders.${userId}`);
             subscribedRef.current = null;
         };
-    }, [userId, addNotification]);
+    }, [userId, addNotification, isNative]);
 
-    // Cleanup toast timer on unmount
     useEffect(() => {
         return () => {
             if (toastTimer.current) clearTimeout(toastTimer.current);
         };
     }, []);
 
-    // ── 5. Actions ────────────────────────────────────────────────────────────
     const markRead = useCallback((id: string) => {
         setNotifications(prev =>
             prev.map(n => n.id === id ? { ...n, read: true } : n)
