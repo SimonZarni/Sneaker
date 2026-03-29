@@ -3,6 +3,8 @@
 namespace App\Events;
 
 use App\Models\Order;
+use App\Services\FcmService;
+use App\Services\PushNotificationService;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -20,11 +22,7 @@ class OrderStatusChanged implements ShouldBroadcastNow
 
     public function __construct(public Order $order, public string $type)
     {
-        // Only set properties here — no side effects in the constructor.
-        // Push notifications (FCM + Web Push) are sent by
-        // App\Listeners\SendOrderPushNotification which is registered in
-        // AppServiceProvider. Keeping them out of the constructor ensures
-        // a push failure never prevents the Pusher broadcast from firing.
+        // Map event type to human-readable message and icon
         $map = [
             'confirmed'   => ['🎉', 'Order Confirmed',   "Order {$order->order_number} was placed successfully."],
             'processing'  => ['⚙️',  'Order Processing',  "Order {$order->order_number} is being prepared."],
@@ -34,8 +32,37 @@ class OrderStatusChanged implements ShouldBroadcastNow
         ];
 
         [$this->icon, $this->title, $this->message] = $map[$type] ?? ['🔔', 'Order Update', "Order {$order->order_number} was updated."];
+
+        // Send Web Push to all subscribed devices (for installed PWA / closed browser)
+        app(PushNotificationService::class)->sendToUser($order->user, [
+            'title'    => $this->title,
+            'body'     => $this->message,
+            'url'      => "/orders/{$order->id}",
+            'tag'      => "order-{$order->id}",
+            'order_id' => $order->id,
+        ]);
+
+        // Send native FCM push to the Android app (if device token registered)
+        if ($order->user->fcm_token) {
+            app(FcmService::class)->sendToToken(
+                $order->user->fcm_token,
+                $this->title,
+                $this->message,
+                [
+                    'order_id'        => (string) $order->id,
+                    'order_number'    => $order->order_number,
+                    'type'            => $type,
+                    'delivery_status' => $order->delivery_status,
+                    'url'             => "/orders/{$order->id}",
+                ]
+            );
+        }
     }
 
+    /**
+     * Broadcast on a private channel scoped to the order's user.
+     * Only the authenticated user who owns the order receives this event.
+     */
     public function broadcastOn(): array
     {
         return [
@@ -43,6 +70,9 @@ class OrderStatusChanged implements ShouldBroadcastNow
         ];
     }
 
+    /**
+     * Data sent to the frontend via Pusher.
+     */
     public function broadcastWith(): array
     {
         return [
