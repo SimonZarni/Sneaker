@@ -75,6 +75,7 @@ export function NotificationProvider({ userId, children }: Props) {
     const [toast, setToast]                 = useState<Notification | null>(null);
     const toastTimer                        = useRef<ReturnType<typeof setTimeout> | null>(null);
     const subscribedRef                     = useRef<number | null>(null);
+    const processedIds                      = useRef<Set<string>>(new Set());
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -107,18 +108,32 @@ export function NotificationProvider({ userId, children }: Props) {
         }, 6000);
     }, []);
 
+    // ── 3b. Gatekeeper — single entry point for all incoming notifications ────
+    // Deduplicates across both delivery channels (Pusher + FCM). If Pusher and
+    // FCM both deliver the same notification ID, the second arrival is dropped.
+    // processedIds is a ref (not state) so checks are synchronous and never
+    // cause a re-render. The Set is capped at 50 entries to prevent memory leaks.
+    const addNotification = useCallback((notif: Notification) => {
+        if (processedIds.current.has(notif.id)) return;
+
+        processedIds.current.add(notif.id);
+
+        if (processedIds.current.size > 50) {
+            const oldest = processedIds.current.values().next().value as string;
+            processedIds.current.delete(oldest);
+        }
+
+        setNotifications(prev => [notif, ...prev].slice(0, 20));
+        showToast(notif);
+    }, [showToast]);
+
     // ── 4a. Capacitor native push listener ───────────────────────────────────
     useEffect(() => {
         if (!userId) return;
 
         const handler = (e: Event) => {
             const notification = (e as CustomEvent<Notification>).detail;
-            setNotifications(prev => {
-                const exists = prev.some(n => n.id === notification.id);
-                if (exists) return prev;
-                return [notification, ...prev].slice(0, 20);
-            });
-            showToast(notification);
+            addNotification(notification);
         };
 
         window.addEventListener('capacitor-notification', handler);
@@ -131,7 +146,7 @@ export function NotificationProvider({ userId, children }: Props) {
         }
 
         return () => window.removeEventListener('capacitor-notification', handler);
-    }, [userId, showToast]);
+    }, [userId, addNotification]);
 
     // ── 4b. Pusher subscription ───────────────────────────────────────────────
     useEffect(() => {
@@ -156,12 +171,7 @@ export function NotificationProvider({ userId, children }: Props) {
                     read:            false,
                 };
 
-                setNotifications(prev => {
-                    const exists = prev.some(n => n.id === newNotification.id);
-                    if (exists) return prev;
-                    return [newNotification, ...prev].slice(0, 20);
-                });
-                showToast(newNotification);
+                addNotification(newNotification);
             });
 
         return () => {
@@ -169,7 +179,7 @@ export function NotificationProvider({ userId, children }: Props) {
             window.Echo.leave(`orders.${userId}`);
             subscribedRef.current = null;
         };
-    }, [userId, showToast]);
+    }, [userId, addNotification]);
 
     // Cleanup toast timer on unmount
     useEffect(() => {

@@ -14,6 +14,13 @@ class SendOrderPushNotification
         $order = $event->order;
         $user  = $order->user;
 
+        // Canonical ID for this specific event — shared by both delivery channels.
+        // Format: "{order_id}-{event_type}" e.g. "105-shipped".
+        // The frontend NotificationContext uses this as the deduplication key, so
+        // both Web Push and FCM must produce the exact same string to be treated
+        // as one notification rather than two.
+        $uniqueId = $order->id . '-' . $event->type;
+
         // Web Push — PWA/browser only.
         // Skip if the user has an FCM token (native app) — FCM handles the
         // notification for them. Sending both causes duplicate system notifications
@@ -21,10 +28,11 @@ class SendOrderPushNotification
         if (! $user->fcm_token) {
             try {
                 app(PushNotificationService::class)->sendToUser($user, [
+                    'id'       => $uniqueId,
                     'title'    => $event->title,
                     'body'     => $event->message,
                     'url'      => "/orders/{$order->id}",
-                    'tag'      => "order-{$order->id}",
+                    'tag'      => $uniqueId,
                     'order_id' => $order->id,
                 ]);
             } catch (\Throwable $e) {
@@ -40,7 +48,7 @@ class SendOrderPushNotification
                     $event->title,
                     $event->message,
                     [
-                        'id'              => (string) $order->id . '-' . $event->type,
+                        'id'              => $uniqueId,
                         'order_id'        => (string) $order->id,
                         'order_number'    => $order->order_number,
                         'type'            => $event->type,
