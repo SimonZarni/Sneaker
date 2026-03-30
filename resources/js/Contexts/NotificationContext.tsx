@@ -85,11 +85,17 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }, 6000);
     }, []);
 
-    const mergeNotifications = useCallback((incoming: Notification[], showToastForNew = false) => {
+    const mergeNotifications = useCallback((incoming: Notification[], toastNotification: Notification | null = null) => {
         if (!incoming.length) return;
 
+        // Show toast immediately — outside setNotifications — so it is never
+        // suppressed by a concurrent refresh() that may have already inserted
+        // the same ID into state before our updater function runs.
+        if (toastNotification) {
+            showToast(toastNotification);
+        }
+
         setNotifications((prev) => {
-            const prevIds = new Set(prev.map((item) => item.id));
             const merged = new Map<string, Notification>();
 
             [...incoming, ...prev].forEach((item) => {
@@ -107,16 +113,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 });
             });
 
-            const next = sortNotifications(Array.from(merged.values()));
-
-            if (showToastForNew) {
-                const newestNew = incoming.find((item) => !prevIds.has(item.id));
-                if (newestNew) {
-                    showToast(newestNew);
-                }
-            }
-
-            return next;
+            return sortNotifications(Array.from(merged.values()));
         });
     }, [showToast]);
 
@@ -170,7 +167,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
         const handleNativeNotification = (event: Event) => {
             const notification = (event as CustomEvent<Notification>).detail;
-            mergeNotifications([notification], true);
+            mergeNotifications([notification], notification);
             refresh().catch(() => {});
         };
 
@@ -226,7 +223,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                     read: false,
                 };
 
-                mergeNotifications([notification], true);
+                mergeNotifications([notification], notification);
                 refresh().catch(() => {});
             });
 

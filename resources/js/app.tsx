@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 import { NotificationProvider } from '@/Contexts/NotificationContext';
 import type { Notification } from '@/Contexts/NotificationContext';
+import NotificationToast from '@/Components/NotificationToast';
 
 (window as any).__pendingCapacitorNotifications = [] as CustomEvent<Notification>[];
 (window as any).__authUserId = null as number | null;
@@ -80,6 +81,7 @@ createInertiaApp({
 
         root.render(
             <NotificationProvider>
+                <NotificationToast />
                 <App {...props} />
             </NotificationProvider>
         );

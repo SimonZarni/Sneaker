@@ -8,11 +8,9 @@ interface Props {
 export default function NotificationBell(_: Props) {
     const {
         notifications,
-        toast,
         unreadCount,
         markRead,
         markAllRead,
-        dismissToast,
         deleteAll,
     } = useNotifications();
 
@@ -47,11 +45,6 @@ export default function NotificationBell(_: Props) {
     const handleNotificationClick = (notification: { id: string; order_id: number }) => {
         markRead(notification.id);
         setOpen(false);
-        window.location.href = `/orders/${notification.order_id}`;
-    };
-
-    const handleToastClick = (notification: { order_id: number }) => {
-        dismissToast();
         window.location.href = `/orders/${notification.order_id}`;
     };
 
@@ -193,51 +186,6 @@ export default function NotificationBell(_: Props) {
                 )}
             </div>
 
-            {toast && (
-                <div
-                    onClick={() => handleToastClick(toast)}
-                    style={{
-                        position: 'fixed',
-                        top: isMobile ? '16px' : 'auto',
-                        bottom: isMobile ? 'auto' : '20px',
-                        right: '20px',
-                        left: isMobile ? '20px' : 'auto',
-                        width: isMobile ? 'auto' : '320px',
-                        backgroundColor: '#111827',
-                        color: '#fff',
-                        padding: '16px',
-                        borderRadius: '12px',
-                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                        zIndex: 9999,
-                        display: 'flex',
-                        gap: '12px',
-                        alignItems: 'flex-start',
-                        cursor: 'pointer',
-                        animation: isMobile ? 'toastSlideDown 0.3s ease-out' : 'toastSlideUp 0.3s ease-out',
-                    }}
-                >
-                    <span style={{ fontSize: '24px' }}>{toast.icon}</span>
-                    <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', marginBottom: '2px' }}>{toast.title}</p>
-                        <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{toast.message}</p>
-                    </div>
-                    <button
-                        onClick={(event) => { event.stopPropagation(); dismissToast(); }}
-                        style={{ background: 'none', border: 'none', color: '#fff', opacity: 0.5, cursor: 'pointer' }}
-                    >✕</button>
-                </div>
-            )}
-
-            <style>{`
-                @keyframes toastSlideUp {
-                    from { transform: translateY(20px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-                @keyframes toastSlideDown {
-                    from { transform: translateY(-20px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-            `}</style>
         </>
     );
 }
