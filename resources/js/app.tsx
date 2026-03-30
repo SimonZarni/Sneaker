@@ -6,10 +6,21 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 import { NotificationProvider } from '@/Contexts/NotificationContext';
-import type { Notification } from '@/Contexts/NotificationContext';
 import NotificationToast from '@/Components/NotificationToast';
 
-(window as any).__pendingCapacitorNotifications = [] as CustomEvent<Notification>[];
+interface AppNotification {
+    id: string;
+    order_id: number;
+    order_number: string;
+    type: string;
+    title: string;
+    message: string;
+    icon: string;
+    delivery_status: string;
+    received_at: string;
+    read: boolean;
+}
+
 (window as any).__authUserId = null as number | null;
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -20,7 +31,7 @@ const syncAuthUser = (pageProps: any) => {
     window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: { userId } }));
 };
 
-const buildNotification = (payload: any): Notification => {
+const buildNotification = (payload: any): AppNotification => {
     const data = payload?.data ?? {};
 
     return {
@@ -49,15 +60,12 @@ const dispatchNotificationsRefreshTwice = () => {
     }, 1200);
 };
 
-const emitNativeNotification = (notification: Notification) => {
-    const event = new CustomEvent<Notification>('capacitor-notification', { detail: notification });
-    const queue = (window as any).__pendingCapacitorNotifications;
-
-    if (Array.isArray(queue)) {
-        queue.push(event);
-    } else {
-        window.dispatchEvent(event);
-    }
+const emitNativeNotification = (notification: AppNotification) => {
+    const event = new CustomEvent<AppNotification>('capacitor-notification', { detail: notification });
+    // Always dispatch directly. The queue in NotificationContext only drains
+    // once on mount — if we keep pushing into the array after mount the events
+    // are never consumed and the toast never fires.
+    window.dispatchEvent(event);
 };
 
 const pushBellAndRefresh = (payload: any) => {

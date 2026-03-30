@@ -29,7 +29,6 @@ interface NotificationContextType {
 declare global {
     interface Window {
         __authUserId?: number | null;
-        __pendingCapacitorNotifications?: CustomEvent<Notification>[] | null;
     }
 }
 
@@ -174,13 +173,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         window.addEventListener('auth-state-changed', handleAuthChanged as EventListener);
         window.addEventListener('notifications:refresh', handleRefresh);
         window.addEventListener('capacitor-notification', handleNativeNotification as EventListener);
-
-        const queue = window.__pendingCapacitorNotifications;
-        if (Array.isArray(queue) && queue.length > 0) {
-            const snapshot = [...queue];
-            window.__pendingCapacitorNotifications = null;
-            snapshot.forEach((queuedEvent) => handleNativeNotification(queuedEvent));
-        }
 
         const pendingRaw = localStorage.getItem('_pending_native_notif');
         if (pendingRaw) {
