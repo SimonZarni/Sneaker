@@ -69,11 +69,14 @@ class SendOrderPushNotification
                     [
                         'id' => $uniqueId,
                         'order_id' => (string) $order->id,
-                        'order_number' => $order->order_number,
-                        'type' => $event->type,
-                        'delivery_status' => $order->delivery_status,
-                        'icon' => $event->icon ?? '📦',
-                        'url' => "/orders/{$order->id}",
+                        'order_number' => (string) $order->order_number,
+                        'type' => (string) $event->type,
+                        'title' => (string) $event->title,
+                        'message' => (string) $event->message,
+                        'body' => (string) $event->message,
+                        'delivery_status' => (string) $order->delivery_status,
+                        'icon' => (string) ($event->icon ?? '📦'),
+                        'url' => (string) "/orders/{$order->id}",
                     ]
                 );
             } catch (\Throwable $e) {
