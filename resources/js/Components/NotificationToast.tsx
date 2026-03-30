@@ -45,28 +45,17 @@ export default function NotificationToast() {
      * z-index 2147483647 is the theoretical maximum for a 32-bit integer —
      * guaranteed to sit above every other layer including Capacitor overlays.
      */
-    const position: React.CSSProperties = (() => {
-        if (isNative || isMobile) {
-            return {
-                top: isNative
-                    ? 'calc(env(safe-area-inset-top, 0px) + 12px)'
-                    : '16px',
-                left: '16px',
-                right: '16px',
-                bottom: 'auto',
-                width: 'auto',
-            };
-        }
-        return {
-            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)',
-            right: '20px',
-            top: 'auto',
-            left: 'auto',
-            width: '320px',
-        };
-    })();
+    const position: React.CSSProperties = {
+        top: isNative
+            ? 'calc(env(safe-area-inset-top, 0px) + 70px)'
+            : '70px',
+        right: '16px',
+        left: 'auto',
+        bottom: 'auto',
+        width: isMobile ? 'calc(100vw - 32px)' : '320px',
+    };
 
-    const animationName = (isNative || isMobile) ? 'toastSlideDown' : 'toastSlideUp';
+    const animationName = 'toastSlideDown';
 
     const node = (
         <>
