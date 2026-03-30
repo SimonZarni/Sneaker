@@ -36,6 +36,36 @@ const buildNotification = (payload: any): Notification => {
     };
 };
 
+const dispatchNotificationsRefresh = () => {
+    window.dispatchEvent(new Event('notifications:refresh'));
+};
+
+const dispatchNotificationsRefreshTwice = () => {
+    dispatchNotificationsRefresh();
+
+    window.setTimeout(() => {
+        dispatchNotificationsRefresh();
+    }, 1200);
+};
+
+const emitNativeNotification = (notification: Notification) => {
+    const event = new CustomEvent<Notification>('capacitor-notification', { detail: notification });
+    const queue = (window as any).__pendingCapacitorNotifications;
+
+    if (Array.isArray(queue)) {
+        queue.push(event);
+    } else {
+        window.dispatchEvent(event);
+    }
+};
+
+const pushBellAndRefresh = (payload: any) => {
+    const notification = buildNotification(payload);
+    emitNativeNotification(notification);
+    dispatchNotificationsRefreshTwice();
+    return notification;
+};
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
@@ -62,7 +92,7 @@ createInertiaApp({
 import('@inertiajs/core').then(({ router }) => {
     router.on('navigate', (event: any) => {
         syncAuthUser(event.detail.page.props ?? {});
-        window.dispatchEvent(new Event('notifications:refresh'));
+        dispatchNotificationsRefresh();
     });
 
     router.on('success', (event: any) => {
@@ -108,7 +138,7 @@ import('@capacitor/core').then(({ Capacitor }) => {
 
         App.addListener('appStateChange', ({ isActive }) => {
             if (isActive) {
-                window.dispatchEvent(new Event('notifications:refresh'));
+                dispatchNotificationsRefreshTwice();
             }
         });
     });
@@ -184,37 +214,16 @@ import('@capacitor/core').then(({ Capacitor }) => {
             router.on('navigate', flushPendingToken);
         });
 
-        const dispatchNativeNotification = (payload: any) => {
-            const notification = buildNotification(payload);
-            const event = new CustomEvent<Notification>('capacitor-notification', { detail: notification });
-            const queue = (window as any).__pendingCapacitorNotifications;
-
-            if (Array.isArray(queue)) {
-                queue.push(event);
-            } else {
-                window.dispatchEvent(event);
-            }
-        };
-
         PushNotifications.addListener('pushNotificationReceived', (push) => {
-            dispatchNativeNotification(push);
+            pushBellAndRefresh(push);
         });
 
         PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-            const notification = buildNotification(action.notification);
+            const notification = pushBellAndRefresh(action.notification);
 
             try {
                 localStorage.setItem('_pending_native_notif', JSON.stringify(notification));
             } catch {}
-
-            const event = new CustomEvent<Notification>('capacitor-notification', { detail: notification });
-            const queue = (window as any).__pendingCapacitorNotifications;
-
-            if (Array.isArray(queue)) {
-                queue.push(event);
-            } else {
-                window.dispatchEvent(event);
-            }
 
             const url = action.notification.data?.url;
             if (url) {
