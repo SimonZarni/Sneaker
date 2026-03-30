@@ -85,7 +85,14 @@ class FcmService
 
             $message = CloudMessage::withTarget('token', $fcmToken)
                 ->withNotification(Notification::create($title, $body))
-                ->withData($stringData);
+                ->withData($stringData)
+                ->withAndroidConfig(\Kreait\Firebase\Messaging\AndroidConfig::fromArray([
+                    'notification' => [
+                        'icon'  => 'ic_stat_sneakerdrp',
+                        'color' => '#0A0A0A',
+                    ],
+                    'priority' => 'high',
+                ]));
 
             $messaging->send($message);
 
