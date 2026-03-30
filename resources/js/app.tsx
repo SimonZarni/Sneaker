@@ -62,9 +62,6 @@ const dispatchNotificationsRefreshTwice = () => {
 
 const emitNativeNotification = (notification: AppNotification) => {
     const event = new CustomEvent<AppNotification>('capacitor-notification', { detail: notification });
-    // Always dispatch directly. The queue in NotificationContext only drains
-    // once on mount — if we keep pushing into the array after mount the events
-    // are never consumed and the toast never fires.
     window.dispatchEvent(event);
 };
 
@@ -74,6 +71,47 @@ const pushBellAndRefresh = (payload: any) => {
     dispatchNotificationsRefreshTwice();
     return notification;
 };
+
+// ─── Native transition overlay ────────────────────────────────────────────────
+// On native, we show an instant opaque overlay on navigation start so the user
+// gets immediate visual feedback (zero perceived latency), then fade it out
+// once Inertia finishes. On web this is never created.
+let nativeOverlay: HTMLDivElement | null = null;
+let overlayHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+const createNativeOverlay = () => {
+    if (nativeOverlay) return;
+    const el = document.createElement('div');
+    el.id = '__native-transition-overlay';
+    el.style.cssText = [
+        'position:fixed',
+        'inset:0',
+        'z-index:9999',
+        'background:#0A0A0A',
+        'opacity:0',
+        'pointer-events:none',
+        'transition:opacity 80ms ease-out',
+        'will-change:opacity',
+    ].join(';');
+    document.body.appendChild(el);
+    nativeOverlay = el;
+};
+
+const showNativeOverlay = () => {
+    if (!nativeOverlay) return;
+    if (overlayHideTimer) { clearTimeout(overlayHideTimer); overlayHideTimer = null; }
+    nativeOverlay.style.pointerEvents = 'all';
+    // Force a reflow so the transition fires from 0 even if we were mid-hide.
+    nativeOverlay.getBoundingClientRect();
+    nativeOverlay.style.opacity = '1';
+};
+
+const hideNativeOverlay = () => {
+    if (!nativeOverlay) return;
+    nativeOverlay.style.pointerEvents = 'none';
+    nativeOverlay.style.opacity = '0';
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -94,9 +132,13 @@ createInertiaApp({
             </NotificationProvider>
         );
     },
-    progress: {
-        color: '#4B5563',
-    },
+    // Progress bar: shown on web, disabled on native (we use the overlay instead).
+    progress: (() => {
+        // Capacitor sets window.Capacitor before scripts run on native builds.
+        const isNative = !!(window as any).Capacitor?.isNativePlatform?.();
+        if (isNative) return false;
+        return { color: '#4B5563', delay: 0 };
+    })(),
 });
 
 import('@inertiajs/core').then(({ router }) => {
@@ -112,6 +154,59 @@ import('@inertiajs/core').then(({ router }) => {
 
 import('@capacitor/core').then(({ Capacitor }) => {
     if (!Capacitor.isNativePlatform()) return;
+
+    // Create the overlay element once the DOM is ready.
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', createNativeOverlay);
+    } else {
+        createNativeOverlay();
+    }
+
+    // Wire overlay to Inertia navigation lifecycle.
+    import('@inertiajs/core').then(({ router }) => {
+        router.on('start', () => showNativeOverlay());
+
+        router.on('finish', () => {
+            // Small RAF delay so the new page has painted before we reveal it.
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => hideNativeOverlay());
+            });
+        });
+
+        // Safety valve — never leave the screen black longer than 1.5s.
+        router.on('start', () => {
+            if (overlayHideTimer) clearTimeout(overlayHideTimer);
+            overlayHideTimer = setTimeout(hideNativeOverlay, 1500);
+        });
+
+        // ── Instant tap feedback ──────────────────────────────────────────────
+        // Dim the tapped link/button immediately on touchstart (< 16 ms) so
+        // the user sees a response well before the network round-trip returns.
+        // On web, CSS :active handles this; on native, touch events fire without
+        // the :active delay that WebView imposes.
+        let _tappedEl: HTMLElement | null = null;
+        let _tapTimer: ReturnType<typeof setTimeout> | null = null;
+
+        const restoreTapped = () => {
+            if (_tapTimer) { clearTimeout(_tapTimer); _tapTimer = null; }
+            if (_tappedEl) { _tappedEl.style.opacity = ''; _tappedEl = null; }
+        };
+
+        document.addEventListener('touchstart', (e: TouchEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (!target) return;
+            const el = target.closest<HTMLElement>('a[href], button');
+            if (!el || el.dataset.noTapFeedback !== undefined) return;
+            restoreTapped();
+            _tappedEl = el;
+            el.style.opacity = '0.55';
+            _tapTimer = setTimeout(restoreTapped, 600);
+        }, { passive: true });
+
+        router.on('finish', restoreTapped);
+        router.on('error',  restoreTapped);
+        // ─────────────────────────────────────────────────────────────────────
+    });
 
     import('@capacitor/splash-screen').then(({ SplashScreen }) => {
         const hide = () => SplashScreen.hide({ fadeOutDuration: 100 });
