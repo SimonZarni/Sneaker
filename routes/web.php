@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PushController;
@@ -78,6 +79,12 @@ Route::middleware(['auth'])->group(function () {
     // Reviews
     Route::post('/reviews',              [ReviewController::class, 'store'])->name('reviews.store');
     Route::delete('/reviews/{id}',       [ReviewController::class, 'destroy'])->name('reviews.destroy');
+
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
+    Route::post('/notifications/{notifKey}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::delete('/notifications', [NotificationController::class, 'destroyAll'])->name('notifications.destroyAll');
 });
 
 // ── Admin ─────────────────────────────────────────────────────────────────────

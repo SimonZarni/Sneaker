@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { Capacitor } from '@capacitor/core'; // ✅ ADDED: detect native platform
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 
 export interface Notification {
     id: string;
@@ -22,6 +23,14 @@ interface NotificationContextType {
     markAllRead: () => void;
     dismissToast: () => void;
     deleteAll: () => void;
+    refresh: () => Promise<void>;
+}
+
+declare global {
+    interface Window {
+        __authUserId?: number | null;
+        __pendingCapacitorNotifications?: CustomEvent<Notification>[] | null;
+    }
 }
 
 const NotificationContext = createContext<NotificationContextType>({
@@ -32,79 +41,43 @@ const NotificationContext = createContext<NotificationContextType>({
     markAllRead: () => {},
     dismissToast: () => {},
     deleteAll: () => {},
+    refresh: async () => {},
 });
 
 export function useNotifications() {
     return useContext(NotificationContext);
 }
 
-const STORAGE_KEY_PREFIX = 'sneaker_notifications_';
-const TTL_MINUTES = 60;
-
-function storageKey(userId: number): string {
-    return `${STORAGE_KEY_PREFIX}${userId}`;
+function getCurrentAuthUserId(): number | null {
+    const value = window.__authUserId;
+    return typeof value === 'number' ? value : null;
 }
 
-function loadFromStorage(userId: number): Notification[] {
-    try {
-        const raw = localStorage.getItem(storageKey(userId));
-        if (!raw) return [];
-        const parsed: Notification[] = JSON.parse(raw);
-        const cutoff = Date.now() - TTL_MINUTES * 60 * 1000;
-        return parsed.filter(n => new Date(n.received_at).getTime() > cutoff);
-    } catch {
-        return [];
-    }
+function sortNotifications(items: Notification[]): Notification[] {
+    return [...items]
+        .sort((a, b) => new Date(b.received_at).getTime() - new Date(a.received_at).getTime())
+        .slice(0, 20);
 }
 
-function saveToStorage(userId: number, notifications: Notification[]): void {
-    try {
-        localStorage.setItem(storageKey(userId), JSON.stringify(notifications));
-    } catch {}
-}
-
-interface Props {
-    userId: number | null;
-    children: React.ReactNode;
-}
-
-export function NotificationProvider({ userId, children }: Props) {
+export function NotificationProvider({ children }: { children: React.ReactNode }) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [toast, setToast] = useState<Notification | null>(null);
+    const [currentUserId, setCurrentUserId] = useState<number | null>(() => getCurrentAuthUserId());
     const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const subscribedRef = useRef<number | null>(null);
-    const processedIds = useRef<Set<string>>(new Set());
-
     const isNative = Capacitor.isNativePlatform();
-    // ✅ ADDED: detect if app is native (Android/iOS)
 
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    // Load stored notifications
-    useEffect(() => {
-        if (!userId) {
-            setNotifications([]);
-            return;
-        }
-        const stored = loadFromStorage(userId);
-
-        processedIds.current = new Set(stored.map(n => n.id));
-        // ✅ ADDED: Prevent duplicates after reload
-
-        setNotifications(stored);
-    }, [userId]);
-
-    // Save notifications
-    useEffect(() => {
-        if (!userId) return;
-        saveToStorage(userId, notifications);
-    }, [notifications, userId]);
+    const unreadCount = useMemo(
+        () => notifications.filter((notification) => !notification.read).length,
+        [notifications]
+    );
 
     const showToast = useCallback((notification: Notification) => {
         if (toastTimer.current) {
             clearTimeout(toastTimer.current);
             toastTimer.current = null;
         }
+
         setToast(notification);
         toastTimer.current = setTimeout(() => {
             setToast(null);
@@ -112,58 +85,135 @@ export function NotificationProvider({ userId, children }: Props) {
         }, 6000);
     }, []);
 
-    const addNotification = useCallback((notif: Notification) => {
-        if (processedIds.current.has(notif.id)) return;
-        // ✅ ADDED: Prevent duplicate notifications
+    const mergeNotifications = useCallback((incoming: Notification[], showToastForNew = false) => {
+        if (!incoming.length) return;
 
-        processedIds.current.add(notif.id);
+        setNotifications((prev) => {
+            const prevIds = new Set(prev.map((item) => item.id));
+            const merged = new Map<string, Notification>();
 
-        if (processedIds.current.size > 50) {
-            const oldest = processedIds.current.values().next().value as string;
-            processedIds.current.delete(oldest);
-        }
+            [...incoming, ...prev].forEach((item) => {
+                const existing = merged.get(item.id);
 
-        setNotifications(prev => [notif, ...prev].slice(0, 20));
-        showToast(notif);
+                if (!existing) {
+                    merged.set(item.id, item);
+                    return;
+                }
+
+                merged.set(item.id, {
+                    ...existing,
+                    ...item,
+                    read: existing.read || item.read,
+                });
+            });
+
+            const next = sortNotifications(Array.from(merged.values()));
+
+            if (showToastForNew) {
+                const newestNew = incoming.find((item) => !prevIds.has(item.id));
+                if (newestNew) {
+                    showToast(newestNew);
+                }
+            }
+
+            return next;
+        });
     }, [showToast]);
 
-    // Capacitor / Native notifications
-    useEffect(() => {
-        if (!userId) return;
+    const clearNotifications = useCallback(() => {
+        setNotifications([]);
+        setToast(null);
+    }, []);
 
-        const handler = (e: Event) => {
-            const notification = (e as CustomEvent<Notification>).detail;
-            addNotification(notification);
-        };
+    const refresh = useCallback(async () => {
+        const userId = getCurrentAuthUserId();
+        setCurrentUserId(userId);
 
-        window.addEventListener('capacitor-notification', handler);
-
-        const queue = (window as any).__pendingCapacitorNotifications;
-        if (Array.isArray(queue)) {
-            (window as any).__pendingCapacitorNotifications = null;
-            queue.forEach((evt: CustomEvent) => handler(evt));
+        if (!userId) {
+            clearNotifications();
+            return;
         }
 
-        return () => window.removeEventListener('capacitor-notification', handler);
-    }, [userId, addNotification]);
+        try {
+            const { data } = await axios.get<Notification[]>('/notifications');
+            setNotifications(sortNotifications(data));
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 401) {
+                clearNotifications();
+                return;
+            }
 
-    // Pusher / Web notifications
+            console.error('Failed to refresh notifications', error);
+        }
+    }, [clearNotifications]);
+
+    useEffect(() => {
+        refresh().catch(() => {});
+    }, [refresh]);
+
+    useEffect(() => {
+        const handleAuthChanged = (event: Event) => {
+            const userId = (event as CustomEvent<{ userId: number | null }>).detail?.userId ?? null;
+            setCurrentUserId(userId);
+
+            if (!userId) {
+                clearNotifications();
+                return;
+            }
+
+            refresh().catch(() => {});
+        };
+
+        const handleRefresh = () => {
+            refresh().catch(() => {});
+        };
+
+        const handleNativeNotification = (event: Event) => {
+            const notification = (event as CustomEvent<Notification>).detail;
+            mergeNotifications([notification], true);
+            refresh().catch(() => {});
+        };
+
+        window.addEventListener('auth-state-changed', handleAuthChanged as EventListener);
+        window.addEventListener('notifications:refresh', handleRefresh);
+        window.addEventListener('capacitor-notification', handleNativeNotification as EventListener);
+
+        const queue = window.__pendingCapacitorNotifications;
+        if (Array.isArray(queue) && queue.length > 0) {
+            const snapshot = [...queue];
+            window.__pendingCapacitorNotifications = null;
+            snapshot.forEach((queuedEvent) => handleNativeNotification(queuedEvent));
+        }
+
+        const pendingRaw = localStorage.getItem('_pending_native_notif');
+        if (pendingRaw) {
+            try {
+                const pendingNotification = JSON.parse(pendingRaw) as Notification;
+                handleNativeNotification(new CustomEvent<Notification>('capacitor-notification', { detail: pendingNotification }));
+            } catch (error) {
+                console.error('Failed to parse _pending_native_notif', error);
+            } finally {
+                localStorage.removeItem('_pending_native_notif');
+            }
+        }
+
+        return () => {
+            window.removeEventListener('auth-state-changed', handleAuthChanged as EventListener);
+            window.removeEventListener('notifications:refresh', handleRefresh);
+            window.removeEventListener('capacitor-notification', handleNativeNotification as EventListener);
+        };
+    }, [clearNotifications, mergeNotifications, refresh]);
+
     useEffect(() => {
         if (isNative) return;
-        // ❗❗❗ MAIN FIX:
-        // Native app should NOT subscribe to Pusher
-        // Native already receives FCM push notifications
-        // Without this line, native receives both Pusher + FCM = duplicates
+        if (!currentUserId || typeof (window as any).Echo === 'undefined') return;
+        if (subscribedRef.current === currentUserId) return;
 
-        // @ts-ignore
-        if (!userId || typeof window.Echo === 'undefined') return;
-        if (subscribedRef.current === userId) return;
-        subscribedRef.current = userId;
+        subscribedRef.current = currentUserId;
 
-        // @ts-ignore
-        window.Echo.private(`orders.${userId}`)
+        (window as any).Echo.private(`orders.${currentUserId}`)
             .listen('.order.status.changed', (data: any) => {
-                const newNotification: Notification = {
+                const notification: Notification = {
                     id: `${data.id}-${data.type}`,
                     order_id: Number(data.id),
                     order_number: data.order_number,
@@ -176,41 +226,54 @@ export function NotificationProvider({ userId, children }: Props) {
                     read: false,
                 };
 
-                addNotification(newNotification);
+                mergeNotifications([notification], true);
+                refresh().catch(() => {});
             });
 
         return () => {
-            // @ts-ignore
-            window.Echo.leave(`orders.${userId}`);
+            (window as any).Echo.leave(`orders.${currentUserId}`);
             subscribedRef.current = null;
         };
-    }, [userId, addNotification, isNative]);
+    }, [currentUserId, isNative, mergeNotifications, refresh]);
 
     useEffect(() => {
         return () => {
-            if (toastTimer.current) clearTimeout(toastTimer.current);
+            if (toastTimer.current) {
+                clearTimeout(toastTimer.current);
+            }
         };
     }, []);
 
     const markRead = useCallback((id: string) => {
-        setNotifications(prev =>
-            prev.map(n => n.id === id ? { ...n, read: true } : n)
-        );
-    }, []);
+        setNotifications((prev) => prev.map((item) => item.id === id ? { ...item, read: true } : item));
+        axios.post(`/notifications/${encodeURIComponent(id)}/read`).catch((error) => {
+            console.error('Failed to mark notification as read', error);
+            refresh().catch(() => {});
+        });
+    }, [refresh]);
 
     const markAllRead = useCallback(() => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    }, []);
+        setNotifications((prev) => prev.map((item) => ({ ...item, read: true })));
+        axios.post('/notifications/read-all').catch((error) => {
+            console.error('Failed to mark all notifications as read', error);
+            refresh().catch(() => {});
+        });
+    }, [refresh]);
 
     const deleteAll = useCallback(() => {
         setNotifications([]);
-        if (userId) {
-            try { localStorage.removeItem(storageKey(userId)); } catch {}
-        }
-    }, [userId]);
+        axios.delete('/notifications').catch((error) => {
+            console.error('Failed to delete notifications', error);
+            refresh().catch(() => {});
+        });
+    }, [refresh]);
 
     const dismissToast = useCallback(() => {
-        if (toastTimer.current) clearTimeout(toastTimer.current);
+        if (toastTimer.current) {
+            clearTimeout(toastTimer.current);
+            toastTimer.current = null;
+        }
+
         setToast(null);
     }, []);
 
@@ -223,6 +286,7 @@ export function NotificationProvider({ userId, children }: Props) {
             markAllRead,
             dismissToast,
             deleteAll,
+            refresh,
         }}>
             {children}
         </NotificationContext.Provider>

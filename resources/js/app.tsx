@@ -8,10 +8,33 @@ import axios from 'axios';
 import { NotificationProvider } from '@/Contexts/NotificationContext';
 import type { Notification } from '@/Contexts/NotificationContext';
 
-// Buffer native push events that arrive before NotificationContext mounts.
-(window as any).__pendingCapacitorNotifications = [] as CustomEvent[];
+(window as any).__pendingCapacitorNotifications = [] as CustomEvent<Notification>[];
+(window as any).__authUserId = null as number | null;
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+const syncAuthUser = (pageProps: any) => {
+    const userId = pageProps?.auth?.user?.id ?? null;
+    (window as any).__authUserId = userId;
+    window.dispatchEvent(new CustomEvent('auth-state-changed', { detail: { userId } }));
+};
+
+const buildNotification = (payload: any): Notification => {
+    const data = payload?.data ?? {};
+
+    return {
+        id: data.id ?? (data.order_id && data.type ? `${data.order_id}-${data.type}` : `unknown-${data.order_id ?? 'push'}`),
+        order_id: Number(data.order_id ?? 0),
+        order_number: data.order_number ?? '',
+        type: data.type ?? 'push',
+        title: data.title ?? payload?.title ?? '',
+        message: data.body ?? payload?.body ?? data.message ?? '',
+        icon: data.icon ?? '📦',
+        delivery_status: data.delivery_status ?? '',
+        received_at: new Date().toISOString(),
+        read: false,
+    };
+};
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
@@ -23,10 +46,10 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        const userId = (props.initialPage.props as any)?.auth?.user?.id ?? null;
+        syncAuthUser((props.initialPage.props as any) ?? {});
 
         root.render(
-            <NotificationProvider userId={userId}>
+            <NotificationProvider>
                 <App {...props} />
             </NotificationProvider>
         );
@@ -36,7 +59,17 @@ createInertiaApp({
     },
 });
 
-// ── Capacitor native platform initialisation ──────────────────────────────────
+import('@inertiajs/core').then(({ router }) => {
+    router.on('navigate', (event: any) => {
+        syncAuthUser(event.detail.page.props ?? {});
+        window.dispatchEvent(new Event('notifications:refresh'));
+    });
+
+    router.on('success', (event: any) => {
+        syncAuthUser(event.detail.page.props ?? {});
+    });
+});
+
 import('@capacitor/core').then(({ Capacitor }) => {
     if (!Capacitor.isNativePlatform()) return;
 
@@ -72,6 +105,12 @@ import('@capacitor/core').then(({ Capacitor }) => {
                 App.exitApp();
             }
         });
+
+        App.addListener('appStateChange', ({ isActive }) => {
+            if (isActive) {
+                window.dispatchEvent(new Event('notifications:refresh'));
+            }
+        });
     });
 
     import('@codetrix-studio/capacitor-google-auth').then(({ GoogleAuth }) => {
@@ -103,7 +142,6 @@ import('@capacitor/core').then(({ Capacitor }) => {
         });
     });
 
-    // Step 7 — Native push notifications
     import('@capacitor/push-notifications').then(({ PushNotifications }) => {
         PushNotifications.requestPermissions().then(({ receive }) => {
             if (receive !== 'granted') return;
@@ -115,22 +153,29 @@ import('@capacitor/core').then(({ Capacitor }) => {
                 .then(() => true)
                 .catch(() => false);
 
-        let _fcmSending = false;
+        let sendingFcmToken = false;
+
         const flushPendingToken = () => {
-            if (_fcmSending) return;
+            if (sendingFcmToken) return;
+
             const pending = localStorage.getItem('_fcm_pending_token');
             if (!pending) return;
-            _fcmSending = true;
+
+            sendingFcmToken = true;
             postFcmToken(pending).then((ok) => {
-                _fcmSending = false;
+                sendingFcmToken = false;
                 if (ok) {
-                    try { localStorage.removeItem('_fcm_pending_token'); } catch {}
+                    try {
+                        localStorage.removeItem('_fcm_pending_token');
+                    } catch {}
                 }
             });
         };
 
         PushNotifications.addListener('registration', ({ value: token }) => {
-            try { localStorage.setItem('_fcm_pending_token', token); } catch {}
+            try {
+                localStorage.setItem('_fcm_pending_token', token);
+            } catch {}
             flushPendingToken();
         });
 
@@ -139,51 +184,37 @@ import('@capacitor/core').then(({ Capacitor }) => {
             router.on('navigate', flushPendingToken);
         });
 
-        // Shared helper for both foreground receive and tapped background/killed push.
-        // Both listeners call this — ensures foreground and background pushes are
-        // handled identically and NotificationContext is always updated.
-        //
-        // ID strategy: data.id is the canonical "{order_id}-{type}" key set by
-        // SendOrderPushNotification. Never fall back to Date.now() — Pusher and
-        // FCM arrive milliseconds apart and would get different timestamp IDs,
-        // defeating the gatekeeper in NotificationContext.
         const dispatchNativeNotification = (payload: any) => {
-            const data = payload?.data ?? {};
-
-            const notification: Notification = {
-                id:              data.id ?? (data.order_id && data.type ? `${data.order_id}-${data.type}` : `unknown-${data.order_id ?? 'push'}`),
-                order_id:        Number(data.order_id ?? 0),
-                order_number:    data.order_number ?? '',
-                type:            data.type ?? 'push',
-                title:           data.title ?? payload?.title ?? '',
-                message:         data.body  ?? payload?.body  ?? data.message ?? '',
-                icon:            data.icon  ?? '📦',
-                delivery_status: data.delivery_status ?? '',
-                received_at:     new Date().toISOString(),
-                read:            false,
-            };
-
-            const evt = new CustomEvent<Notification>('capacitor-notification', { detail: notification });
+            const notification = buildNotification(payload);
+            const event = new CustomEvent<Notification>('capacitor-notification', { detail: notification });
             const queue = (window as any).__pendingCapacitorNotifications;
 
             if (Array.isArray(queue)) {
-                queue.push(evt);
+                queue.push(event);
             } else {
-                window.dispatchEvent(evt);
+                window.dispatchEvent(event);
             }
         };
 
-        // Foreground push — app is open when notification arrives
         PushNotifications.addListener('pushNotificationReceived', (push) => {
             dispatchNativeNotification(push);
         });
 
-        // Background / killed push tap — user taps system tray notification.
-        // pushNotificationReceived does NOT fire in this case, only this one does.
-        // Without feeding NotificationContext here, the in-app bell never updates
-        // for any push that arrived while the app was backgrounded or killed.
         PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-            dispatchNativeNotification(action.notification);
+            const notification = buildNotification(action.notification);
+
+            try {
+                localStorage.setItem('_pending_native_notif', JSON.stringify(notification));
+            } catch {}
+
+            const event = new CustomEvent<Notification>('capacitor-notification', { detail: notification });
+            const queue = (window as any).__pendingCapacitorNotifications;
+
+            if (Array.isArray(queue)) {
+                queue.push(event);
+            } else {
+                window.dispatchEvent(event);
+            }
 
             const url = action.notification.data?.url;
             if (url) {

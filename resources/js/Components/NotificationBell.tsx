@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNotifications } from '@/Contexts/NotificationContext';
 
 interface Props {
-    userId: number;
+    userId?: number;
 }
 
-export default function NotificationBell({ userId }: Props) {
+export default function NotificationBell(_: Props) {
     const {
         notifications,
         toast,
@@ -13,44 +13,44 @@ export default function NotificationBell({ userId }: Props) {
         markRead,
         markAllRead,
         dismissToast,
-        deleteAll
+        deleteAll,
     } = useNotifications();
 
     const [open, setOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // 1. Handle Responsive Viewport Logic
     useEffect(() => {
         const checkMobile = () => {
             setIsMobile(window.innerWidth < 640);
         };
+
         checkMobile();
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // 2. Handle Outside Clicks
     useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setOpen(false);
             }
         };
+
         if (open) {
             document.addEventListener('mousedown', handleClickOutside);
         }
+
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [open]);
 
-    // 3. Handlers
-    const handleNotificationClick = (notification: any) => {
+    const handleNotificationClick = (notification: { id: string; order_id: number }) => {
         markRead(notification.id);
         setOpen(false);
         window.location.href = `/orders/${notification.order_id}`;
     };
 
-    const handleToastClick = (notification: any) => {
+    const handleToastClick = (notification: { order_id: number }) => {
         dismissToast();
         window.location.href = `/orders/${notification.order_id}`;
     };
@@ -65,7 +65,6 @@ export default function NotificationBell({ userId }: Props) {
         return `${Math.floor(hrs / 24)}d ago`;
     };
 
-    // 4. Dropdown Styles
     const containerStyles: React.CSSProperties = isMobile
         ? {
             position: 'fixed',
@@ -73,26 +72,30 @@ export default function NotificationBell({ userId }: Props) {
             left: '10px',
             right: '10px',
             width: 'auto',
-            zIndex: 1000
+            zIndex: 1000,
         }
         : {
             position: 'absolute',
             top: 'calc(100% + 15px)',
             right: '0',
             width: '320px',
-            zIndex: 1000
+            zIndex: 1000,
         };
 
     return (
         <>
-            {/* --- Bell Icon Wrapper --- */}
             <div ref={dropdownRef} style={{ position: isMobile ? 'static' : 'relative', display: 'inline-block' }}>
                 <button
-                    onClick={() => setOpen(v => !v)}
+                    onClick={() => setOpen((value) => !value)}
                     style={{
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        padding: '8px', display: 'flex', alignItems: 'center',
-                        position: 'relative', color: 'inherit'
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        position: 'relative',
+                        color: 'inherit',
                     }}
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -102,19 +105,26 @@ export default function NotificationBell({ userId }: Props) {
 
                     {unreadCount > 0 && (
                         <span style={{
-                            position: 'absolute', top: '4px', right: '4px',
-                            backgroundColor: '#ef4444', color: '#fff',
-                            fontSize: '9px', fontWeight: 900,
-                            width: '18px', height: '18px', borderRadius: '50%',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            border: '2px solid #fff'
+                            position: 'absolute',
+                            top: '4px',
+                            right: '4px',
+                            backgroundColor: '#ef4444',
+                            color: '#fff',
+                            fontSize: '9px',
+                            fontWeight: 900,
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '2px solid #fff',
                         }}>
                             {unreadCount > 9 ? '9+' : unreadCount}
                         </span>
                     )}
                 </button>
 
-                {/* --- Notification Dropdown --- */}
                 {open && (
                     <div style={{
                         ...containerStyles,
@@ -124,21 +134,23 @@ export default function NotificationBell({ userId }: Props) {
                         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
                         overflow: 'hidden',
                         display: 'flex',
-                        flexDirection: 'column'
+                        flexDirection: 'column',
                     }}>
                         <div style={{ padding: '12px 16px', borderBottom: '1px solid #f3f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase' }}>Notifications</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 {unreadCount > 0 && (
-                                    <button onClick={markAllRead} style={{ fontSize: '10px', color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Mark all read</button>
+                                    <button onClick={markAllRead} style={{ fontSize: '10px', color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                                        Mark all read
+                                    </button>
                                 )}
                                 {notifications.length > 0 && (
                                     <button
-                                        onClick={(e) => { e.stopPropagation(); deleteAll(); }}
+                                        onClick={(event) => { event.stopPropagation(); deleteAll(); }}
                                         title="Delete all notifications"
                                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', color: '#9ca3af' }}
-                                        onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
-                                        onMouseLeave={e => (e.currentTarget.style.color = '#9ca3af')}
+                                        onMouseEnter={(event) => (event.currentTarget.style.color = '#ef4444')}
+                                        onMouseLeave={(event) => (event.currentTarget.style.color = '#9ca3af')}
                                     >
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <polyline points="3 6 5 6 21 6" />
@@ -154,13 +166,24 @@ export default function NotificationBell({ userId }: Props) {
                             {notifications.length === 0 ? (
                                 <div style={{ padding: '30px 20px', textAlign: 'center', color: '#9ca3af', fontSize: '12px' }}>No notifications.</div>
                             ) : (
-                                notifications.map(n => (
-                                    <div key={n.id} onClick={() => handleNotificationClick(n)} style={{ padding: '12px 16px', display: 'flex', gap: '12px', borderBottom: '1px solid #f9fafb', cursor: 'pointer', backgroundColor: n.read ? '#fff' : '#f8faff' }}>
-                                        <span style={{ fontSize: '20px' }}>{n.icon}</span>
+                                notifications.map((notification) => (
+                                    <div
+                                        key={notification.id}
+                                        onClick={() => handleNotificationClick(notification)}
+                                        style={{
+                                            padding: '12px 16px',
+                                            display: 'flex',
+                                            gap: '12px',
+                                            borderBottom: '1px solid #f9fafb',
+                                            cursor: 'pointer',
+                                            backgroundColor: notification.read ? '#fff' : '#f8faff',
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '20px' }}>{notification.icon}</span>
                                         <div style={{ flex: 1 }}>
-                                            <p style={{ fontSize: '12px', fontWeight: 700, margin: 0 }}>{n.title}</p>
-                                            <p style={{ fontSize: '11px', color: '#4b5563', margin: '2px 0' }}>{n.message}</p>
-                                            <span style={{ fontSize: '9px', color: '#9ca3af' }}>{timeAgo(n.received_at)}</span>
+                                            <p style={{ fontSize: '12px', fontWeight: 700, margin: 0 }}>{notification.title}</p>
+                                            <p style={{ fontSize: '11px', color: '#4b5563', margin: '2px 0' }}>{notification.message}</p>
+                                            <span style={{ fontSize: '9px', color: '#9ca3af' }}>{timeAgo(notification.received_at)}</span>
                                         </div>
                                     </div>
                                 ))
@@ -170,13 +193,11 @@ export default function NotificationBell({ userId }: Props) {
                 )}
             </div>
 
-            {/* --- Toast Popup (FIXED FOR MOBILE) --- */}
             {toast && (
                 <div
                     onClick={() => handleToastClick(toast)}
                     style={{
                         position: 'fixed',
-                        // Mobile: Top for visibility, Desktop: Bottom-right
                         top: isMobile ? '16px' : 'auto',
                         bottom: isMobile ? 'auto' : '20px',
                         right: '20px',
@@ -192,8 +213,7 @@ export default function NotificationBell({ userId }: Props) {
                         gap: '12px',
                         alignItems: 'flex-start',
                         cursor: 'pointer',
-                        // Trigger correct animation based on position
-                        animation: isMobile ? 'toastSlideDown 0.3s ease-out' : 'toastSlideUp 0.3s ease-out'
+                        animation: isMobile ? 'toastSlideDown 0.3s ease-out' : 'toastSlideUp 0.3s ease-out',
                     }}
                 >
                     <span style={{ fontSize: '24px' }}>{toast.icon}</span>
@@ -202,7 +222,7 @@ export default function NotificationBell({ userId }: Props) {
                         <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.7)', lineHeight: 1.4 }}>{toast.message}</p>
                     </div>
                     <button
-                        onClick={(e) => { e.stopPropagation(); dismissToast(); }}
+                        onClick={(event) => { event.stopPropagation(); dismissToast(); }}
                         style={{ background: 'none', border: 'none', color: '#fff', opacity: 0.5, cursor: 'pointer' }}
                     >✕</button>
                 </div>

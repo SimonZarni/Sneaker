@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\OrderStatusChanged;
+use App\Models\UserNotification;
 use App\Services\FcmService;
 use App\Services\PushNotificationService;
 use Illuminate\Support\Facades\Log;
@@ -14,25 +15,43 @@ class SendOrderPushNotification
         $order = $event->order;
         $user  = $order->user;
 
-        // Canonical ID for this specific event — shared by both delivery channels.
-        // Format: "{order_id}-{event_type}" e.g. "105-shipped".
-        // The frontend NotificationContext uses this as the deduplication key, so
-        // both Web Push and FCM must produce the exact same string to be treated
-        // as one notification rather than two.
+        if (! $user) {
+            return;
+        }
+
+        // Canonical ID for this specific event — shared by DB history, web push,
+        // FCM, and the frontend bell. Format: "{order_id}-{event_type}".
         $uniqueId = $order->id . '-' . $event->type;
+
+        UserNotification::updateOrCreate(
+            ['notif_key' => $uniqueId],
+            [
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+                'type' => $event->type,
+                'title' => $event->title,
+                'message' => $event->message,
+                'icon' => $event->icon ?? '📦',
+                'delivery_status' => $order->delivery_status,
+                'occurred_at' => now(),
+                'read_at' => null,
+            ]
+        );
 
         // Web Push — PWA/browser only.
         // Skip if the user has an FCM token (native app) — FCM handles the
-        // notification for them. Sending both causes duplicate system notifications
-        // because the Android WebView service worker also receives the web push.
+        // system notification for them. Sending both causes duplicate system
+        // notifications because the Android WebView service worker also receives
+        // the web push.
         if (! $user->fcm_token) {
             try {
                 app(PushNotificationService::class)->sendToUser($user, [
-                    'id'       => $uniqueId,
-                    'title'    => $event->title,
-                    'body'     => $event->message,
-                    'url'      => "/orders/{$order->id}",
-                    'tag'      => $uniqueId,
+                    'id' => $uniqueId,
+                    'title' => $event->title,
+                    'body' => $event->message,
+                    'url' => "/orders/{$order->id}",
+                    'tag' => $uniqueId,
                     'order_id' => $order->id,
                 ]);
             } catch (\Throwable $e) {
@@ -48,13 +67,13 @@ class SendOrderPushNotification
                     $event->title,
                     $event->message,
                     [
-                        'id'              => $uniqueId,
-                        'order_id'        => (string) $order->id,
-                        'order_number'    => $order->order_number,
-                        'type'            => $event->type,
+                        'id' => $uniqueId,
+                        'order_id' => (string) $order->id,
+                        'order_number' => $order->order_number,
+                        'type' => $event->type,
                         'delivery_status' => $order->delivery_status,
-                        'icon'            => $event->icon ?? '📦',
-                        'url'             => "/orders/{$order->id}",
+                        'icon' => $event->icon ?? '📦',
+                        'url' => "/orders/{$order->id}",
                     ]
                 );
             } catch (\Throwable $e) {
