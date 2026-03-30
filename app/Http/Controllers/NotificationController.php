@@ -13,7 +13,7 @@ class NotificationController extends Controller
         $items = UserNotification::query()
             ->where('user_id', $request->user()->id)
             ->latest('occurred_at')
-            ->limit(20)
+            ->limit(8)
             ->get()
             ->map(fn (UserNotification $notification) => $notification->toFrontend())
             ->values();

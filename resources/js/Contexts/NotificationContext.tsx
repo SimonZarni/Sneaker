@@ -56,7 +56,7 @@ function getCurrentAuthUserId(): number | null {
 function sortNotifications(items: Notification[]): Notification[] {
     return [...items]
         .sort((a, b) => new Date(b.received_at).getTime() - new Date(a.received_at).getTime())
-        .slice(0, 20);
+        .slice(0, 8);
 }
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
