@@ -3,18 +3,6 @@ import { createPortal } from 'react-dom';
 import { useNotifications } from '@/Contexts/NotificationContext';
 import { Capacitor } from '@capacitor/core';
 
-/**
- * NotificationToast — global, portal-based toast.
- *
- * Mounted once at the app root (inside NotificationProvider, outside every
- * page component). Rendered via createPortal directly onto document.body so
- * it is never a child of any stacking context created by the nav
- * (backdrop-filter, transform, opacity < 1, etc.) — the exact cause of the
- * toast being invisible on native WebView while working fine on web.
- *
- * Safe-area insets are applied so the toast clears the status bar / home
- * indicator on Android and iOS.
- */
 export default function NotificationToast() {
     const { toast, dismissToast } = useNotifications();
     const [isMobile, setIsMobile] = useState(false);
@@ -34,17 +22,6 @@ export default function NotificationToast() {
         window.location.href = `/orders/${toast.order_id}`;
     };
 
-    /**
-     * Positioning strategy:
-     *
-     * Native top placement:  below the status bar via env(safe-area-inset-top)
-     * Native bottom placement: above the home indicator via env(safe-area-inset-bottom)
-     * Web mobile: top (slide down)
-     * Web desktop: bottom-right (slide up)
-     *
-     * z-index 2147483647 is the theoretical maximum for a 32-bit integer —
-     * guaranteed to sit above every other layer including Capacitor overlays.
-     */
     const position: React.CSSProperties = {
         top: isNative
             ? 'calc(env(safe-area-inset-top, 0px) + 70px)'
@@ -55,15 +32,9 @@ export default function NotificationToast() {
         width: isMobile ? 'calc(100vw - 32px)' : '320px',
     };
 
-    const animationName = 'toastSlideDown';
-
     const node = (
         <>
             <style>{`
-                @keyframes toastSlideUp {
-                    from { transform: translateY(20px); opacity: 0; }
-                    to   { transform: translateY(0);    opacity: 1; }
-                }
                 @keyframes toastSlideDown {
                     from { transform: translateY(-20px); opacity: 0; }
                     to   { transform: translateY(0);     opacity: 1; }
@@ -75,31 +46,29 @@ export default function NotificationToast() {
                 style={{
                     position: 'fixed',
                     ...position,
-                    backgroundColor: '#111827',
-                    color: '#fff',
-                    padding: '16px',
+                    backgroundColor: '#fff',
+                    color: '#111827',
+                    border: '1px solid #e5e7eb',
+                    padding: '12px 16px',
                     borderRadius: '12px',
-                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
                     zIndex: 2147483647,
                     display: 'flex',
                     gap: '12px',
                     alignItems: 'flex-start',
                     cursor: 'pointer',
-                    animation: `${animationName} 0.3s ease-out`,
-                    // Prevent the WebView from treating this as a scrollable element
+                    animation: 'toastSlideDown 0.3s ease-out',
                     WebkitOverflowScrolling: 'auto',
                 }}
             >
-                <span style={{ fontSize: '24px', lineHeight: 1, flexShrink: 0 }}>
+                <span style={{ fontSize: '20px', lineHeight: 1, flexShrink: 0, marginTop: '2px' }}>
                     {toast.icon}
                 </span>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
-                        fontSize: '11px',
-                        fontWeight: 900,
-                        textTransform: 'uppercase',
-                        marginBottom: '2px',
+                        fontSize: '12px',
+                        fontWeight: 700,
                         margin: 0,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
@@ -108,8 +77,8 @@ export default function NotificationToast() {
                         {toast.title}
                     </p>
                     <p style={{
-                        fontSize: '10px',
-                        color: 'rgba(255,255,255,0.7)',
+                        fontSize: '11px',
+                        color: '#4b5563',
                         lineHeight: 1.4,
                         margin: '2px 0 0',
                     }}>
@@ -123,10 +92,9 @@ export default function NotificationToast() {
                     style={{
                         background: 'none',
                         border: 'none',
-                        color: '#fff',
-                        opacity: 0.5,
+                        color: '#9ca3af',
                         cursor: 'pointer',
-                        fontSize: '16px',
+                        fontSize: '14px',
                         lineHeight: 1,
                         padding: '0 0 0 4px',
                         flexShrink: 0,
@@ -138,6 +106,5 @@ export default function NotificationToast() {
         </>
     );
 
-    // Portal to document.body — escapes every stacking context in the page tree.
     return createPortal(node, document.body);
 }
