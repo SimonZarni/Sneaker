@@ -26,8 +26,12 @@ Broadcast::routes(['middleware' => ['web', 'auth']]);
 
 // Broadcasting auth for admins — uses admin middleware so admins can
 // subscribe to the private admin-chat channel
-Route::post('/broadcasting/auth/admin', function () {
-    return \Illuminate\Support\Facades\Broadcast::auth(request());
+Route::post('/broadcasting/auth/admin', function (\Illuminate\Http\Request $request) {
+    // Broadcast::auth() resolves the user via $request->user() which defaults
+    // to the web guard. Admins only have an admin guard session, so we must
+    // override the user resolver before delegating to the broadcaster.
+    $request->setUserResolver(fn () => auth('admin')->user());
+    return \Illuminate\Support\Facades\Broadcast::auth($request);
 })->middleware(['web', 'admin'])->name('broadcasting.auth.admin');
 
 Route::middleware('auth')->group(function () {
