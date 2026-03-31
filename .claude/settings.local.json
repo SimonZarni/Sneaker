@@ -6,7 +6,20 @@
       "Bash(npm run:*)",
       "Bash(npx cap:*)",
       "Bash(./gradlew assembleDebug)",
-      "Bash(./gradlew assembleRelease)"
+      "Bash(./gradlew assembleRelease)",
+      "Bash(php artisan:*)",
+      "Bash(net start:*)",
+      "Bash(sc query:*)",
+      "Bash(wmic service:*)",
+      "Bash(where mysql:*)",
+      "Bash(where mysqld:*)",
+      "Read(//c/xampp/mysql/bin/**)",
+      "Read(//c/wamp64/bin/**)",
+      "Read(//c/laragon/bin/**)",
+      "Bash(\"C:/laragon/bin/mysql/mysql-8.0.30-winx64/bin/mysqld.exe\" --install)",
+      "Bash(sc start:*)",
+      "Bash(npx tsc:*)",
+      "Bash(php -l routes/web.php)"
     ]
   }
 }

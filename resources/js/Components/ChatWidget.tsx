@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { ChatMessage } from '@/types/models';
+import { MessageType, MESSAGE_TYPE } from '@/types/enums';
 
-interface Message {
-    id: number;
-    sender_type: 'user' | 'admin';
-    body: string;
-    created_at: string;
+interface SendPayload {
+    text:         string;
+    message_type: MessageType;
 }
 
 interface Props {
@@ -14,28 +14,24 @@ interface Props {
 
 export default function ChatWidget({ userId }: Props) {
     // ─── STATE ───
-    const [open, setOpen] = useState(false);
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [input, setInput] = useState('');
+    const [open, setOpen]               = useState(false);
+    const [messages, setMessages]       = useState<ChatMessage[]>([]);
+    const [input, setInput]             = useState('');
     const [conversationId, setConversationId] = useState<number | null>(null);
-    const [status, setStatus] = useState<'open' | 'closed'>('open');
-    const [unread, setUnread] = useState(0);
-    const [loading, setLoading] = useState(false);
-    const [sending, setSending] = useState(false);
+    const [status, setStatus]           = useState<'open' | 'closed'>('open');
+    const [unread, setUnread]           = useState(0);
+    const [loading, setLoading]         = useState(false);
+    const [sending, setSending]         = useState(false);
 
     // ─── REFS ───
-    const bottomRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const loadedRef = useRef(false);
-    const openRef = useRef(false); // Used to avoid stale closures in Pusher listener
+    const bottomRef   = useRef<HTMLDivElement>(null);
+    const inputRef    = useRef<HTMLInputElement>(null);
+    const loadedRef   = useRef(false);
+    const openRef     = useRef(false);
 
-    // Sync openRef with state
-    useEffect(() => {
-        openRef.current = open;
-    }, [open]);
+    useEffect(() => { openRef.current = open; }, [open]);
 
     // ─── EFFECT: BOOTSTRAP ───
-    // Get conversation ID and unread count immediately on mount for Pusher subscription
     useEffect(() => {
         if (!userId) return;
 
@@ -44,7 +40,7 @@ export default function ChatWidget({ userId }: Props) {
                 setUnread(r.data.unread);
                 setConversationId(r.data.conversation_id);
             })
-            .catch(err => console.error("Initial chat bootstrap failed", err));
+            .catch(err => console.error('Initial chat bootstrap failed', err));
     }, [userId]);
 
     // ─── EFFECT: PUSHER SUBSCRIPTION ───
@@ -54,20 +50,20 @@ export default function ChatWidget({ userId }: Props) {
 
         // @ts-ignore
         const channel = window.Echo.private(`chat.${conversationId}`)
-            .listen('.chat.message', (data: any) => {
+            .listen('.chat.message', (data: { id: number; sender_type: 'user' | 'admin'; message_type: MessageType; created_at: string }) => {
                 if (data.sender_type === 'admin') {
-                    setMessages(prev => [...prev, {
-                        id: data.id,
-                        sender_type: 'admin',
-                        body: data.body,
-                        created_at: data.created_at,
-                    }]);
+                    // Fetch the decrypted content — broadcast carries no text
+                    axios.get<ChatMessage>(`/chat/message/${data.id}`)
+                        .then(r => {
+                            setMessages(prev => [...prev, r.data]);
 
-                    if (openRef.current) {
-                        axios.post('/chat/read').catch(() => {});
-                    } else {
-                        setUnread(u => u + 1);
-                    }
+                            if (openRef.current) {
+                                axios.post('/chat/read').catch(() => {});
+                            } else {
+                                setUnread(u => u + 1);
+                            }
+                        })
+                        .catch(() => {});
                 }
             });
 
@@ -77,7 +73,7 @@ export default function ChatWidget({ userId }: Props) {
         };
     }, [conversationId]);
 
-    // ─── EFFECT: LOAD HISTORY & INITIAL SCROLL ───
+    // ─── EFFECT: LOAD HISTORY ───
     useEffect(() => {
         if (!open || loadedRef.current || !userId) return;
 
@@ -89,29 +85,22 @@ export default function ChatWidget({ userId }: Props) {
                 loadedRef.current = true;
                 setUnread(0);
 
-                // Scroll to bottom immediately after loading data
-                setTimeout(() => {
-                    bottomRef.current?.scrollIntoView({ behavior: 'auto' });
-                }, 100);
+                setTimeout(() => { bottomRef.current?.scrollIntoView({ behavior: 'auto' }); }, 100);
             })
-            .catch(err => console.error("Could not load history", err))
+            .catch(err => console.error('Could not load history', err))
             .finally(() => setLoading(false));
     }, [open, userId]);
 
     // ─── EFFECT: SCROLL ON RE-OPEN ───
     useEffect(() => {
         if (open && loadedRef.current) {
-            // If already loaded, just scroll to bottom when window opens
-            const timer = setTimeout(() => {
-                bottomRef.current?.scrollIntoView({ behavior: 'auto' });
-            }, 50);
+            const timer = setTimeout(() => { bottomRef.current?.scrollIntoView({ behavior: 'auto' }); }, 50);
             return () => clearTimeout(timer);
         }
     }, [open]);
 
     // ─── EFFECT: NEW MESSAGE SCROLL ───
     useEffect(() => {
-        // Smooth scroll only for new messages while chat is open
         if (open && !loading && messages.length > 0) {
             bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
@@ -130,22 +119,30 @@ export default function ChatWidget({ userId }: Props) {
     const sendMessage = async () => {
         if (!input.trim() || sending || !userId) return;
 
-        const body = input.trim();
+        const text = input.trim();
         setInput('');
         setSending(true);
 
-        // Optimistic UI Update
+        // Optimistic update — replaced by server-confirmed message on success
+        const optimisticId = Date.now();
         setMessages(prev => [...prev, {
-            id: Date.now(),
-            sender_type: 'user',
-            body: body,
-            created_at: new Date().toISOString(),
+            id:           optimisticId,
+            sender_type:  'user',
+            text,
+            message_type: MESSAGE_TYPE.Text,
+            edited_at:    null,
+            created_at:   new Date().toISOString(),
         }]);
 
+        const payload: SendPayload = { text, message_type: MESSAGE_TYPE.Text };
+
         try {
-            await axios.post('/chat/send', { body });
+            const res = await axios.post<{ ok: boolean; id: number }>('/chat/send', payload);
+            // Replace optimistic entry with server-confirmed message
+            const confirmed = await axios.get<ChatMessage>(`/chat/message/${res.data.id}`);
+            setMessages(prev => prev.map(m => m.id === optimisticId ? confirmed.data : m));
         } catch (err) {
-            console.error("Failed to send message", err);
+            console.error('Failed to send message', err);
         } finally {
             setSending(false);
         }
@@ -216,7 +213,7 @@ export default function ChatWidget({ userId }: Props) {
                                         lineHeight: 1.4,
                                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                                     }}>
-                                        {msg.body}
+                                        {msg.text}
                                         <div style={{ fontSize: '9px', opacity: 0.5, marginTop: '4px', textAlign: 'right' }}>
                                             {formatTime(msg.created_at)}
                                         </div>

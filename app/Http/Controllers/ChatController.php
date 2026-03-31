@@ -2,58 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\ChatMessageSent;
+use App\Http\Requests\SendMessageRequest;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
-use Illuminate\Http\Request;
+use App\Services\ChatService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class ChatController extends Controller
 {
-    /**
-     * Load full conversation history.
-     * Triggered when the user clicks to open the widget.
-     */
-    public function conversation()
-    {
-        $user = Auth::user();
+    public function __construct(private ChatService $chat) {}
 
+    public function conversation(): JsonResponse
+    {
         $conversation = ChatConversation::firstOrCreate(
-            ['user_id' => $user->id],
+            ['user_id' => Auth::id()],
             ['status' => 'open', 'last_message_at' => now()]
         );
 
-        $messages = $conversation->messages()
-            ->orderBy('created_at')
-            ->get()
-            ->map(fn($m) => [
-                'id'          => $m->id,
-                'sender_type' => $m->sender_type,
-                'body'        => $m->body,
-                'created_at'  => $m->created_at->toISOString(),
-            ]);
-
         return response()->json([
             'conversation_id' => $conversation->id,
-            'status'          => $conversation->status,
-            'messages'        => $messages,
+            'status' => $conversation->status,
+            'messages' => $this->chat->getMessages($conversation),
         ]);
     }
 
-    /**
-     * Store and broadcast a new message.
-     */
-    public function send(Request $request)
+    public function send(SendMessageRequest $request): JsonResponse
     {
-        $request->validate([
-            'body' => 'required|string|max:1000',
-        ]);
-
-        $user = Auth::user();
-
         $conversation = ChatConversation::firstOrCreate(
-            ['user_id' => $user->id],
+            ['user_id' => Auth::id()],
             ['status' => 'open', 'last_message_at' => now()]
         );
 
@@ -61,63 +38,50 @@ class ChatController extends Controller
             $conversation->update(['status' => 'open']);
         }
 
-        $message = ChatMessage::create([
-            'conversation_id' => $conversation->id,
-            'sender_type'     => 'user',
-            'sender_id'       => $user->id,
-            'body'            => $request->body,
-        ]);
-
-        $conversation->update(['last_message_at' => now()]);
-
-        try {
-            broadcast(new ChatMessageSent($message, $conversation->load('user')));
-        } catch (\Throwable $e) {
-            Log::warning('Chat broadcast failed: ' . $e->getMessage());
-        }
+        $message = $this->chat->send(
+            $conversation,
+            'user',
+            Auth::id(),
+            $request->validated('text'),
+            $request->messageType(),
+            array_filter(['order_id' => $request->validated('order_id')])
+        );
 
         return response()->json(['ok' => true, 'id' => $message->id]);
     }
 
-    /**
-     * Mark all admin messages as read.
-     */
-    public function markRead()
+    public function message(int $id): JsonResponse
     {
-        $user = Auth::user();
-        $conversation = ChatConversation::where('user_id', $user->id)->first();
+        $message = ChatMessage::whereHas(
+            'conversation',
+            fn ($q) => $q->where('user_id', Auth::id())
+        )->findOrFail($id);
 
-        if ($conversation) {
-            $conversation->messages()
-                ->where('sender_type', 'admin')
-                ->whereNull('read_at')
-                ->update(['read_at' => now()]);
-        }
+        return response()->json($this->chat->getSingleMessage($message));
+    }
+
+    public function markRead(): JsonResponse
+    {
+        $conversation = ChatConversation::where('user_id', Auth::id())->first();
+
+        $conversation?->messages()
+            ->where('sender_type', 'admin')
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
 
         return response()->json(['ok' => true]);
     }
 
-    /**
-     * Returns unread count AND conversation_id for immediate subscription.
-     */
-    public function unread()
+    public function unread(): JsonResponse
     {
-        $user = Auth::user();
-
-        // Ensure ID exists so frontend can subscribe on page load
         $conversation = ChatConversation::firstOrCreate(
-            ['user_id' => $user->id],
+            ['user_id' => Auth::id()],
             ['status' => 'open', 'last_message_at' => now()]
         );
 
-        $count = $conversation->messages()
-            ->where('sender_type', 'admin')
-            ->whereNull('read_at')
-            ->count();
-
         return response()->json([
-            'unread' => $count,
-            'conversation_id' => $conversation->id
+            'unread' => $conversation->messages()->where('sender_type', 'admin')->whereNull('read_at')->count(),
+            'conversation_id' => $conversation->id,
         ]);
     }
 }

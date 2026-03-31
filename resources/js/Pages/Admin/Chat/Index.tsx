@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Head } from '@inertiajs/react';
 import AdminLayout from '@/Components/AdminLayout';
+import { ChatMessage } from '@/types/models';
+import { MessageType } from '@/types/enums';
 
 interface Conversation {
     id: number;
@@ -14,12 +16,7 @@ interface Conversation {
     unread: number;
 }
 
-interface Message {
-    id: number;
-    sender_type: 'user' | 'admin';
-    body: string;
-    created_at: string;
-}
+type Message = ChatMessage;
 
 interface Props {
     conversations: Conversation[];
@@ -46,22 +43,36 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
         if (typeof window.Echo === 'undefined') return;
         // @ts-ignore
         window.Echo.private('admin-chat')
-            .listen('.chat.message', (data: any) => {
+            .listen('.chat.message', (data: { id: number; conversation_id: number; user_id: number; user_name: string; sender_type: 'user' | 'admin'; message_type: MessageType; created_at: string }) => {
                 const currentSelected = selectedRef.current;
                 const isOpen = data.sender_type === 'user' && currentSelected?.id === data.conversation_id;
+
+                // Fetch decrypted content — broadcast carries no text
+                if (isOpen) {
+                    axios.get<Message>(`/admin/chat/message/${data.id}`)
+                        .then(r => {
+                            setMessages(prev => [...prev, r.data]);
+                            setConversations(prev => prev.map(c =>
+                                c.id === data.conversation_id ? { ...c, unread: 0 } : c
+                            ));
+                            axios.post(`/admin/chat/${data.conversation_id}/read`).catch(() => {});
+                        })
+                        .catch(() => {});
+                }
 
                 setConversations(prev => {
                     const existing = prev.find(c => c.id === data.conversation_id);
                     if (existing) {
-                        const updated = {
-                            ...existing,
-                            last_message:    data.body,
-                            last_message_at: data.created_at,
-                            unread: data.sender_type === 'user' && !isOpen
-                                ? existing.unread + 1
-                                : existing.unread,
-                        };
-                        return [updated, ...prev.filter(c => c.id !== data.conversation_id)];
+                        return [
+                            {
+                                ...existing,
+                                last_message_at: data.created_at,
+                                unread: data.sender_type === 'user' && !isOpen
+                                    ? existing.unread + 1
+                                    : existing.unread,
+                            },
+                            ...prev.filter(c => c.id !== data.conversation_id),
+                        ];
                     }
                     return [{
                         id:              data.conversation_id,
@@ -70,23 +81,10 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
                         user_email:      '',
                         status:          'open' as const,
                         last_message_at: data.created_at,
-                        last_message:    data.body,
+                        last_message:    '',
                         unread:          isOpen ? 0 : 1,
                     }, ...prev];
                 });
-
-                if (isOpen) {
-                    setMessages(prev => [...prev, {
-                        id:          data.id,
-                        sender_type: 'user',
-                        body:        data.body,
-                        created_at:  data.created_at,
-                    }]);
-                    setConversations(prev => prev.map(c =>
-                        c.id === data.conversation_id ? { ...c, unread: 0 } : c
-                    ));
-                    axios.post(`/admin/chat/${data.conversation_id}/read`).catch(() => {});
-                }
             });
         return () => {
             // @ts-ignore
@@ -120,17 +118,25 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
 
     const sendMessage = async () => {
         if (!input.trim() || !selected || sending) return;
-        const body = input.trim();
+        const text = input.trim();
         setInput('');
         setSending(true);
+        const optimisticId = Date.now();
         setMessages(prev => [...prev, {
-            id:          Date.now(),
-            sender_type: 'admin',
-            body,
-            created_at:  new Date().toISOString(),
+            id:           optimisticId,
+            sender_type:  'admin',
+            text,
+            message_type: 'text' as MessageType,
+            edited_at:    null,
+            created_at:   new Date().toISOString(),
         }]);
-        await axios.post(`/admin/chat/${selected.id}/send`, { body });
-        setSending(false);
+        try {
+            const res = await axios.post<{ ok: boolean; id: number }>(`/admin/chat/${selected.id}/send`, { text });
+            const confirmed = await axios.get<Message>(`/admin/chat/message/${res.data.id}`);
+            setMessages(prev => prev.map(m => m.id === optimisticId ? confirmed.data : m));
+        } finally {
+            setSending(false);
+        }
     };
 
     const closeConversation = async () => {
@@ -266,7 +272,7 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
                                         {msg.sender_type === 'admin' ? admin.name : selected.user_name}
                                     </p>
                                     <div style={{ padding: '10px 14px', backgroundColor: msg.sender_type === 'admin' ? '#0a0a0a' : '#f5f5f7', color: msg.sender_type === 'admin' ? '#fff' : '#0a0a0a', fontSize: '12px', lineHeight: 1.6, borderRadius: msg.sender_type === 'admin' ? '12px 12px 0 12px' : '12px 12px 12px 0' }}>
-                                        {msg.body}
+                                        {msg.text}
                                     </div>
                                     <p style={{ fontSize: '9px', color: 'rgba(45,50,62,0.3)', marginTop: '3px', textAlign: msg.sender_type === 'admin' ? 'right' : 'left' }}>
                                         {formatTime(msg.created_at)}

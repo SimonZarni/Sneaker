@@ -2,8 +2,8 @@
 
 namespace App\Events;
 
-use App\Models\ChatMessage;
 use App\Models\ChatConversation;
+use App\Models\ChatMessage;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -15,7 +15,7 @@ class ChatMessageSent implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
-        public ChatMessage      $message,
+        public ChatMessage $message,
         public ChatConversation $conversation,
     ) {}
 
@@ -32,13 +32,14 @@ class ChatMessageSent implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         return [
-            'id'              => $this->message->id,
+            'id' => $this->message->id,
             'conversation_id' => $this->conversation->id,
-            'user_id'         => $this->conversation->user_id,
-            'user_name'       => $this->conversation->user->name ?? 'Customer',
-            'sender_type'     => $this->message->sender_type,
-            'body'            => $this->message->body,
-            'created_at'      => $this->message->created_at->toISOString(),
+            'user_id' => $this->conversation->user_id,
+            'user_name' => $this->conversation->user->name ?? 'Customer',
+            'sender_type' => $this->message->sender_type,
+            'message_type' => $this->message->message_type?->value ?? 'text',
+            'created_at' => $this->message->created_at->toISOString(),
+            // No body/text — frontend must fetch content via GET /chat/message/{id}
         ];
     }
 

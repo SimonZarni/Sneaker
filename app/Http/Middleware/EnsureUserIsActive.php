@@ -10,8 +10,8 @@ class EnsureUserIsActive
 {
     public function handle(Request $request, Closure $next)
     {
-        if (Auth::check() && ! Auth::user()->is_active) {
-            Auth::logout();
+        if (Auth::guard('web')->check() && ! Auth::guard('web')->user()->is_active) {
+            Auth::guard('web')->logout();
 
             $request->session()->invalidate();
             $request->session()->regenerateToken();

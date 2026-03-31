@@ -72,9 +72,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Chat
     Route::get('/chat/conversation',   [ChatController::class, 'conversation'])->name('chat.conversation');
+    Route::get('/chat/unread',         [ChatController::class, 'unread'])->name('chat.unread');
+    Route::get('/chat/message/{id}',   [ChatController::class, 'message'])->name('chat.message');
     Route::post('/chat/send',          [ChatController::class, 'send'])->name('user.chat.send');
     Route::post('/chat/read',          [ChatController::class, 'markRead'])->name('chat.markRead');
-    Route::get('/chat/unread',         [ChatController::class, 'unread'])->name('chat.unread');
 
     // Reviews
     Route::post('/reviews',              [ReviewController::class, 'store'])->name('reviews.store');
@@ -128,13 +129,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/reviews',                [AdminReviewController::class, 'index'])->name('reviews.index');
         Route::delete('/reviews/{id}',        [AdminReviewController::class, 'reject'])->name('reviews.reject');
 
-        // Chat — unread must come before {id} routes to avoid wildcard capture
+        // Chat — static paths before {id} wildcards
         Route::get('/chat',                      [AdminChatController::class, 'index'])->name('chat.index');
         Route::get('/chat/unread',               [AdminChatController::class, 'unread'])->name('admin.chat.unread');
+        Route::get('/chat/message/{id}',         [AdminChatController::class, 'message'])->name('admin.chat.message');
         Route::get('/chat/{id}/messages',        [AdminChatController::class, 'messages'])->name('chat.messages');
         Route::post('/chat/{id}/send',           [AdminChatController::class, 'send'])->name('admin.chat.send');
         Route::patch('/chat/{id}/close',         [AdminChatController::class, 'close'])->name('chat.close');
-        Route::post('/chat/{id}/read',          [AdminChatController::class, 'markRead'])->name('admin.chat.markRead');
+        Route::post('/chat/{id}/read',           [AdminChatController::class, 'markRead'])->name('admin.chat.markRead');
 
         // Customers
         Route::get('/customers',                     [AdminCustomerController::class, 'index'])->name('customers.index');
