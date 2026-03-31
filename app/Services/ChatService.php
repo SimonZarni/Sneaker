@@ -63,16 +63,13 @@ class ChatService
             $conversation->id
         );
 
-        $message = DB::transaction(function () use ($conversation, $senderType, $senderId, $text, $type, $payload) {
+        $message = DB::transaction(function () use ($conversation, $senderType, $senderId, $type, $payload) {
             $message = ChatMessage::create([
                 'conversation_id' => $conversation->id,
                 'sender_type' => $senderType,
                 'sender_id' => $senderId,
                 'payload' => $payload,
                 'message_type' => $type,
-                // Dual-write: keep body for rollback safety until backfill is verified
-                // and the body column is dropped in a future migration.
-                'body' => $text,
             ]);
 
             $conversation->update(['last_message_at' => now()]);
@@ -92,17 +89,10 @@ class ChatService
         return $message;
     }
 
-    /**
-     * Decrypt payload if present; fall back to body for legacy rows.
-     */
     private function resolveText(ChatMessage $message): string
     {
-        if ($message->payload !== null) {
-            $json = $this->crypto->decrypt($message->payload, $message->conversation_id);
+        $json = $this->crypto->decrypt($message->payload, $message->conversation_id);
 
-            return $this->crypto->parsePayload($json)['text'];
-        }
-
-        return $message->body ?? '';
+        return $this->crypto->parsePayload($json)['text'];
     }
 }

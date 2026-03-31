@@ -28,7 +28,7 @@ class AdminChatController extends Controller
                 'user_email' => $c->user->email ?? '',
                 'status' => $c->status,
                 'last_message_at' => $c->last_message_at?->toISOString(),
-                'last_message' => $c->messages->first()?->body ?? '',
+                'last_message' => ($first = $c->messages->first()) ? $this->chat->getSingleMessage($first)['text'] : '',
                 'unread' => $c->messages()->where('sender_type', 'user')->whereNull('read_at')->count(),
             ]);
 

@@ -20,8 +20,6 @@ class ChatMessage extends Model
         'message_type',
         'read_at',
         'edited_at',
-        // body stays fillable for dual-write rollback safety until the column is dropped
-        'body',
     ];
 
     protected $casts = [

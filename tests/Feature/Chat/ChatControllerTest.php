@@ -86,29 +86,6 @@ class ChatControllerTest extends TestCase
         });
     }
 
-    public function test_chat_controller_conversation_falls_back_to_body_for_legacy_messages_where_payload_is_null(): void
-    {
-        $user = $this->makeUser();
-        $conversation = $this->makeConversation($user);
-
-        ChatMessage::insert([
-            'conversation_id' => $conversation->id,
-            'sender_type' => 'admin',
-            'sender_id' => 1,
-            'body' => 'Legacy message text',
-            'payload' => null,
-            'message_type' => 'text',
-            'read_at' => null,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        $this->actingAs($user)
-            ->getJson('/chat/conversation')
-            ->assertOk()
-            ->assertJsonPath('messages.0.text', 'Legacy message text');
-    }
-
     // ── AdminChatController ────────────────────────────────────────────────────
 
     public function test_admin_chat_controller_send_broadcast_payload_does_not_contain_body_or_text(): void
@@ -118,6 +95,7 @@ class ChatControllerTest extends TestCase
         $user = $this->makeUser();
         $conversation = $this->makeConversation($user);
         $admin = Admin::factory()->create();
+        /** @var Admin $admin */
 
         $this->actingAs($admin, 'admin')
             ->postJson("/admin/chat/{$conversation->id}/send", ['text' => 'Admin reply'])
