@@ -48,43 +48,59 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
                 const isOpen = data.sender_type === 'user' && currentSelected?.id === data.conversation_id;
 
                 // Fetch decrypted content — broadcast carries no text
-                if (isOpen) {
-                    axios.get<Message>(`/admin/chat/message/${data.id}`)
-                        .then(r => {
+                axios.get<Message>(`/admin/chat/message/${data.id}`)
+                    .then(r => {
+                        if (isOpen) {
                             setMessages(prev => [...prev, r.data]);
-                            setConversations(prev => prev.map(c =>
-                                c.id === data.conversation_id ? { ...c, unread: 0 } : c
-                            ));
                             axios.post(`/admin/chat/${data.conversation_id}/read`).catch(() => {});
-                        })
-                        .catch(() => {});
-                }
+                        }
 
-                setConversations(prev => {
-                    const existing = prev.find(c => c.id === data.conversation_id);
-                    if (existing) {
-                        return [
-                            {
-                                ...existing,
+                        setConversations(prev => {
+                            const existing = prev.find(c => c.id === data.conversation_id);
+                            if (existing) {
+                                return [
+                                    {
+                                        ...existing,
+                                        last_message_at: data.created_at,
+                                        last_message:    r.data.text ?? existing.last_message,
+                                        unread: data.sender_type === 'user' && !isOpen
+                                            ? existing.unread + 1
+                                            : existing.unread,
+                                    },
+                                    ...prev.filter(c => c.id !== data.conversation_id),
+                                ];
+                            }
+                            return [{
+                                id:              data.conversation_id,
+                                user_id:         data.user_id,
+                                user_name:       data.user_name,
+                                user_email:      '',
+                                status:          'open' as const,
                                 last_message_at: data.created_at,
-                                unread: data.sender_type === 'user' && !isOpen
-                                    ? existing.unread + 1
-                                    : existing.unread,
-                            },
-                            ...prev.filter(c => c.id !== data.conversation_id),
-                        ];
-                    }
-                    return [{
-                        id:              data.conversation_id,
-                        user_id:         data.user_id,
-                        user_name:       data.user_name,
-                        user_email:      '',
-                        status:          'open' as const,
-                        last_message_at: data.created_at,
-                        last_message:    '',
-                        unread:          isOpen ? 0 : 1,
-                    }, ...prev];
-                });
+                                last_message:    r.data.text ?? '',
+                                unread:          isOpen ? 0 : 1,
+                            }, ...prev];
+                        });
+                    })
+                    .catch(() => {
+                        // fallback: update metadata only, without decrypted text
+                        setConversations(prev => {
+                            const existing = prev.find(c => c.id === data.conversation_id);
+                            if (existing) {
+                                return [
+                                    {
+                                        ...existing,
+                                        last_message_at: data.created_at,
+                                        unread: data.sender_type === 'user' && !isOpen
+                                            ? existing.unread + 1
+                                            : existing.unread,
+                                    },
+                                    ...prev.filter(c => c.id !== data.conversation_id),
+                                ];
+                            }
+                            return prev;
+                        });
+                    });
             });
         return () => {
             // @ts-ignore
