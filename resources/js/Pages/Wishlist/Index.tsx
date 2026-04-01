@@ -35,40 +35,31 @@ export default function WishlistIndex({ items }: Props) {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="Wishlist — Walker Sneaker" />
+            <Head title="Wishlist — Walker Sneaker Store" />
 
             {/* ── NAV ── */}
-            <nav className="border-b border-brand-surface py-5 sticky top-0 bg-brand-white/90 backdrop-blur-md z-50">
-                <div className="mx-auto max-w-7xl px-4 flex justify-between items-center">
-                    <div className="flex items-center gap-8 text-[10px] font-black uppercase tracking-widest">
-                        <Link href={route("home")} className="text-xl tracking-tightest">
-                            Walker Sneaker
-                        </Link>
-                        <Link href={route("shop.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
-                            Shop
-                        </Link>
-                        <Link href={route("orders.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
-                            Orders
-                        </Link>
-                        <span className="border-b-2 border-brand-charcoal pb-0.5">Wishlist</span>
-                    </div>
-
-                    <div className="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+            <nav className="bg-brand-charcoal shadow-md sticky top-0 z-50">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+                    <Link href={route("home")} className="text-white font-bold text-base tracking-tight whitespace-nowrap">
+                        Walker Sneaker Store
+                    </Link>
+                    <div className="hidden md:flex items-center gap-7 text-sm font-medium">
+                        <Link href={route("home")} className="text-white/75 hover:text-white transition-colors">Home</Link>
+                        <Link href={route("shop.index")} className="text-white/75 hover:text-white transition-colors">Shop</Link>
+                        <Link href={route("orders.index")} className="text-white/75 hover:text-white transition-colors">Orders</Link>
+                        <span className="text-white border-b-2 border-white/60 pb-0.5">Wishlist</span>
                         {auth?.user && (
-                            <Link href={route("profile.edit")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
-                                {auth.user.name}
-                            </Link>
+                            <Link href={route("profile.edit")} className="text-white/75 hover:text-white transition-colors">{auth.user.name}</Link>
                         )}
-                        <button
-                            onClick={() => setIsCartOpen(true)}
-                            className="flex items-center gap-2 hover:text-brand-slate transition-colors"
-                        >
-                            Vault
-                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">
-                                {cartCount}
-                            </span>
-                        </button>
                     </div>
+                    <button onClick={() => setIsCartOpen(true)} aria-label="Cart" className="relative text-white/80 hover:text-white transition-colors">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                        </svg>
+                        {cartCount > 0 && (
+                            <span className="absolute -top-2 -right-2 bg-white text-brand-charcoal text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>
+                        )}
+                    </button>
                 </div>
             </nav>
 
@@ -109,7 +100,7 @@ export default function WishlistIndex({ items }: Props) {
                             href={route("shop.index")}
                             className="bg-brand-charcoal text-brand-white px-10 py-4 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-brand-slate transition-colors"
                         >
-                            Browse The Archive →
+                            Browse All Products →
                         </Link>
                     </div>
                 )}

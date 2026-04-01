@@ -3,7 +3,7 @@ import { Link } from "@inertiajs/react";
 
 export default function Footer() {
     return (
-        <footer className="bg-brand-charcoal text-brand-white">
+        <footer className="bg-black text-brand-white">
 
             {/* ── Main grid ── */}
             <div className="mx-auto max-w-7xl px-4 py-20">
@@ -12,7 +12,7 @@ export default function Footer() {
                     {/* Brand column */}
                     <div className="space-y-6">
                         <Link href="/" className="text-2xl font-black tracking-tightest uppercase text-white">
-                            Walker Sneaker
+                            Walker Sneaker Store
                         </Link>
                         <p className="text-[10px] font-medium leading-loose text-white/40 max-w-xs">
                             Curated drops from the world's most coveted sneaker brands. Every pair verified authentic before it reaches your vault.
@@ -110,7 +110,7 @@ export default function Footer() {
                 <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
 
                     <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/20">
-                        © 2026 Walker Sneaker — All Rights Reserved
+                        © 2026 Walker Sneaker Store — All Rights Reserved
                     </p>
 
                     {/* Payment icons */}

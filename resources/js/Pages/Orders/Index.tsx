@@ -61,59 +61,40 @@ export default function OrdersIndex({ orders }: Props) {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="My Orders — Walker Sneaker" />
+            <Head title="My Orders — Walker Sneaker Store" />
 
             {/* ── NAV ── */}
-            <nav className="fixed top-0 w-full z-50 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
-                    {/* Left */}
-                    <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
-                        <Link href="/shop" className="hover:text-brand-slate transition-colors">
-                            The Archive
-                        </Link>
-                        <Link href="/orders" className="border-b-2 border-brand-charcoal pb-0.5">
-                            My Orders
-                        </Link>
-                    </div>
-
-                    {/* Logo */}
-                    <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
-                        <Link href="/">Walker Sneaker</Link>
-                    </h1>
-
-                    {/* Right */}
-                    <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+            <nav className="fixed top-0 w-full z-50 bg-brand-charcoal shadow-md">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+                    <Link href={route("home")} className="text-white font-bold text-base tracking-tight whitespace-nowrap">
+                        Walker Sneaker Store
+                    </Link>
+                    <div className="hidden md:flex items-center gap-7 text-sm font-medium">
+                        <Link href={route("home")} className="text-white/75 hover:text-white transition-colors">Home</Link>
+                        <Link href={route("shop.index")} className="text-white/75 hover:text-white transition-colors">Shop</Link>
+                        <span className="text-white border-b-2 border-white/60 pb-0.5">My Orders</span>
                         {auth?.user ? (
                             <>
-                                <Link href="/profile" className="hover:text-brand-slate transition-colors">
-                                    {auth.user.name}
-                                </Link>
-                                <Link
-                                    href="/logout"
-                                    method="post"
-                                    as="button"
-                                    className="hover:text-brand-slate transition-colors uppercase cursor-pointer"
-                                >
-                                    Log Out
-                                </Link>
+                                <Link href="/profile" className="text-white/75 hover:text-white transition-colors">{auth.user.name}</Link>
+                                <Link href="/logout" method="post" as="button" className="text-white/65 hover:text-white transition-colors cursor-pointer">Log Out</Link>
                             </>
                         ) : (
-                            <Link href="/login" className="hover:text-brand-slate transition-colors">
-                                Account
-                            </Link>
+                            <Link href="/login" className="text-white/75 hover:text-white transition-colors">Login</Link>
                         )}
-                        <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 group">
-                            <span>Vault</span>
-                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px] group-hover:bg-brand-slate transition-colors">
-                                {cartCount}
-                            </span>
-                        </button>
                     </div>
+                    <button onClick={() => setIsCartOpen(true)} aria-label="Cart" className="relative text-white/80 hover:text-white transition-colors">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                        </svg>
+                        {cartCount > 0 && (
+                            <span className="absolute -top-2 -right-2 bg-white text-brand-charcoal text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">{cartCount}</span>
+                        )}
+                    </button>
                 </div>
             </nav>
 
             {/* ── MAIN ── */}
-            <main className="pt-32 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <main className="pt-20 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Header */}
                 <div className="mb-16 border-b border-brand-surface pb-10">
@@ -134,7 +115,7 @@ export default function OrdersIndex({ orders }: Props) {
                 {orders.length === 0 && (
                     <div className="text-center py-32 space-y-6">
                         <p className="text-[10px] font-black uppercase tracking-[0.4em] text-brand-slate/30">
-                            The Vault Is Empty
+                            Your Orders Are Empty
                         </p>
                         <p className="text-xs text-brand-slate/50 font-medium">
                             You haven't secured any drops yet.
@@ -143,7 +124,7 @@ export default function OrdersIndex({ orders }: Props) {
                             href="/shop"
                             className="inline-block mt-4 bg-brand-charcoal text-brand-white px-10 py-4 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-brand-slate transition-colors"
                         >
-                            Browse The Archive →
+                            Browse All Products →
                         </Link>
                     </div>
                 )}
@@ -237,7 +218,7 @@ export default function OrdersIndex({ orders }: Props) {
                             href="/shop"
                             className="text-[10px] font-black uppercase tracking-[0.3em] border-b-2 border-brand-charcoal pb-0.5 hover:text-brand-slate hover:border-brand-slate transition-colors"
                         >
-                            Browse The Archive →
+                            Browse All Products →
                         </Link>
                     </div>
                 )}

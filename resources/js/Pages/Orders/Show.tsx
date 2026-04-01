@@ -293,37 +293,36 @@ export default function OrdersShow({ order }: Props) {
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title={`${order.order_number} — Walker Sneaker`} />
+            <Head title={`${order.order_number} — Walker Sneaker Store`} />
 
             {/* ── NAV ── */}
-            <nav className="fixed top-0 w-full z-40 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
-                    <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
-                        <Link href="/shop" className="hover:text-brand-slate transition-colors">The Archive</Link>
-                        <Link href={route("about")} className="hover:text-brand-slate transition-colors">About Us</Link>
-                        <Link href="/orders" className="hover:text-brand-slate transition-colors">My Orders</Link>
-                    </div>
-                    <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
-                        <Link href="/">Walker Sneaker</Link>
-                    </h1>
-                    <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+            <nav className="fixed top-0 w-full z-40 bg-brand-charcoal shadow-md">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+                    <Link href={route("home")} className="text-white font-bold text-base tracking-tight whitespace-nowrap">
+                        Walker Sneaker Store
+                    </Link>
+                    <div className="hidden md:flex items-center gap-7 text-sm font-medium">
+                        <Link href={route("home")} className="text-white/75 hover:text-white transition-colors">Home</Link>
+                        <Link href={route("shop.index")} className="text-white/75 hover:text-white transition-colors">Shop</Link>
+                        <Link href={route("about")} className="text-white/75 hover:text-white transition-colors">About</Link>
+                        <Link href="/orders" className="text-white border-b-2 border-white/60 pb-0.5">My Orders</Link>
                         {auth?.user ? (
                             <>
-                                <Link href="/profile" className="hover:text-brand-slate transition-colors">{auth.user.name}</Link>
-                                <Link href="/logout" method="post" as="button" className="hover:text-brand-slate transition-colors uppercase cursor-pointer">Log Out</Link>
+                                <Link href="/profile" className="text-white/75 hover:text-white transition-colors">{auth.user.name}</Link>
+                                <Link href="/logout" method="post" as="button" className="text-white/65 hover:text-white transition-colors cursor-pointer">Log Out</Link>
                             </>
                         ) : (
-                            <Link href="/login" className="hover:text-brand-slate transition-colors">Account</Link>
+                            <Link href="/login" className="text-white/75 hover:text-white transition-colors">Login</Link>
                         )}
-                        <Link href="/shop" className="flex items-center gap-2 group">
-                            <span>Vault</span>
-                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px] group-hover:bg-brand-slate transition-colors">{cartCount}</span>
-                        </Link>
                     </div>
+                    <Link href="/shop" className="text-white/75 hover:text-white transition-colors text-xs font-medium hidden md:flex items-center gap-1">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" d="M15 19l-7-7 7-7"/></svg>
+                        Back to Shop
+                    </Link>
                 </div>
             </nav>
 
-            <main className="pt-32 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <main className="pt-20 pb-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 {/* Breadcrumb */}
                 <div className="mb-10 flex items-center gap-3 text-[9px] font-black uppercase tracking-[0.3em] text-brand-slate/40">
@@ -427,7 +426,7 @@ export default function OrdersShow({ order }: Props) {
                         </div>
                         <div className="mt-10 pt-6 border-t border-brand-surface">
                             <Link href="/shop" className="text-[10px] font-black uppercase tracking-[0.3em] border-b-2 border-brand-charcoal pb-0.5 hover:text-brand-slate hover:border-brand-slate transition-colors">
-                                Browse The Archive →
+                                Browse All Products →
                             </Link>
                         </div>
                     </div>

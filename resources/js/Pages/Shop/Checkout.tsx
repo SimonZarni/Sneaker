@@ -94,15 +94,22 @@ export default function Checkout({ cart, savedAddresses, shippingFee }: { cart: 
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="Secure Transaction — Walker Sneaker" />
+            <Head title="Secure Transaction — Walker Sneaker Store" />
 
-            <nav className="border-b border-brand-surface py-10">
-                <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-                    <Link href="/shop" className="text-[10px] font-black uppercase tracking-[0.3em] hover:text-brand-slate transition-colors">
-                        ← Exit Checkout
+            <nav className="bg-brand-charcoal shadow-md">
+                <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                    <Link href="/shop" className="text-white/75 hover:text-white transition-colors text-sm font-medium flex items-center gap-1">
+                        ← Back to Shop
                     </Link>
-                    <h1 className="text-2xl font-black tracking-tightest">Walker Sneaker</h1>
-                    <div className="w-24 hidden md:block" />
+                    <Link href="/" className="text-white font-bold text-base tracking-tight">
+                        Walker Sneaker Store
+                    </Link>
+                    <div className="flex items-center gap-2 text-white/60 text-xs font-medium">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        Secure Checkout
+                    </div>
                 </div>
             </nav>
 

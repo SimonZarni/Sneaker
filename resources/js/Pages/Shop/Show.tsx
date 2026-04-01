@@ -156,7 +156,7 @@ export default function Show({
         });
     };
 
-    const handleAddToVault = () => {
+    const handleAddToCart = () => {
         if (!selectedVariant || isOutOfStock) return;
         router.post("/cart", { product_variant_id: selectedVariant.id, quantity: 1 }, {
             preserveScroll: true,
@@ -170,17 +170,42 @@ export default function Show({
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title={`${product.brand.name} ${product.name} — Walker Sneaker`} />
+            <Head title={`${product.brand.name} ${product.name} — Walker Sneaker Store`} />
 
-            {/* Nav */}
-            <nav className="border-b border-brand-surface py-5 sticky top-0 bg-brand-white/90 backdrop-blur-md z-50">
-                <div className="mx-auto max-w-7xl px-4 flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                    <Link href="/shop" className="hover:text-brand-slate transition-colors">← Collection</Link>
-                    {/* <Link href={route("about")} className="hover:text-brand-slate transition-colors">About Us</Link> */}
-                    <Link href="/" className="text-xl tracking-tightest">Walker Sneaker</Link>
-                    <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2">
-                        Vault <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">{cartCount}</span>
-                    </button>
+            {/* Nav (green, site-wide style) */}
+            <nav className="sticky top-0 z-50 bg-brand-charcoal shadow-md">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+                    <Link href={route("home")} className="text-white font-bold text-base tracking-tight whitespace-nowrap">
+                        Walker Sneaker Store
+                    </Link>
+                    <div className="hidden md:flex items-center gap-7 text-sm font-medium">
+                        <Link href={route("home")} className="text-white/75 hover:text-white transition-colors">Home</Link>
+                        <Link href={route("about")} className="text-white/75 hover:text-white transition-colors">About</Link>
+                        <Link href={route("shop.index")} className="text-white border-b-2 border-white/60 pb-0.5">Shop</Link>
+                        {auth?.user ? (
+                            <>
+                                <Link href={route("wishlist.index")} className="text-white/75 hover:text-white transition-colors">Wishlist</Link>
+                                <Link href="/logout" method="post" as="button" className="text-white/65 hover:text-white transition-colors cursor-pointer">Log Out</Link>
+                            </>
+                        ) : (
+                            <Link href="/login" className="text-white/75 hover:text-white transition-colors">Login</Link>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <Link href={route("shop.index")} aria-label="Back to shop" className="text-white/75 hover:text-white transition-colors text-xs font-medium hidden md:block">
+                            ← Back to Shop
+                        </Link>
+                        <button onClick={() => setIsCartOpen(true)} aria-label="Cart" className="relative text-white/80 hover:text-white transition-colors">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                            </svg>
+                            {cartCount > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-white text-brand-charcoal text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </nav>
 
@@ -261,11 +286,11 @@ export default function Show({
                         </div>
                     </div>
 
-                    {/* Add to Vault */}
+                    {/* Add to Cart */}
                     <div className="pt-6">
-                        <button onClick={handleAddToVault} disabled={!selectedVariant || isOutOfStock}
+                        <button onClick={handleAddToCart} disabled={!selectedVariant || isOutOfStock}
                             className={`w-full py-6 text-[10px] font-black uppercase tracking-[0.3em] transition-all ${addedFlash ? "bg-emerald-600 text-white" : !selectedVariant || isOutOfStock ? "bg-brand-surface text-brand-slate/30 cursor-not-allowed" : "bg-brand-charcoal text-brand-white hover:bg-brand-slate"}`}>
-                            {addedFlash ? "✓ Added to Vault" : isOutOfStock ? "Sold Out" : !selectedColor ? "Select Color" : !selectedSize ? "Select Size" : "Add to Vault"}
+                            {addedFlash ? "✓ Added to Cart" : isOutOfStock ? "Sold Out" : !selectedColor ? "Select Color" : !selectedSize ? "Select Size" : "Add to Cart"}
                         </button>
                     </div>
 
@@ -275,7 +300,7 @@ export default function Show({
                         <p className="text-xs leading-loose text-brand-slate font-medium">{product.description}</p>
                         <div className="pt-4 space-y-px">
                             <AccordionRow label="Free Shipping & Returns" body="Complimentary shipping on all orders. Easy 30-day returns." />
-                            <AccordionRow label="Authenticity Guaranteed" body="Every pair in the vault is verified authentic." />
+                            <AccordionRow label="Authenticity Guaranteed" body="Every pair is verified authentic before it ships to you." />
                         </div>
                     </div>
                 </div>

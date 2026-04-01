@@ -24,65 +24,44 @@ export default function Login({
     };
 
     return (
-        <div className="min-h-screen bg-brand-white flex">
-            <Head title="Sign In — Walker Sneaker" />
+        <div className="min-h-screen bg-white flex flex-col">
+            <Head title="Login — Walker Sneaker Store" />
 
-            {/* ── Left panel: branding ── */}
-            <div className="hidden lg:flex lg:w-1/2 bg-brand-charcoal flex-col justify-between p-16">
-                <Link href="/" className="text-2xl font-black tracking-tightest uppercase text-white">
-                    Walker Sneaker
+            {/* ── NAVBAR (green, matches site) ── */}
+            <nav className="w-full bg-brand-charcoal h-14 flex items-center px-6 shadow-sm flex-shrink-0">
+                <Link href="/" className="text-white font-bold text-base tracking-tight">
+                    Walker Sneaker Store
                 </Link>
-
-                <div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.5em] text-white/20 mb-6">
-                        The Archive
-                    </p>
-                    <h2 className="text-5xl font-black uppercase tracking-tightest text-white leading-none">
-                        Exclusive<br />Drops.<br />Verified<br />Always.
-                    </h2>
+                <div className="ml-auto flex items-center gap-6">
+                    <Link href={route("home")} className="text-white/70 text-sm hover:text-white transition-colors">Home</Link>
+                    <Link href={route("about")} className="text-white/70 text-sm hover:text-white transition-colors">About</Link>
+                    <Link href={route("shop.index")} className="text-white/70 text-sm hover:text-white transition-colors">Shop</Link>
                 </div>
+            </nav>
 
-                <p className="text-[8px] font-black uppercase tracking-[0.4em] text-white/10">
-                    Members Only Access
-                </p>
-            </div>
-
-            {/* ── Right panel: form ── */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center px-8 py-16">
+            {/* ── FORM CENTERED (matches prototype Fig4.3) ── */}
+            <div className="flex-1 flex items-center justify-center px-4 py-12">
                 <div className="w-full max-w-sm">
 
-                    {/* Mobile logo */}
-                    <div className="lg:hidden mb-12 text-center">
-                        <Link href="/" className="text-2xl font-black tracking-tightest uppercase text-brand-charcoal">
-                            Walker Sneaker
-                        </Link>
-                    </div>
-
                     {/* Header */}
-                    <div className="mb-12">
-                        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-brand-slate/30 mb-2">
-                            Welcome Back
-                        </p>
-                        <h1 className="text-3xl font-black uppercase tracking-tightest">
-                            Sign In
-                        </h1>
+                    <div className="mb-8 text-center">
+                        <h1 className="text-2xl font-black uppercase tracking-tight text-brand-charcoal mb-1">Login</h1>
+                        <p className="text-xs text-gray-400">Sign in to your account</p>
                     </div>
 
-                    {/* Status message (e.g. password reset success) */}
+                    {/* Status message */}
                     {status && (
-                        <div className="mb-8 border border-emerald-200 bg-emerald-50 px-5 py-4">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">
-                                {status}
-                            </p>
+                        <div className="mb-6 bg-green-50 border border-green-200 px-4 py-3 rounded-sm">
+                            <p className="text-xs font-medium text-green-700">{status}</p>
                         </div>
                     )}
 
-                    <form onSubmit={submit} className="space-y-8">
+                    <form onSubmit={submit} className="space-y-5">
 
                         {/* Email */}
                         <div>
-                            <label className="text-[8px] font-black uppercase tracking-[0.3em] text-brand-slate/40 block mb-3">
-                                Email Address
+                            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
+                                Username or Email
                             </label>
                             <input
                                 type="email"
@@ -91,38 +70,34 @@ export default function Login({
                                 autoComplete="email"
                                 autoFocus
                                 placeholder="you@example.com"
-                                className="w-full border-0 border-b-2 border-brand-surface focus:border-brand-charcoal bg-transparent px-0 py-3 text-sm font-medium outline-none transition-colors placeholder:text-brand-slate/20"
+                                className="w-full border border-gray-200 focus:border-brand-charcoal bg-white px-4 py-3 text-sm outline-none transition-colors rounded-sm placeholder:text-gray-300"
                             />
                             {errors.email && (
-                                errors.email.includes('suspended') ? (
-                                    <div className="mt-3 border border-amber-200 bg-amber-50 px-4 py-3">
-                                        <p className="text-[9px] font-black uppercase tracking-wide text-amber-700">
-                                            {errors.email}
-                                        </p>
-                                        <a href="mailto:support@Walker Sneaker" className="text-[9px] font-black uppercase tracking-wide text-amber-600 border-b border-amber-400 mt-1 inline-block">
+                                errors.email.includes("suspended") ? (
+                                    <div className="mt-2 bg-amber-50 border border-amber-200 px-3 py-2 rounded-sm">
+                                        <p className="text-xs text-amber-700">{errors.email}</p>
+                                        <a href="mailto:support@walkersneaker.com" className="text-xs font-bold text-amber-600 underline mt-1 inline-block">
                                             Contact Support →
                                         </a>
                                     </div>
                                 ) : (
-                                    <p className="mt-2 text-[9px] font-black uppercase tracking-wide text-red-500">
-                                        {errors.email}
-                                    </p>
+                                    <p className="mt-1.5 text-xs text-red-500">{errors.email}</p>
                                 )
                             )}
                         </div>
 
                         {/* Password */}
                         <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <label className="text-[8px] font-black uppercase tracking-[0.3em] text-brand-slate/40">
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="text-xs font-bold uppercase tracking-widest text-gray-500">
                                     Password
                                 </label>
                                 {canResetPassword && (
                                     <Link
                                         href={route("password.request")}
-                                        className="text-[8px] font-black uppercase tracking-widest text-brand-slate/30 hover:text-brand-charcoal transition-colors border-b border-transparent hover:border-brand-charcoal pb-px"
+                                        className="text-xs text-brand-charcoal hover:text-brand-slate transition-colors"
                                     >
-                                        Forgot?
+                                        Forgot your password?
                                     </Link>
                                 )}
                             </div>
@@ -133,12 +108,13 @@ export default function Login({
                                     onChange={e => setData("password", e.target.value)}
                                     autoComplete="current-password"
                                     placeholder="••••••••"
-                                    className="w-full border-0 border-b-2 border-brand-surface focus:border-brand-charcoal bg-transparent px-0 py-3 text-sm font-medium outline-none transition-colors placeholder:text-brand-slate/20 pr-10"
+                                    className="w-full border border-gray-200 focus:border-brand-charcoal bg-white px-4 py-3 text-sm outline-none transition-colors rounded-sm placeholder:text-gray-300 pr-10"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(v => !v)}
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 text-brand-slate/30 hover:text-brand-charcoal transition-colors"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-brand-charcoal transition-colors"
                                     tabIndex={-1}
                                 >
                                     {showPassword ? (
@@ -154,9 +130,7 @@ export default function Login({
                                 </button>
                             </div>
                             {errors.password && (
-                                <p className="mt-2 text-[9px] font-black uppercase tracking-wide text-red-500">
-                                    {errors.password}
-                                </p>
+                                <p className="mt-1.5 text-xs text-red-500">{errors.password}</p>
                             )}
                         </div>
 
@@ -168,18 +142,18 @@ export default function Login({
                                 checked={data.remember}
                                 onChange={e => setData("remember", e.target.checked)}
                             />
-                            <div className={`w-4 h-4 border-2 flex items-center justify-center shrink-0 transition-colors pointer-events-none ${
+                            <div className={`w-4 h-4 border-2 flex items-center justify-center shrink-0 transition-colors rounded-sm ${
                                 data.remember
                                     ? "border-brand-charcoal bg-brand-charcoal"
-                                    : "border-brand-surface group-hover:border-brand-slate/40"
+                                    : "border-gray-300 group-hover:border-brand-charcoal/50"
                             }`}>
                                 {data.remember && (
-                                    <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2">
+                                    <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke="white" strokeWidth="2.5">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
                                     </svg>
                                 )}
                             </div>
-                            <span className="text-[9px] font-black uppercase tracking-widest text-brand-slate/40 group-hover:text-brand-slate/60 transition-colors">
+                            <span className="text-xs text-gray-500 group-hover:text-gray-700 transition-colors">
                                 Remember me
                             </span>
                         </label>
@@ -188,22 +162,29 @@ export default function Login({
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full bg-brand-charcoal text-white py-5 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-brand-slate transition-colors disabled:opacity-30"
+                            className="w-full bg-brand-charcoal text-white py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-brand-slate transition-colors disabled:opacity-40 rounded-sm mt-2"
                         >
-                            {processing ? "Signing In..." : "Sign In"}
+                            {processing ? "Signing In..." : "Login"}
                         </button>
                     </form>
 
                     {/* Register link */}
-                    <p className="mt-10 text-center text-[9px] font-bold uppercase tracking-widest text-brand-slate/30">
-                        No account?{" "}
+                    <p className="mt-6 text-center text-xs text-gray-400">
+                        Don't have an account?{" "}
                         <Link
                             href={route("register")}
-                            className="text-brand-charcoal border-b border-brand-charcoal pb-px hover:text-brand-slate hover:border-brand-slate transition-colors"
+                            className="text-brand-charcoal font-bold hover:text-brand-slate transition-colors"
                         >
                             Create one
                         </Link>
                     </p>
+
+                    {/* Divider + back home */}
+                    <div className="mt-4 text-center">
+                        <Link href={route("home")} className="text-xs text-gray-300 hover:text-gray-500 transition-colors">
+                            ← Back to store
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

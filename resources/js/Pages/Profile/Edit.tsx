@@ -262,21 +262,22 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
 
     return (
         <div style={{ minHeight: "100vh", backgroundColor: "#fff", color: "#5B8C5A" }}>
-            <Head title="My Account — Walker Sneaker" />
+            <Head title="My Account — Walker Sneaker Store" />
 
             {/* ── NAV ── */}
-            <nav style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: 0, zIndex: 50 }}>
-                <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 32px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#5B8C5A", textDecoration: "none" }}>
-                        Walker Sneaker
+            <nav style={{ backgroundColor: "#5B8C5A", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}>
+                <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 32px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 700, color: "#fff", textDecoration: "none", whiteSpace: "nowrap" }}>
+                        Walker Sneaker Store
                     </Link>
-                    <div style={{ display: "flex", alignItems: "center", gap: "28px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
-                        <Link href={route("shop.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Shop</Link>
-                        <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Orders</Link>
-                        <span style={{ color: "#5B8C5A", borderBottom: "2px solid #5B8C5A", paddingBottom: "2px" }}>Account</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "28px", fontSize: "13px", fontWeight: 500 }}>
+                        <Link href={route("home")} style={{ color: "rgba(255,255,255,0.75)", textDecoration: "none" }}>Home</Link>
+                        <Link href={route("shop.index")} style={{ color: "rgba(255,255,255,0.75)", textDecoration: "none" }}>Shop</Link>
+                        <Link href={route("orders.index")} style={{ color: "rgba(255,255,255,0.75)", textDecoration: "none" }}>Orders</Link>
+                        <span style={{ color: "#fff", borderBottom: "2px solid rgba(255,255,255,0.6)", paddingBottom: "2px" }}>Account</span>
                         <Link
                             href="/logout" method="post" as="button"
-                            style={{ color: "rgba(45,50,62,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}
+                            style={{ color: "rgba(255,255,255,0.65)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "13px", fontWeight: 500 }}
                         >
                             Log Out
                         </Link>

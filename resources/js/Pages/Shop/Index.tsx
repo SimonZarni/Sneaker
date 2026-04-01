@@ -69,36 +69,41 @@ export default function ShopIndex({ products, brands, categories, genders, filte
 
     return (
         <div style={{ minHeight: "100vh", backgroundColor: "#fff", fontFamily: "inherit" }}>
-            <Head title="Shop — Walker Sneaker" />
+            <Head title="Shop — Walker Sneaker Store" />
 
-            {/* ── NAV ── */}
-            <nav style={{ borderBottom: "1px solid #f0f0f0", backgroundColor: "#fff", position: "sticky", top: 0, zIndex: 50 }}>
-                <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#5B8C5A", textDecoration: "none" }}>
-                        Walker Sneaker
+            {/* ── NAV (green, matches site-wide style) ── */}
+            <nav style={{ backgroundColor: "#5B8C5A", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}>
+                <div style={{ maxWidth: "1400px", margin: "0 auto", padding: "0 32px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 700, color: "#fff", textDecoration: "none", whiteSpace: "nowrap" }}>
+                        Walker Sneaker Store
                     </Link>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "32px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
-                        <Link href={route("shop.index")} style={{ color: "#5B8C5A", textDecoration: "none", borderBottom: "2px solid #5B8C5A", paddingBottom: "2px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "28px", fontSize: "13px", fontWeight: 500 }}>
+                        <Link href={route("home")} style={{ color: "rgba(255,255,255,0.75)", textDecoration: "none" }}>Home</Link>
+                        <Link href={route("about")} style={{ color: "rgba(255,255,255,0.75)", textDecoration: "none" }}>About</Link>
+                        <Link href={route("shop.index")} style={{ color: "#fff", textDecoration: "none", borderBottom: "2px solid rgba(255,255,255,0.6)", paddingBottom: "2px" }}>
                             Shop
                         </Link>
-                        <Link href={route("about")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>About Us</Link>
                         {auth.user ? (
                             <>
-                                <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Orders</Link>
-                                <Link href={route("wishlist.index")} style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Wishlist</Link>
-                                <Link href="/logout" method="post" as="button" style={{ color: "rgba(45,50,62,0.4)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
+                                <Link href={route("orders.index")} style={{ color: "rgba(255,255,255,0.75)", textDecoration: "none" }}>Orders</Link>
+                                <Link href={route("wishlist.index")} style={{ color: "rgba(255,255,255,0.75)", textDecoration: "none" }}>Wishlist</Link>
+                                <Link href="/logout" method="post" as="button" style={{ color: "rgba(255,255,255,0.65)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "13px", fontWeight: 500 }}>
                                     Log Out
                                 </Link>
                             </>
                         ) : (
-                            <Link href="/login" style={{ color: "rgba(45,50,62,0.5)", textDecoration: "none" }}>Login</Link>
+                            <Link href="/login" style={{ color: "rgba(255,255,255,0.75)", textDecoration: "none" }}>Login</Link>
                         )}
-                        <button onClick={() => setIsCartOpen(true)} style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#5B8C5A" }}>
-                            Vault
-                            <span style={{ backgroundColor: "#5B8C5A", color: "#fff", padding: "2px 6px", borderRadius: "9999px", fontSize: "8px" }}>
-                                {cartCount}
-                            </span>
+                        <button onClick={() => setIsCartOpen(true)} aria-label="Cart" style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.85)" }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                            </svg>
+                            {cartCount > 0 && (
+                                <span style={{ backgroundColor: "#fff", color: "#5B8C5A", padding: "1px 6px", borderRadius: "9999px", fontSize: "10px", fontWeight: 700 }}>
+                                    {cartCount}
+                                </span>
+                            )}
                         </button>
                     </div>
                 </div>

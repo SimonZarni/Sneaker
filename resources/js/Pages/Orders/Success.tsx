@@ -50,11 +50,11 @@ export default function OrderSuccess({ order }: Props) {
             <Head title={`Order Confirmed — ${order.order_number}`} />
 
             {/* ── NAVBAR ── */}
-            <nav style={{ backgroundColor: "#5B8C5A", padding: "0 40px", height: "56px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
-                <Link href={route("home")} style={{ fontSize: "15px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "-0.04em", color: "#fff", textDecoration: "none" }}>
-                    Walker Sneaker
+            <nav style={{ backgroundColor: "#5B8C5A", padding: "0 40px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 2px 8px rgba(0,0,0,0.12)" }}>
+                <Link href={route("home")} style={{ fontSize: "16px", fontWeight: 700, color: "#fff", textDecoration: "none" }}>
+                    Walker Sneaker Store
                 </Link>
-                <Link href={route("orders.index")} style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>
+                <Link href={route("orders.index")} style={{ fontSize: "13px", fontWeight: 500, color: "rgba(255,255,255,0.75)", textDecoration: "none" }}>
                     My Orders
                 </Link>
             </nav>

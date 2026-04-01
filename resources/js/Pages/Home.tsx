@@ -5,13 +5,8 @@ import Footer from "@/Components/Footer";
 
 export default function Home({ featured }: any) {
     const { navigation, cart, auth }: any = usePage().props;
-
-    // State to track which top-level item is being hovered
-    const [activeMenu, setActiveMenu] = useState<{
-        type: "gender" | "brand";
-        id: number;
-    } | null>(null);
     const [isCartOpen, setIsCartOpen] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const cartCount =
         cart?.items?.reduce(
@@ -20,250 +15,172 @@ export default function Home({ featured }: any) {
         ) || 0;
 
     return (
-        <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
-            <Head title="Walker Sneaker — The Vault" />
+        <div className="min-h-screen bg-white text-brand-charcoal antialiased">
+            <Head title="Walker Sneaker Store — Home" />
 
-            {/* NAVIGATION WRAPPER */}
-            <nav
-                className="fixed top-0 w-full z-50 border-b border-brand-surface bg-brand-white/95 backdrop-blur-md"
-                onMouseLeave={() => setActiveMenu(null)} // Close menu when leaving the whole nav area
-            >
-                {/* Tier 1: Identity & Utility */}
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
-                    <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
-                        <Link
-                            href="/shop"
-                            className="hover:text-brand-slate transition-colors"
-                        >
-                            The Archive
-                        </Link>
-                        <Link
-                            href={route("about")}
-                            className="hover:text-brand-slate transition-colors"
-                        >
-                            About Us
-                        </Link>
-                    </div>
+            {/* ── NAVBAR ── */}
+            <nav className="fixed top-0 w-full z-50 bg-brand-charcoal shadow-md">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+                    <Link href="/" className="text-white font-bold text-lg tracking-tight whitespace-nowrap">
+                        Walker Sneaker Store
+                    </Link>
 
-                    <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
-                        <Link href="/">Walker Sneaker</Link>
-                    </h1>
-                    <div className="flex-1 flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+                    <div className="hidden md:flex items-center gap-8">
+                        <Link href={route("home")} className="text-white text-sm font-medium hover:text-white/70 transition-colors">
+                            Home
+                        </Link>
+                        <Link href={route("about")} className="text-white text-sm font-medium hover:text-white/70 transition-colors">
+                            About
+                        </Link>
+                        <Link href={route("shop.index")} className="text-white text-sm font-medium hover:text-white/70 transition-colors">
+                            Shop
+                        </Link>
                         {auth?.user ? (
                             <>
-                                {/* User is Logged In */}
-                                <Link
-                                    href="/profile"
-                                    className="hover:text-brand-slate transition-colors"
-                                >
+                                <Link href="/profile" className="text-white text-sm font-medium hover:text-white/70 transition-colors">
                                     {auth.user.name}
                                 </Link>
-
-                                <Link
-                                    href="/orders"
-                                    className="hover:text-brand-slate transition-colors"
-                                >
-                                    My Orders
-                                </Link>
-
-                                <Link
-                                    href="/logout"
-                                    method="post"
-                                    as="button"
-                                    className="hover:text-brand-slate transition-colors uppercase cursor-pointer"
-                                >
+                                <Link href="/logout" method="post" as="button" className="text-white text-sm font-medium hover:text-white/70 transition-colors cursor-pointer">
                                     Log Out
                                 </Link>
                             </>
                         ) : (
-                            /* User is Guest */
-                            <Link
-                                href="/login"
-                                className="hover:text-brand-slate transition-colors"
-                            >
+                            <Link href="/login" className="text-white text-sm font-medium hover:text-white/70 transition-colors">
                                 Login
                             </Link>
                         )}
+                    </div>
 
-                        {/* Vault / Cart */}
-                        <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 group">
-                            <span>Vault</span>
-                            <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px] group-hover:bg-brand-slate transition-colors">
-                                {cartCount}
-                            </span>
+                    <div className="flex items-center gap-4">
+                        <Link href={route("shop.index")} aria-label="Search" className="text-white/80 hover:text-white transition-colors">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <path strokeLinecap="round" d="M21 21l-4.35-4.35" />
+                            </svg>
+                        </Link>
+                        <Link href={route("wishlist.index")} aria-label="Wishlist" className="text-white/80 hover:text-white transition-colors">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                            </svg>
+                        </Link>
+                        <button onClick={() => setIsCartOpen(true)} aria-label="Cart" className="relative text-white/80 hover:text-white transition-colors">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                            </svg>
+                            {cartCount > 0 && (
+                                <span className="absolute -top-2 -right-2 bg-white text-brand-charcoal text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </button>
+                        <button onClick={() => setMobileMenuOpen(v => !v)} aria-label="Toggle menu" className="md:hidden text-white/80 hover:text-white">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M3 12h18M3 6h18M3 18h18"} />
+                            </svg>
                         </button>
                     </div>
                 </div>
 
-                {/* Tier 2: Discovery Taps */}
-                <div className="border-t border-brand-surface relative">
-                    <div className="mx-auto max-w-7xl px-4 flex justify-center gap-10 py-4">
-                        {/* Genders Loop */}
-                        {navigation.genders.map((gender: any) => (
-                            <div
-                                key={gender.id}
-                                onMouseEnter={() =>
-                                    setActiveMenu({
-                                        type: "gender",
-                                        id: gender.id,
-                                    })
-                                }
-                                className="relative py-2"
-                            >
-                                <Link
-                                    href={`/shop?gender=${gender.id}`}
-                                    className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${activeMenu?.type === "gender" && activeMenu?.id === gender.id ? "text-brand-charcoal" : "text-brand-slate/40 hover:text-brand-charcoal"}`}
-                                >
-                                    {gender.name}
-                                </Link>
-                            </div>
-                        ))}
-
-                        <div className="w-px h-3 bg-brand-surface self-center hidden md:block"></div>
-
-                        {/* Brands Loop */}
-                        {navigation.brands.slice(0, 4).map((brand: any) => (
-                            <div
-                                key={brand.id}
-                                onMouseEnter={() =>
-                                    setActiveMenu({
-                                        type: "brand",
-                                        id: brand.id,
-                                    })
-                                }
-                                className="relative py-2"
-                            >
-                                <Link
-                                    href={`/shop?brand=${brand.id}`}
-                                    className={`text-[10px] font-black uppercase tracking-[0.2em] transition-colors ${activeMenu?.type === "brand" && activeMenu?.id === brand.id ? "text-brand-charcoal" : "text-brand-slate/40 hover:text-brand-charcoal"}`}
-                                >
-                                    {brand.name}
-                                </Link>
-                            </div>
-                        ))}
+                {mobileMenuOpen && (
+                    <div className="md:hidden bg-brand-slate px-4 pb-4 space-y-1">
+                        <Link href={route("home")} className="block text-white text-sm font-medium py-2">Home</Link>
+                        <Link href={route("about")} className="block text-white text-sm font-medium py-2">About</Link>
+                        <Link href={route("shop.index")} className="block text-white text-sm font-medium py-2">Shop</Link>
+                        {auth?.user ? (
+                            <>
+                                <Link href="/profile" className="block text-white text-sm font-medium py-2">{auth.user.name}</Link>
+                                <Link href="/orders" className="block text-white text-sm font-medium py-2">My Orders</Link>
+                                <Link href="/logout" method="post" as="button" className="block text-white text-sm font-medium py-2 w-full text-left">Log Out</Link>
+                            </>
+                        ) : (
+                            <Link href="/login" className="block text-white text-sm font-medium py-2">Login</Link>
+                        )}
                     </div>
-
-                    {/* MEGA MENU DROPDOWN */}
-                    <div
-                        className={`absolute top-full left-0 w-full bg-brand-white border-b border-brand-surface transition-all duration-500 ease-in-out overflow-hidden shadow-2xl ${activeMenu ? "max-h-[500px] opacity-100 visible" : "max-h-0 opacity-0 invisible"}`}
-                    >
-                        <div className="mx-auto max-w-7xl px-8 py-16 grid grid-cols-12 gap-12">
-                            {/* Categories Column */}
-                            <div className="col-span-3 space-y-8">
-                                <div>
-                                    <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-brand-slate/30 mb-6">
-                                        Browse by Category
-                                    </h4>
-                                    <ul className="space-y-4">
-                                        {navigation.categories.map(
-                                            (category: any) => (
-                                                <li key={category.id}>
-                                                    <Link
-                                                        href={`/shop?${activeMenu?.type}=${activeMenu?.id}&category=${category.id}`}
-                                                        className="text-xs font-bold uppercase tracking-tighter hover:pl-2 transition-all block group"
-                                                    >
-                                                        <span className="group-hover:text-brand-slate transition-colors">
-                                                            {category.name}
-                                                        </span>
-                                                    </Link>
-                                                </li>
-                                            ),
-                                        )}
-                                    </ul>
-                                </div>
-                            </div>
-
-                            {/* Promotional / Visual Column */}
-                            <div className="col-span-9 grid grid-cols-2 gap-8">
-                                <div className="relative aspect-[16/7] bg-brand-surface overflow-hidden group">
-                                    <img
-                                        src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=1450&auto=format&fit=crop"
-                                        className="w-full h-full object-cover grayscale opacity-60 group-hover:scale-105 group-hover:grayscale-0 transition-all duration-1000"
-                                    />
-                                    <div className="absolute inset-0 p-8 flex flex-col justify-end bg-gradient-to-t from-brand-white/40 to-transparent">
-                                        <p className="text-[10px] font-black uppercase tracking-widest mb-1">
-                                            Seasonal Focus
-                                        </p>
-                                        <h5 className="text-2xl font-black uppercase tracking-tightest">
-                                            Archive Performance
-                                        </h5>
-                                    </div>
-                                </div>
-                                <div className="border border-brand-surface p-8 flex flex-col justify-center items-center text-center space-y-4">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.5em] text-brand-slate/30">
-                                        Free Priority Shipping
-                                    </p>
-                                    <p className="text-xs font-bold uppercase tracking-tight leading-relaxed max-w-[200px]">
-                                        Complimentary shipping on all vault
-                                        secures over $250.
-                                    </p>
-                                    <Link
-                                        href="/shop"
-                                        className="text-[9px] font-black uppercase border-b border-brand-charcoal pb-1"
-                                    >
-                                        Shop Everything
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                )}
             </nav>
 
-            {/* Hero Section */}
-            <section className="pt-48 pb-20 px-4">
-                <div className="mx-auto max-w-7xl">
-                    <div className="relative overflow-hidden bg-brand-surface h-[70vh] flex items-center group">
-                        <div className="absolute inset-0 z-0">
-                            <img
-                                src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop"
-                                className="w-full h-full object-cover grayscale brightness-75 transition-transform duration-1000 group-hover:scale-105"
-                                alt="Hero Sneaker"
-                            />
-                        </div>
-                        <div className="relative z-10 p-12 lg:p-24 space-y-6 max-w-3xl">
-                            <span className="text-xs font-black uppercase tracking-[0.4em] text-brand-white">
-                                Season 2026 // Archive
-                            </span>
-                            <h2 className="text-7xl lg:text-9xl font-black text-brand-white uppercase leading-[0.85] tracking-tightest">
-                                The New <br /> Standard.
+            {/* ── HERO (prototype: text left, sneaker image right) ── */}
+            <section className="pt-16 min-h-[88vh] flex items-center bg-white relative overflow-hidden">
+                <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-brand-surface/30 hidden lg:block" />
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 w-full relative">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[72vh]">
+                        {/* Left: Text */}
+                        <div className="space-y-6 py-16 lg:py-0">
+                            <p className="text-xs font-bold uppercase tracking-[0.4em] text-brand-charcoal/50">
+                                Welcome to
+                            </p>
+                            <h2 className="text-5xl lg:text-6xl font-black uppercase tracking-tight leading-tight text-brand-charcoal">
+                                Walker <br />Sneaker Store
                             </h2>
-                            <Link
-                                href="/shop"
-                                className="inline-block bg-brand-white text-brand-charcoal px-10 py-4 text-xs font-black uppercase tracking-widest hover:bg-brand-charcoal hover:text-brand-white transition-all transform hover:-translate-y-1"
-                            >
-                                Shop the Drop
-                            </Link>
+                            <p className="text-sm font-medium leading-relaxed text-gray-500 max-w-md">
+                                Walker Sneaker Store is a modern footwear retailer offering a wide range of popular sneaker brands
+                                and stylish urban footwear. The store focuses on delivering high-quality, trendy products that appeal
+                                to sneaker enthusiasts and everyday customers alike. With a customer-friendly shopping experience
+                                and reliable service, Walker has become a trusted destination for fashionable, authentic sneakers.
+                            </p>
+                            <div className="flex flex-wrap gap-4 pt-2">
+                                <Link
+                                    href={route("shop.index")}
+                                    className="inline-block bg-brand-charcoal text-white px-8 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-brand-slate transition-colors"
+                                >
+                                    Shop Now
+                                </Link>
+                                <Link
+                                    href={route("about")}
+                                    className="inline-block border-2 border-brand-charcoal text-brand-charcoal px-8 py-3.5 text-xs font-bold uppercase tracking-widest hover:bg-brand-surface transition-colors"
+                                >
+                                    About Us
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Right: Sneaker Image */}
+                        <div className="relative flex items-center justify-center py-8 lg:py-0">
+                            <div className="absolute w-80 h-80 lg:w-[420px] lg:h-[420px] rounded-full bg-brand-charcoal/6" />
+                            <img
+                                src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1470&auto=format&fit=crop"
+                                alt="Featured Sneaker"
+                                className="relative z-10 w-full max-w-md object-contain drop-shadow-2xl"
+                                style={{ transform: "rotate(-6deg) translateY(-8px)" }}
+                            />
+                            <div className="absolute top-8 right-0 lg:right-4 bg-brand-charcoal text-white px-4 py-2 shadow-lg z-20">
+                                <p className="text-[8px] font-black uppercase tracking-widest text-white/60">New Season</p>
+                                <p className="text-xs font-black uppercase">2026 Drop</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-
             {/* ── BRAND STRIP ── */}
-            <section className="py-0 border-b border-brand-surface">
+            <section className="py-16 bg-white border-t border-b border-gray-100">
                 <div className="mx-auto max-w-7xl px-4">
-                    <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-brand-surface">
+                    <div className="text-center mb-8">
+                        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-gray-400 mb-3">Our Brands</p>
+                        <p className="text-sm text-gray-400 max-w-xl mx-auto">
+                            Walker Sneaker Store carries a diverse range of trusted global brands, offering customers both sporty and casual lifestyle options. These brands provide high-quality footwear and apparel.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-100 border border-gray-100">
                         {navigation.brands.map((brand: any) => (
                             <Link
                                 key={brand.id}
                                 href={`/shop?brand=${brand.id}`}
-                                className="group flex flex-col items-center justify-center py-10 px-6 hover:bg-brand-surface/30 transition-colors gap-3"
+                                className="group flex flex-col items-center justify-center py-10 px-6 bg-white hover:bg-brand-surface/40 transition-colors gap-3"
                             >
-                                {/* Logo if available, else large text */}
                                 {brand.logo_url ? (
                                     <img
                                         src={brand.logo_url}
                                         alt={brand.name}
-                                        className="h-10 w-auto object-contain opacity-20 group-hover:opacity-80 transition-opacity duration-300 grayscale"
+                                        className="h-10 w-auto object-contain opacity-25 group-hover:opacity-80 transition-opacity duration-300 grayscale group-hover:grayscale-0"
                                     />
                                 ) : (
-                                    <span className="text-2xl font-black uppercase tracking-tightest text-brand-charcoal/15 group-hover:text-brand-charcoal transition-colors duration-300">
+                                    <span className="text-2xl font-black uppercase tracking-tightest text-gray-200 group-hover:text-brand-charcoal transition-colors duration-300">
                                         {brand.name}
                                     </span>
                                 )}
-                                <span className="text-[8px] font-black uppercase tracking-[0.3em] text-brand-slate/20 group-hover:text-brand-slate/50 transition-colors">
-                                    {brand.name} →
+                                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-300 group-hover:text-brand-charcoal/60 transition-colors">
+                                    {brand.name}
                                 </span>
                             </Link>
                         ))}
@@ -271,153 +188,79 @@ export default function Home({ featured }: any) {
                 </div>
             </section>
 
-            {/* Featured Grid */}
-            <section className="py-20 border-t border-brand-surface">
+            {/* ── FEATURED PRODUCTS ── */}
+            <section className="py-20 bg-brand-surface/20">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-end mb-12">
-                        <h3 className="text-4xl font-black uppercase tracking-tightest leading-none">
-                            Featured <br /> Selection
-                        </h3>
+                        <div>
+                            <p className="text-[9px] font-black uppercase tracking-[0.4em] text-brand-charcoal/40 mb-2">Hand-picked</p>
+                            <h3 className="text-3xl font-black uppercase tracking-tight leading-none">Featured Selection</h3>
+                        </div>
                         <Link
                             href="/shop"
-                            className="text-[10px] font-black uppercase border-b-2 border-brand-charcoal pb-1 tracking-widest hover:text-brand-slate hover:border-brand-slate transition-all"
+                            className="text-xs font-bold uppercase tracking-widest text-brand-charcoal border-b-2 border-brand-charcoal pb-0.5 hover:text-brand-slate hover:border-brand-slate transition-all"
                         >
-                            Explore All
+                            View All →
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-brand-surface border border-brand-surface overflow-hidden">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                         {featured.map((product: any) => (
                             <div
                                 key={product.id}
-                                className="bg-brand-white p-8 group transition-colors hover:bg-brand-surface/30 relative"
+                                className="bg-white overflow-hidden group shadow-sm hover:shadow-md transition-shadow relative border border-gray-100"
                             >
-                                <Link
-                                    href={`/shop/${product.id}`}
-                                    className="absolute inset-0 z-10"
-                                />
-                                <div className="aspect-square bg-brand-surface mb-6 overflow-hidden">
+                                <Link href={`/shop/${product.id}`} className="absolute inset-0 z-10" />
+                                <div className="aspect-square bg-gray-50 overflow-hidden">
                                     <img
                                         src={product.main_image_url}
-                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                                        alt={product.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                 </div>
-                                <p className="text-[10px] font-bold text-brand-slate/40 uppercase tracking-widest">
-                                    {product.brand?.name}
-                                </p>
-                                <h4 className="text-lg font-bold uppercase tracking-tighter mt-1">
-                                    {product.name}
-                                </h4>
-                                <div className="flex justify-between items-end mt-4">
-                                    <div className="flex items-center gap-3">
-                                        <p className={`text-sm font-black ${(product as any).is_on_sale ? "text-brand-charcoal" : ""}`}>
+                                <div className="p-4">
+                                    <p className="text-[9px] font-bold text-brand-charcoal/50 uppercase tracking-widest mb-1">
+                                        {product.brand?.name}
+                                    </p>
+                                    <h4 className="text-sm font-bold tracking-tight truncate">{product.name}</h4>
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <p className={`text-sm font-black ${(product as any).is_on_sale ? "text-brand-charcoal" : "text-gray-800"}`}>
                                             ${parseFloat((product as any).effective_price ?? product.base_price).toFixed(2)}
                                         </p>
                                         {(product as any).is_on_sale && (
-                                            <p className="text-xs font-medium text-brand-slate/35 line-through">
+                                            <p className="text-xs text-gray-400 line-through">
                                                 ${parseFloat(product.base_price).toFixed(2)}
                                             </p>
                                         )}
                                     </div>
-                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                                        Details →
-                                    </span>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
-
 
             {/* ── TRUST BAR ── */}
-            <section className="py-16 border-t border-brand-surface bg-brand-charcoal">
+            <section className="py-12 bg-white border-t border-b border-gray-100">
                 <div className="mx-auto max-w-7xl px-4">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-white/5">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
                         {[
-                            {
-                                icon: (
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-                                    </svg>
-                                ),
-                                title: "Free Shipping",
-                                body: "Complimentary on all orders. No minimums.",
-                            },
-                            {
-                                icon: (
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                                    </svg>
-                                ),
-                                title: "100% Authentic",
-                                body: "Every pair verified by our expert team.",
-                            },
-                            {
-                                icon: (
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                    </svg>
-                                ),
-                                title: "Easy Returns",
-                                body: "30-day hassle-free returns on unworn pairs.",
-                            },
-                            {
-                                icon: (
-                                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                                    </svg>
-                                ),
-                                title: "Secure Checkout",
-                                body: "Encrypted payments. Your data stays safe.",
-                            },
-                        ].map((item) => (
-                            <div key={item.title} className="flex flex-col items-center text-center px-8 py-12 bg-brand-charcoal space-y-4">
-                                <div className="text-white/30">
-                                    {item.icon}
-                                </div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">
-                                    {item.title}
-                                </p>
-                                <p className="text-[10px] font-medium text-white/40 leading-relaxed max-w-[160px]">
-                                    {item.body}
-                                </p>
+                            { icon: "🚚", title: "Free Shipping", body: "On all orders. No minimums." },
+                            { icon: "✅", title: "100% Authentic", body: "Every pair verified by experts." },
+                            { icon: "↩", title: "Easy Returns", body: "30-day hassle-free returns." },
+                            { icon: "🔒", title: "Secure Checkout", body: "Encrypted payments always." },
+                        ].map(item => (
+                            <div key={item.title} className="flex flex-col items-center space-y-2">
+                                <span className="text-2xl">{item.icon}</span>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-charcoal">{item.title}</p>
+                                <p className="text-[10px] text-gray-400 leading-relaxed">{item.body}</p>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Branding Ticker & Footer */}
-            <section className="py-24 bg-brand-surface text-brand-charcoal overflow-hidden">
-                <div className="flex animate-marquee-reverse whitespace-nowrap">
-                    {/* First Set */}
-                    <div className="flex shrink-0">
-                        {[...Array(5)].map((_, i) => (
-                            <span
-                                key={`a-${i}`}
-                                className="text-4xl font-black uppercase tracking-tightest mx-12 opacity-10"
-                            >
-                                Nike / Adidas / Jordan / New Balance
-                            </span>
-                        ))}
-                    </div>
-                    {/* Second Set (Identical) */}
-                    <div className="flex shrink-0">
-                        {[...Array(5)].map((_, i) => (
-                            <span
-                                key={`b-${i}`}
-                                className="text-4xl font-black uppercase tracking-tightest mx-12 opacity-10"
-                            >
-                                Nike / Adidas / Jordan / New Balance
-                            </span>
                         ))}
                     </div>
                 </div>
             </section>
 
             <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-
             <Footer />
         </div>
     );
