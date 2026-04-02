@@ -34,7 +34,9 @@ class GoogleAuthController extends Controller
             session(['oauth_source' => 'capacitor']);
             // Force Google to show the account chooser on every native login so the user
             // can pick which account to use, even when Chrome has a stored Google session.
-            return Socialite::driver('google')->with(['prompt' => 'select_account'])->redirect();
+            /** @var \Laravel\Socialite\Two\GoogleProvider $driver */
+            $driver = Socialite::driver('google');
+            return $driver->with(['prompt' => 'select_account'])->redirect();
         }
 
         return Socialite::driver('google')->redirect();
