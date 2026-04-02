@@ -308,8 +308,8 @@ export default function ProfileEdit({ orderStats, recentOrders, addresses, profi
                     </Link>
                     {/* Desktop links */}
                     <div className="hidden-mobile-profile" style={{ display: "flex", alignItems: "center", gap: "28px", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>
-                        <Link href={route("shop.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Shop</Link>
-                        <Link href={route("orders.index")} style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Orders</Link>
+                        <Link href={route("shop.index")} prefetch style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Shop</Link>
+                        <Link href={route("orders.index")} prefetch style={{ color: "rgba(45,50,62,0.4)", textDecoration: "none" }}>Orders</Link>
                         <span style={{ color: "#0A0A0A", borderBottom: "2px solid #0A0A0A", paddingBottom: "2px" }}>Account</span>
                         <Link href="/logout" method="post" as="button"
                             style={{ color: "rgba(45,50,62,0.35)", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: "10px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em" }}>

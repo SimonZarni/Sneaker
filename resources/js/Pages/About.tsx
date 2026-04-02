@@ -30,18 +30,18 @@ export default function About() {
                             { label: "The Archive", href: route("shop.index") },
                             { label: "About Us",    href: route("about") },
                         ].map(item => (
-                            <Link key={item.label} href={item.href} onClick={() => setMobileMenuOpen(false)}
+                            <Link key={item.label} href={item.href} prefetch onClick={() => setMobileMenuOpen(false)}
                                 className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors text-brand-charcoal">
                                 {item.label}
                             </Link>
                         ))}
                         {auth?.user ? (
                             <>
-                                <Link href="/profile" onClick={() => setMobileMenuOpen(false)}
+                                <Link href="/profile" prefetch onClick={() => setMobileMenuOpen(false)}
                                     className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
                                     {auth.user.name}
                                 </Link>
-                                <Link href="/orders" onClick={() => setMobileMenuOpen(false)}
+                                <Link href="/orders" prefetch onClick={() => setMobileMenuOpen(false)}
                                     className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
                                     My Orders
                                 </Link>
@@ -51,7 +51,7 @@ export default function About() {
                                 </Link>
                             </>
                         ) : (
-                            <Link href="/login" onClick={() => setMobileMenuOpen(false)}
+                            <Link href="/login" prefetch onClick={() => setMobileMenuOpen(false)}
                                 className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors">
                                 Login
                             </Link>
@@ -73,8 +73,8 @@ export default function About() {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
                     {/* Desktop left */}
                     <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
-                        <Link href={route("shop.index")} className="hover:text-brand-slate transition-colors">The Archive</Link>
-                        <Link href={route("about")} className="border-b-2 border-brand-charcoal pb-0.5">About Us</Link>
+                        <Link href={route("shop.index")} prefetch className="hover:text-brand-slate transition-colors">The Archive</Link>
+                        <Link href={route("about")} prefetch className="border-b-2 border-brand-charcoal pb-0.5">About Us</Link>
                     </div>
                     <h1 className="text-2xl font-black tracking-tightest uppercase flex-shrink-0">
                         <Link href={route("home")}>SNEAKER.DRP</Link>
@@ -83,13 +83,13 @@ export default function About() {
                     <div className="flex-1 hidden lg:flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
                         {auth?.user ? (
                             <>
-                                <Link href="/profile" className="hover:text-brand-slate transition-colors">{auth.user.name}</Link>
-                                <Link href="/orders" className="hover:text-brand-slate transition-colors">My Orders</Link>
+                                <Link href="/profile" prefetch className="hover:text-brand-slate transition-colors">{auth.user.name}</Link>
+                                <Link href="/orders" prefetch className="hover:text-brand-slate transition-colors">My Orders</Link>
                                 <Link href="/logout" method="post" as="button" className="hover:text-brand-slate transition-colors uppercase cursor-pointer">Log Out</Link>
                                 <NotificationBell userId={auth.user.id} />
                             </>
                         ) : (
-                            <Link href="/login" className="hover:text-brand-slate transition-colors">Login</Link>
+                            <Link href="/login" prefetch className="hover:text-brand-slate transition-colors">Login</Link>
                         )}
                         <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2 group">
                             <span>Vault</span>

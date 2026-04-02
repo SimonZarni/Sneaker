@@ -83,21 +83,21 @@ export default function WishlistIndex({ items }: Props) {
             <nav className="border-b border-brand-surface sticky top-0 bg-brand-white/90 backdrop-blur-md z-50">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-5">
                     {/* Logo */}
-                    <Link href={route("home")} className="text-xl font-black tracking-tightest uppercase flex-shrink-0">
+                    <Link href={route("home")} prefetch className="text-xl font-black tracking-tightest uppercase flex-shrink-0">
                         SNEAKER.DRP
                     </Link>
 
                     {/* Desktop links */}
                     <div className="hidden lg:flex items-center gap-8 text-[10px] font-black uppercase tracking-widest">
-                        <Link href={route("shop.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">Shop</Link>
-                        <Link href={route("orders.index")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">Orders</Link>
+                        <Link href={route("shop.index")} prefetch className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">Shop</Link>
+                        <Link href={route("orders.index")} prefetch className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">Orders</Link>
                         <span className="border-b-2 border-brand-charcoal pb-0.5">Wishlist</span>
                     </div>
 
                     {/* Desktop right */}
                     <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-widest">
                         {auth?.user && (
-                            <Link href={route("profile.edit")} className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
+                            <Link href={route("profile.edit")} prefetch className="text-brand-slate/40 hover:text-brand-charcoal transition-colors">
                                 {auth.user.name}
                             </Link>
                         )}

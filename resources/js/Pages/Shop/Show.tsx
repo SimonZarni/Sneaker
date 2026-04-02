@@ -175,9 +175,9 @@ export default function Show({
             {/* Nav */}
             <nav className="border-b border-brand-surface py-5 sticky top-0 bg-brand-white/90 backdrop-blur-md z-50">
                 <div className="mx-auto max-w-7xl px-4 flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                    <Link href="/shop" className="hover:text-brand-slate transition-colors">← Collection</Link>
+                    <Link href="/shop" prefetch className="hover:text-brand-slate transition-colors">← Collection</Link>
                     {/* <Link href={route("about")} className="hover:text-brand-slate transition-colors">About Us</Link> */}
-                    <Link href="/" className="text-xl tracking-tightest">SNEAKER.DRP</Link>
+                    <Link href="/" prefetch className="text-xl tracking-tightest">SNEAKER.DRP</Link>
                     <button onClick={() => setIsCartOpen(true)} className="flex items-center gap-2">
                         Vault <span className="bg-brand-charcoal text-brand-white px-1.5 py-0.5 rounded-full text-[8px]">{cartCount}</span>
                     </button>

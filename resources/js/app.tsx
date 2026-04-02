@@ -94,9 +94,7 @@ createInertiaApp({
             </NotificationProvider>
         );
     },
-    progress: {
-        color: '#4B5563',
-    },
+    progress: false,
 });
 
 import('@inertiajs/core').then(({ router }) => {

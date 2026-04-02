@@ -57,6 +57,7 @@ export default function Home({ featured }: any) {
                     <nav className="flex flex-col flex-1 px-6 py-8 gap-1 overflow-y-auto">
                         <Link
                             href="/shop"
+                            prefetch
                             onClick={() => setIsMobileMenuOpen(false)}
                             className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
                         >
@@ -64,6 +65,7 @@ export default function Home({ featured }: any) {
                         </Link>
                         <Link
                             href={route("about")}
+                            prefetch
                             onClick={() => setIsMobileMenuOpen(false)}
                             className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
                         >
@@ -74,6 +76,7 @@ export default function Home({ featured }: any) {
                             <>
                                 <Link
                                     href="/profile"
+                                    prefetch
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
                                 >
@@ -81,6 +84,7 @@ export default function Home({ featured }: any) {
                                 </Link>
                                 <Link
                                     href="/orders"
+                                    prefetch
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
                                 >
@@ -99,6 +103,7 @@ export default function Home({ featured }: any) {
                         ) : (
                             <Link
                                 href="/login"
+                                prefetch
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className="text-xs font-black uppercase tracking-widest py-3 border-b border-brand-surface hover:text-brand-slate transition-colors"
                             >
@@ -136,10 +141,10 @@ export default function Home({ featured }: any) {
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-between items-center py-6">
                     {/* Desktop left links */}
                     <div className="flex-1 hidden lg:flex gap-6 text-[10px] font-black uppercase tracking-widest">
-                        <Link href="/shop" className="hover:text-brand-slate transition-colors">
+                        <Link href="/shop" prefetch className="hover:text-brand-slate transition-colors">
                             The Archive
                         </Link>
-                        <Link href={route("about")} className="hover:text-brand-slate transition-colors">
+                        <Link href={route("about")} prefetch className="hover:text-brand-slate transition-colors">
                             About Us
                         </Link>
                     </div>
@@ -153,10 +158,10 @@ export default function Home({ featured }: any) {
                     <div className="flex-1 hidden lg:flex justify-end items-center gap-6 text-[10px] font-black uppercase tracking-widest">
                         {auth?.user ? (
                             <>
-                                <Link href="/profile" className="hover:text-brand-slate transition-colors">
+                                <Link href="/profile" prefetch className="hover:text-brand-slate transition-colors">
                                     {auth.user.name}
                                 </Link>
-                                <Link href="/orders" className="hover:text-brand-slate transition-colors">
+                                <Link href="/orders" prefetch className="hover:text-brand-slate transition-colors">
                                     My Orders
                                 </Link>
                                 <Link
@@ -170,7 +175,7 @@ export default function Home({ featured }: any) {
                                 <NotificationBell userId={auth.user.id} />
                             </>
                         ) : (
-                            <Link href="/login" className="hover:text-brand-slate transition-colors">
+                            <Link href="/login" prefetch className="hover:text-brand-slate transition-colors">
                                 Login
                             </Link>
                         )}
