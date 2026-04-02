@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 import { NotificationProvider } from '@/Contexts/NotificationContext';
 import NotificationToast from '@/Components/NotificationToast';
+import NavigationProgress from '@/Components/NavigationProgress';
 
 interface AppNotification {
     id: string;
@@ -89,6 +90,7 @@ createInertiaApp({
 
         root.render(
             <NotificationProvider>
+                <NavigationProgress />
                 <NotificationToast />
                 <App {...props} />
             </NotificationProvider>

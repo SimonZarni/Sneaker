@@ -19,7 +19,8 @@
       "Bash(\"C:/laragon/bin/mysql/mysql-8.0.30-winx64/bin/mysqld.exe\" --install)",
       "Bash(sc start:*)",
       "Bash(npx tsc:*)",
-      "Bash(php -l routes/web.php)"
+      "Bash(php -l routes/web.php)",
+      "Bash(grep -r \"theme\\\\|primary\" tailwind.config*)"
     ]
   }
 }
