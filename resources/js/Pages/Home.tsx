@@ -208,9 +208,9 @@ export default function Home({ featured }: any) {
                     </div>
                 </div>
 
-                {/* Tier 2: Discovery Taps — hidden on mobile */}
-                <div className="hidden md:block border-t border-brand-surface relative">
-                    <div className="mx-auto max-w-7xl px-4 flex justify-center gap-10 py-4">
+                {/* Tier 2: Discovery Taps */}
+                <div className="block border-t border-brand-surface relative" onMouseLeave={() => setActiveMenu(null)}>
+                    <div className="mx-auto max-w-7xl px-4 flex justify-center gap-10 py-4 overflow-x-auto">
                         {/* Genders Loop */}
                         {navigation.genders.map((gender: any) => (
                             <div
@@ -221,7 +221,14 @@ export default function Home({ featured }: any) {
                                         id: gender.id,
                                     })
                                 }
-                                className="relative py-2"
+                                onClick={() =>
+                                    setActiveMenu((prev) =>
+                                        prev?.type === "gender" && prev?.id === gender.id
+                                            ? null
+                                            : { type: "gender", id: gender.id }
+                                    )
+                                }
+                                className="relative py-2 cursor-pointer shrink-0"
                             >
                                 <Link
                                     href={`/shop?gender=${gender.id}`}
@@ -244,7 +251,14 @@ export default function Home({ featured }: any) {
                                         id: brand.id,
                                     })
                                 }
-                                className="relative py-2"
+                                onClick={() =>
+                                    setActiveMenu((prev) =>
+                                        prev?.type === "brand" && prev?.id === brand.id
+                                            ? null
+                                            : { type: "brand", id: brand.id }
+                                    )
+                                }
+                                className="relative py-2 cursor-pointer shrink-0"
                             >
                                 <Link
                                     href={`/shop?brand=${brand.id}`}
@@ -258,22 +272,23 @@ export default function Home({ featured }: any) {
 
                     {/* MEGA MENU DROPDOWN */}
                     <div
-                        className={`absolute top-full left-0 w-full bg-brand-white border-b border-brand-surface transition-all duration-500 ease-in-out overflow-hidden shadow-2xl ${activeMenu ? "max-h-[500px] opacity-100 visible" : "max-h-0 opacity-0 invisible"}`}
+                        className={`absolute top-full left-0 w-full bg-brand-white border-b border-brand-surface transition-all duration-500 ease-in-out overflow-hidden shadow-2xl ${activeMenu ? "max-h-[600px] opacity-100 visible" : "max-h-0 opacity-0 invisible"}`}
                     >
-                        <div className="mx-auto max-w-7xl px-8 py-16 grid grid-cols-12 gap-12">
+                        <div className="mx-auto max-w-7xl px-4 md:px-8 py-8 md:py-16 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
                             {/* Categories Column */}
-                            <div className="col-span-3 space-y-8">
+                            <div className="md:col-span-3 space-y-8">
                                 <div>
                                     <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-brand-slate/30 mb-6">
                                         Browse by Category
                                     </h4>
-                                    <ul className="space-y-4">
+                                    <ul className="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-4 md:space-y-0">
                                         {navigation.categories.map(
                                             (category: any) => (
                                                 <li key={category.id}>
                                                     <Link
                                                         href={`/shop?${activeMenu?.type}=${activeMenu?.id}&category=${category.id}`}
                                                         className="text-xs font-bold uppercase tracking-tighter hover:pl-2 transition-all block group"
+                                                        onClick={() => setActiveMenu(null)}
                                                     >
                                                         <span className="group-hover:text-brand-slate transition-colors">
                                                             {category.name}
@@ -287,7 +302,7 @@ export default function Home({ featured }: any) {
                             </div>
 
                             {/* Promotional / Visual Column */}
-                            <div className="col-span-9 grid grid-cols-2 gap-8">
+                            <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="relative aspect-[16/7] bg-brand-surface overflow-hidden group">
                                     <img
                                         src="https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?q=80&w=1450&auto=format&fit=crop"
