@@ -273,7 +273,7 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                             )}
                         </div>
                         <button
-                            onClick={handleCheckout}
+                            onClick={() => handleCheckout()}
                             disabled={localItems.length === 0 || isSaving}
                             className="block w-full bg-brand-charcoal text-brand-white py-6 text-center text-[10px] font-black uppercase tracking-[0.3em] hover:bg-brand-slate transition-all disabled:bg-brand-slate/20 disabled:cursor-not-allowed"
                         >
