@@ -75,10 +75,12 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
         );
     };
 
-    // ── Checkout: persist everything then navigate ────────────────────────────
-    const handleCheckout = () => {
+    // ── Checkout: persist quantities then navigate ────────────────────────────
+    // Pass checkoutItemIds to restrict which items get checked out.
+    const handleCheckout = (checkoutItemIds?: number[]) => {
         router.post(route('cart.bulk-update'), {
             items: localItems.map(item => ({ id: item.id, quantity: item.quantity })),
+            ...(checkoutItemIds ? { checkout_item_ids: checkoutItemIds } : {}),
         });
     };
 
@@ -181,12 +183,20 @@ export default function CartDrawer({ isOpen, onClose }: { isOpen: boolean; onClo
                                                     <h3 className="text-sm font-black uppercase tracking-tight pr-4">
                                                         {item.product_variant.product.name}
                                                     </h3>
-                                                    <button
-                                                        onClick={() => handleRemove(item.id)}
-                                                        className="text-[9px] font-black uppercase text-red-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                                    >
-                                                        Remove
-                                                    </button>
+                                                    <div className="flex flex-col items-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                                        <button
+                                                            onClick={() => handleCheckout([item.id])}
+                                                            className="text-[9px] font-black uppercase text-brand-charcoal hover:opacity-50 transition-opacity"
+                                                        >
+                                                            Checkout
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleRemove(item.id)}
+                                                            className="text-[9px] font-black uppercase text-red-500 hover:opacity-70 transition-opacity"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <p className="text-[9px] font-bold text-brand-slate/60 uppercase mt-2 tracking-widest">
                                                     US {item.product_variant.size.size_value} // {item.product_variant.color.name}

@@ -38,6 +38,19 @@ class CheckoutController extends Controller
             return redirect()->route('shop.index')->with('error', 'Your vault is empty.');
         }
 
+        // Filter to specific items if the user chose to checkout a single item
+        $checkoutItemIds = session()->pull('checkout_item_ids');
+        if ($checkoutItemIds) {
+            $cart->setRelation(
+                'items',
+                $cart->items->filter(fn($item) => in_array($item->id, $checkoutItemIds))->values()
+            );
+        }
+
+        if ($cart->items->isEmpty()) {
+            return redirect()->route('shop.index')->with('error', 'Selected items are no longer in your vault.');
+        }
+
         $savedAddresses = UserAddress::where('user_id', $user->id)
             ->orderBy('is_default', 'desc')
             ->get();
@@ -54,9 +67,10 @@ class CheckoutController extends Controller
         $shippingFee = (float) Setting::get('shipping_fee', '0.00');
 
         return Inertia::render('Shop/Checkout', [
-            'cart'           => $cart,
-            'savedAddresses' => $savedAddresses,
-            'shippingFee'    => $shippingFee,
+            'cart'            => $cart,
+            'savedAddresses'  => $savedAddresses,
+            'shippingFee'     => $shippingFee,
+            'checkoutItemIds' => $checkoutItemIds ?? null,
         ]);
     }
 
@@ -87,6 +101,9 @@ class CheckoutController extends Controller
             $rules['card_cvc']        = 'required|digits_between:3,4';
         }
 
+        $rules['checkout_item_ids']   = 'nullable|array';
+        $rules['checkout_item_ids.*'] = 'integer';
+
         $validated = $request->validate($rules);
 
         $user = Auth::user();
@@ -115,10 +132,23 @@ class CheckoutController extends Controller
 
         // Guard: cart missing entirely, or all items were removed/deactivated
         // between the page load and the form submission.
-        // Without this, firstOrFail() would 404, or a $0 order would be created.
         if (!$cart || $cart->items->isEmpty()) {
             return redirect()->route('shop.index')
                 ->with('error', 'Your cart is empty. Please add items before checking out.');
+        }
+
+        // If the user checked out a specific subset of items, filter to those only
+        $checkoutItemIds = $request->input('checkout_item_ids');
+        if ($checkoutItemIds) {
+            $cart->setRelation(
+                'items',
+                $cart->items->filter(fn($item) => in_array($item->id, $checkoutItemIds))->values()
+            );
+        }
+
+        if ($cart->items->isEmpty()) {
+            return redirect()->route('shop.index')
+                ->with('error', 'Selected items are no longer in your vault.');
         }
 
         $subtotal = $cart->items->reduce(function ($carry, $item) {
@@ -260,8 +290,8 @@ class CheckoutController extends Controller
                 'paid_at'         => $isCard ? now() : null,
             ]);
 
-            // F. Clear the Cart
-            $cart->items()->delete();
+            // F. Remove only the checked-out items from the cart
+            $cart->items()->whereIn('id', $cart->items->pluck('id'))->delete();
 
             return $order; // Return order from transaction so we can email after
         });

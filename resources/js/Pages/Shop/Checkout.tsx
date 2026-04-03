@@ -25,7 +25,7 @@ function effectivePrice(item: any): number {
     return parseFloat(product.base_price);
 }
 
-export default function Checkout({ cart, savedAddresses, shippingFee }: { cart: any; savedAddresses: Address[]; shippingFee: number }) {
+export default function Checkout({ cart, savedAddresses, shippingFee, checkoutItemIds }: { cart: any; savedAddresses: Address[]; shippingFee: number; checkoutItemIds?: number[] | null }) {
     const { data, setData, post, processing, errors } = useForm({
         shipping_full_name:    '',
         shipping_phone:        '',
@@ -39,6 +39,7 @@ export default function Checkout({ cart, savedAddresses, shippingFee }: { cart: 
         card_number:           '',
         card_expiry:           '',
         card_cvc:              '',
+        checkout_item_ids:     checkoutItemIds ?? null,
     });
 
     const [cardNumberDisplay, setCardNumberDisplay] = useState('');

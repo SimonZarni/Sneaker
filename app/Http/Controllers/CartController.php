@@ -87,9 +87,11 @@ class CartController extends Controller
     public function bulkUpdate(Request $request)
     {
         $request->validate([
-            'items'              => 'required|array',
-            'items.*.id'         => 'required|exists:cart_items,id',
-            'items.*.quantity'   => 'required|integer|min:1|max:99',
+            'items'               => 'required|array',
+            'items.*.id'          => 'required|exists:cart_items,id',
+            'items.*.quantity'    => 'required|integer|min:1|max:99',
+            'checkout_item_ids'   => 'nullable|array',
+            'checkout_item_ids.*' => 'integer|exists:cart_items,id',
         ]);
 
         foreach ($request->items as $itemData) {
@@ -103,6 +105,13 @@ class CartController extends Controller
             $quantity = min((int) $itemData['quantity'], max($stock, 1));
 
             $cartItem->update(['quantity' => $quantity]);
+        }
+
+        // Store selected item IDs in session so checkout knows which items to process
+        if ($request->filled('checkout_item_ids')) {
+            session(['checkout_item_ids' => $request->checkout_item_ids]);
+        } else {
+            session()->forget('checkout_item_ids');
         }
 
         return redirect()->route('checkout.index');
