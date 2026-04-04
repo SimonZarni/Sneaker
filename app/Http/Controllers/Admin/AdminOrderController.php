@@ -79,7 +79,7 @@ class AdminOrderController extends Controller
 
     public function show(int $id)
     {
-        $order = Order::with(['user', 'items.product', 'payment'])->findOrFail($id);
+        $order = Order::with(['user', 'items.product', 'payment', 'returnRequests.items'])->findOrFail($id);
 
         return Inertia::render('Admin/Orders/Show', [
             'order'         => $this->formatOrder($order),
@@ -134,7 +134,11 @@ class AdminOrderController extends Controller
                 ]);
             }
 
-            $order->update(['delivery_status' => $request->delivery_status]);
+            $updates = ['delivery_status' => $request->delivery_status];
+            if ($request->delivery_status === 'Delivered') {
+                $updates['delivered_at'] = now();
+            }
+            $order->update($updates);
         });
 
         // ── Broadcast real-time notification to user via Pusher ───────────────
@@ -265,6 +269,15 @@ class AdminOrderController extends Controller
             'cancelled_at'          => $order->cancelled_at?->toISOString(),
             'cancellation_reason'   => $order->cancellation_reason,
             'cancellation_note'     => $order->cancellation_note,
+            'delivered_at'          => $order->delivered_at?->toISOString(),
+            'return_requests'       => $order->returnRequests->map(fn($r) => [
+                'id'            => $r->id,
+                'status'        => $r->status,
+                'refund_method' => $r->refund_method,
+                'refund_amount' => $r->refund_amount,
+                'item_count'    => $r->items->sum('quantity'),
+                'requested_at'  => $r->requested_at?->toISOString(),
+            ])->all(),
             'customer_name'         => $order->user?->name,
             'customer_email'        => $order->user?->email,
             'shipping_full_name'    => $order->shipping_full_name,

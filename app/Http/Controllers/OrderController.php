@@ -36,7 +36,7 @@ class OrderController extends Controller
 
     public function show(int $id)
     {
-        $order = Order::with(['items.product', 'payment'])
+        $order = Order::with(['items.product', 'payment', 'returnRequests.items'])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
 
@@ -172,8 +172,18 @@ class OrderController extends Controller
             'payment_status'        => $order->payment_status,
             'placed_at'             => $order->placed_at?->toISOString(),
             'cancelled_at'          => $order->cancelled_at?->toISOString(),
+            'delivered_at'          => $order->delivered_at?->toISOString(),
             'cancellation_reason'   => $order->cancellation_reason,
             'cancellation_note'     => $order->cancellation_note,
+            'return_request'        => ($latestReturn = $order->returnRequests->sortByDesc('requested_at')->first()) ? [
+                'id'            => $latestReturn->id,
+                'status'        => $latestReturn->status,
+                'refund_method' => $latestReturn->refund_method,
+                'refund_amount' => $latestReturn->refund_amount,
+                'admin_note'    => $latestReturn->admin_note,
+                'requested_at'  => $latestReturn->requested_at?->toISOString(),
+                'item_ids'      => $latestReturn->items->pluck('order_item_id')->all(),
+            ] : null,
             'shipping_full_name'    => $order->shipping_full_name,
             'shipping_phone'        => $order->shipping_phone,
             'shipping_address_line' => $order->shipping_address_line,

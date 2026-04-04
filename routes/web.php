@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminReturnController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PushController;
+use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Admin\AdminReviewController;
@@ -76,6 +78,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{id}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{id}/return', [ReturnController::class, 'store'])->name('orders.return');
 
     // Wishlist
     Route::get('/wishlist',              [WishlistController::class, 'index'])->name('wishlist.index');
@@ -121,6 +124,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/orders/{id}/invoice', [AdminOrderController::class, 'downloadInvoice'])->name('orders.invoice');
         Route::patch('/orders/{id}/delivery', [AdminOrderController::class, 'updateDeliveryStatus'])->name('orders.updateDelivery');
         Route::post('/orders/{id}/cancel',   [AdminOrderController::class, 'cancel'])->name('orders.cancel');
+
+        // Returns
+        Route::get('/returns',                    [AdminReturnController::class, 'index'])->name('returns.index');
+        Route::get('/returns/{id}',               [AdminReturnController::class, 'show'])->name('returns.show');
+        Route::post('/returns/{id}/approve',      [AdminReturnController::class, 'approve'])->name('returns.approve');
+        Route::post('/returns/{id}/reject',       [AdminReturnController::class, 'reject'])->name('returns.reject');
+        Route::post('/returns/{id}/refund',       [AdminReturnController::class, 'markRefunded'])->name('returns.refund');
 
         // Settings (brands, categories, genders, colors)
         Route::patch('/settings/shipping-fee', [\App\Http\Controllers\Admin\AdminSettingsController::class, 'updateShippingFee'])->name('settings.shippingFee');

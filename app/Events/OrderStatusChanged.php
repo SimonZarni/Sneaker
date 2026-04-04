@@ -22,11 +22,15 @@ class OrderStatusChanged implements ShouldBroadcastNow
     {
         // Map event type to human-readable message and icon
         $map = [
-            'confirmed'   => ['🎉', 'Order Confirmed',   "Order {$order->order_number} was placed successfully."],
-            'processing'  => ['⚙️',  'Order Processing',  "Order {$order->order_number} is being prepared."],
-            'shipped'     => ['📦', 'Order Shipped',     "Order {$order->order_number} is on its way to you."],
-            'delivered'   => ['✅', 'Order Delivered',   "Order {$order->order_number} has arrived. Enjoy your kicks!"],
-            'cancelled'   => ['❌', 'Order Cancelled',   "Order {$order->order_number} has been cancelled."],
+            'confirmed'        => ['🎉', 'Order Confirmed',        "Order {$order->order_number} was placed successfully."],
+            'processing'       => ['⚙️',  'Order Processing',       "Order {$order->order_number} is being prepared."],
+            'shipped'          => ['📦', 'Order Shipped',          "Order {$order->order_number} is on its way to you."],
+            'delivered'        => ['✅', 'Order Delivered',        "Order {$order->order_number} has arrived. Enjoy your kicks!"],
+            'cancelled'        => ['❌', 'Order Cancelled',        "Order {$order->order_number} has been cancelled."],
+            'return_requested' => ['🔄', 'Return Requested',       "Your return request for order {$order->order_number} has been received."],
+            'return_approved'  => ['✅', 'Return Approved',        "Your return for order {$order->order_number} has been approved."],
+            'return_rejected'  => ['❌', 'Return Rejected',        "Your return request for order {$order->order_number} was not approved."],
+            'return_refunded'  => ['💜', 'Refund Processed',       "Your refund for order {$order->order_number} has been processed."],
         ];
 
         [$this->icon, $this->title, $this->message] = $map[$type] ?? ['🔔', 'Order Update', "Order {$order->order_number} was updated."];

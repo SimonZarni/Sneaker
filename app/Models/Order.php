@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Order extends Model
 {
@@ -29,13 +30,15 @@ class Order extends Model
         'cancellation_reason',
         'cancellation_note',
         'shipping_fee',
+        'delivered_at',
     ];
 
     protected $casts = [
         'placed_at'    => 'datetime',
-        'cancelled_at' => 'datetime',
-        'total_amount' => 'decimal:2',
-        'shipping_fee' => 'decimal:2',
+        'cancelled_at'  => 'datetime',
+        'delivered_at'  => 'datetime',
+        'total_amount'  => 'decimal:2',
+        'shipping_fee'  => 'decimal:2',
     ];
 
     public function user(): BelongsTo
@@ -51,5 +54,10 @@ class Order extends Model
     public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
+    }
+
+    public function returnRequests(): HasMany
+    {
+        return $this->hasMany(ReturnRequest::class);
     }
 }
