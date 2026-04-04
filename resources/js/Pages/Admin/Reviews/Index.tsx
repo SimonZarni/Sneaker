@@ -141,7 +141,7 @@ function ReviewRow({ review, onDelete }: { review: Review; onDelete: () => void 
                         {review.user_name}
                     </span>
                     <span style={{ fontSize: "8px", color: "rgba(45,50,62,0.25)", fontWeight: 600 }}>
-                        {new Date(review.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                        {new Date(review.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric"})}
                     </span>
                 </div>
 

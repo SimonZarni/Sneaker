@@ -58,7 +58,7 @@ const REASONS = [
 function fmtDate(iso: string) {
     // Parse with timeZone:"UTC" so the displayed date matches the stored date.
     // Without this, e.g. 2026-03-14 21:51:30 UTC shows as Mar 15 in UTC+7.
-    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 const D_BG:  Record<string,string> = { Pending:"#fffbeb", Processing:"#eff6ff", Shipped:"#f5f3ff", Delivered:"#ecfdf5", Cancelled:"#fef2f2" };
