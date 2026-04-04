@@ -447,12 +447,19 @@ export default function OrdersShow({ order }: Props) {
                             <StatusPill label={order.payment_status} />
                             <StatusPill label={order.delivery_status} />
                             <button
-                                onClick={() => {
+                                onClick={async () => {
                                     const url = route("orders.invoice", order.id);
                                     if (Capacitor.isNativePlatform()) {
                                         Browser.open({ url });
                                     } else {
-                                        window.open(url, "_blank", "noopener,noreferrer");
+                                        const res = await fetch(url, { credentials: "same-origin" });
+                                        const blob = await res.blob();
+                                        const blobUrl = URL.createObjectURL(blob);
+                                        const a = document.createElement("a");
+                                        a.href = blobUrl;
+                                        a.download = `invoice-${order.order_number}.pdf`;
+                                        a.click();
+                                        URL.revokeObjectURL(blobUrl);
                                     }
                                 }}
                                 className="inline-flex items-center gap-2 border border-brand-charcoal px-4 py-2 text-[8px] font-black uppercase tracking-[0.3em] hover:bg-brand-charcoal hover:text-white transition-colors"

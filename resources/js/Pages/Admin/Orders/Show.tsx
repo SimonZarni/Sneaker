@@ -308,12 +308,19 @@ export default function AdminOrdersShow({ order, deliverySteps, admin }: Props) 
                     <DPill label={order.delivery_status} />
                     <PPill label={order.payment_status} />
                     <button
-                        onClick={() => {
+                        onClick={async () => {
                             const url = route("admin.orders.invoice", order.id);
                             if (Capacitor.isNativePlatform()) {
                                 Browser.open({ url });
                             } else {
-                                window.open(url, "_blank", "noopener,noreferrer");
+                                const res = await fetch(url, { credentials: "same-origin" });
+                                const blob = await res.blob();
+                                const blobUrl = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = blobUrl;
+                                a.download = `invoice-${order.order_number}.pdf`;
+                                a.click();
+                                URL.revokeObjectURL(blobUrl);
                             }
                         }}
                         style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 14px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", border: "1px solid #0A0A0A", color: "#0A0A0A", backgroundColor: "#fff", cursor: "pointer" }}
