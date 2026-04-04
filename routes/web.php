@@ -67,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{id}/success', [OrderController::class, 'success'])->name('orders.success');
+    Route::get('/orders/{id}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 
@@ -110,6 +111,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Orders
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/{id}', [AdminOrderController::class, 'show'])->name('orders.show');
+        Route::get('/orders/{id}/invoice', [AdminOrderController::class, 'downloadInvoice'])->name('orders.invoice');
         Route::patch('/orders/{id}/delivery', [AdminOrderController::class, 'updateDeliveryStatus'])->name('orders.updateDelivery');
         Route::post('/orders/{id}/cancel',   [AdminOrderController::class, 'cancel'])->name('orders.cancel');
 

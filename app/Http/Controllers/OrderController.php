@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\ProductVariant;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +54,31 @@ class OrderController extends Controller
         return Inertia::render('Orders/Success', [
             'order' => $this->formatOrder($order),
         ]);
+    }
+
+    public function downloadInvoice(int $id)
+    {
+        $order = Order::with(['items.product', 'payment'])
+            ->where('user_id', Auth::id())
+            ->findOrFail($id);
+
+        $data = $this->formatOrder($order);
+
+        $total      = (float) $data['total_amount'];
+        $shipping   = (float) ($data['shipping_fee'] ?? 0);
+        $tax        = round($total * 0.07, 2);
+        $subtotal   = round($total - $tax, 2);
+
+        $pdf = Pdf::loadView('pdf.invoice', [
+            'order'      => $data,
+            'subtotal'   => $subtotal,
+            'shippingFee'=> $shipping,
+            'tax'        => $tax,
+            'placedAt'   => $order->placed_at?->format('M j, Y'),
+        ]);
+
+        $filename = 'invoice-' . $data['order_number'] . '.pdf';
+        return $pdf->download($filename);
     }
 
     public function cancel(Request $request, int $id)

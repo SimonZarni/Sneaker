@@ -7,6 +7,7 @@ use App\Events\OrderStatusChanged;
 use App\Mail\OrderDelivered;
 use App\Models\Order;
 use App\Models\ProductVariant;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -85,6 +86,29 @@ class AdminOrderController extends Controller
             'deliverySteps' => self::DELIVERY_STEPS,
             'admin'         => ['name' => Auth::guard('admin')->user()->full_name],
         ]);
+    }
+
+    public function downloadInvoice(int $id)
+    {
+        $order = Order::with(['user', 'items.product', 'payment'])->findOrFail($id);
+
+        $data = $this->formatOrder($order);
+
+        $total      = (float) $data['total_amount'];
+        $shipping   = (float) ($data['shipping_fee'] ?? 0);
+        $tax        = round($total * 0.07, 2);
+        $subtotal   = round($total - $tax, 2);
+
+        $pdf = Pdf::loadView('pdf.invoice', [
+            'order'      => $data,
+            'subtotal'   => $subtotal,
+            'shippingFee'=> $shipping,
+            'tax'        => $tax,
+            'placedAt'   => $order->placed_at?->format('M j, Y'),
+        ]);
+
+        $filename = 'invoice-' . $data['order_number'] . '.pdf';
+        return $pdf->download($filename);
     }
 
     public function updateDeliveryStatus(Request $request, int $id)
