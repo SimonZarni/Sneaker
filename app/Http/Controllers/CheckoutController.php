@@ -6,6 +6,7 @@ use App\Events\NewOrderPlaced;
 use App\Events\OrderStatusChanged;
 use App\Mail\OrderConfirmation;
 use App\Models\Cart;
+use App\Models\PromoCode;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Models\Setting;
@@ -104,6 +105,7 @@ class CheckoutController extends Controller
 
         $rules['checkout_item_ids']   = 'nullable|array';
         $rules['checkout_item_ids.*'] = 'integer';
+        $rules['promo_code']          = 'nullable|string|max:50';
 
         $validated = $request->validate($rules);
 
@@ -162,8 +164,24 @@ class CheckoutController extends Controller
             return $carry + ($price * $item->quantity);
         }, 0);
 
-        $shippingFee = (float) Setting::get('shipping_fee', '0.00');
-        $totalAmount = $subtotal + $shippingFee;
+        $shippingFee    = (float) Setting::get('shipping_fee', '0.00');
+        $discountAmount = 0.0;
+        $promoCodeModel = null;
+
+        // ── Validate promo code server-side ───────────────────────────────────
+        if (!empty($validated['promo_code'])) {
+            $promoCodeModel = PromoCode::where('code', strtoupper(trim($validated['promo_code'])))->first();
+
+            if ($promoCodeModel) {
+                $promoResult = $promoCodeModel->validate($subtotal, $user->id);
+                if ($promoResult['valid']) {
+                    $discountAmount = $promoResult['discount'];
+                }
+                // If invalid, we silently ignore it (user was already shown the error on apply)
+            }
+        }
+
+        $totalAmount = max(0, $subtotal + $shippingFee - $discountAmount);
 
         // ── Determine payment statuses ────────────────────────────────────────
         // Card  → payment confirmed immediately
@@ -171,7 +189,7 @@ class CheckoutController extends Controller
         $paymentStatus = $isCard ? 'Confirmed' : 'COD';
 
         // ── DB Transaction ────────────────────────────────────────────────────
-        $order = DB::transaction(function () use ($validated, $user, $cart, $subtotal, $totalAmount, $shippingFee, $isCard, $paymentStatus) {
+        $order = DB::transaction(function () use ($validated, $user, $cart, $subtotal, $totalAmount, $shippingFee, $discountAmount, $promoCodeModel, $isCard, $paymentStatus) {
 
             // A. Stock validation — acquire row-level write locks so two concurrent
             //    checkouts for the same variant cannot both read sufficient stock
@@ -242,6 +260,8 @@ class CheckoutController extends Controller
                 'order_number'          => $this->generateOrderNumber(),
                 'total_amount'          => $totalAmount,
                 'shipping_fee'          => $shippingFee,
+                'promo_code_id'         => $promoCodeModel?->id,
+                'discount_amount'       => $discountAmount,
                 'order_status'          => 'Confirmed',
                 'payment_status'        => $paymentStatus,
                 'delivery_status'       => 'Pending',
@@ -296,6 +316,11 @@ class CheckoutController extends Controller
 
             return $order; // Return order from transaction so we can email after
         });
+
+        // Increment promo code usage counter (outside transaction — non-critical)
+        if ($promoCodeModel) {
+            $promoCodeModel->increment('uses_count');
+        }
 
         // Bust admin dashboard stats cache so new order shows immediately
         \Illuminate\Support\Facades\Cache::forget('dashboard.stats');

@@ -30,15 +30,18 @@ class Order extends Model
         'cancellation_reason',
         'cancellation_note',
         'shipping_fee',
+        'promo_code_id',
+        'discount_amount',
         'delivered_at',
     ];
 
     protected $casts = [
-        'placed_at'    => 'datetime',
-        'cancelled_at'  => 'datetime',
-        'delivered_at'  => 'datetime',
-        'total_amount'  => 'decimal:2',
-        'shipping_fee'  => 'decimal:2',
+        'placed_at'       => 'datetime',
+        'cancelled_at'    => 'datetime',
+        'delivered_at'    => 'datetime',
+        'total_amount'    => 'decimal:2',
+        'shipping_fee'    => 'decimal:2',
+        'discount_amount' => 'decimal:2',
     ];
 
     public function user(): BelongsTo

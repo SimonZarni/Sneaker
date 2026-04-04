@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head, useForm, Link } from '@inertiajs/react';
+import React, { useState, useRef } from 'react';
+import { Head, useForm, Link, router } from '@inertiajs/react';
 
 interface Address {
     id: number;
@@ -40,10 +40,54 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
         card_expiry:           '',
         card_cvc:              '',
         checkout_item_ids:     checkoutItemIds ?? null,
+        promo_code:            '' as string,
     });
 
     const [cardNumberDisplay, setCardNumberDisplay] = useState('');
     const [expiryDisplay, setExpiryDisplay]         = useState('');
+
+    // Promo code state
+    const [promoInput, setPromoInput]   = useState('');
+    const [promoApplied, setPromoApplied] = useState<{ code: string; discount: number; message: string } | null>(null);
+    const [promoError, setPromoError]   = useState('');
+    const [promoLoading, setPromoLoading] = useState(false);
+
+    const applyPromo = async () => {
+        if (!promoInput.trim()) return;
+        setPromoLoading(true);
+        setPromoError('');
+        setPromoApplied(null);
+
+        try {
+            const res = await fetch(route('promo.apply'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ code: promoInput.trim() }),
+            });
+            const json = await res.json();
+            if (json.valid) {
+                setPromoApplied({ code: json.code, discount: json.discount, message: json.message });
+                setData('promo_code', json.code);
+            } else {
+                setPromoError(json.error ?? 'Invalid promo code.');
+            }
+        } catch {
+            setPromoError('Failed to apply promo code. Please try again.');
+        } finally {
+            setPromoLoading(false);
+        }
+    };
+
+    const removePromo = () => {
+        setPromoApplied(null);
+        setPromoInput('');
+        setPromoError('');
+        setData('promo_code', '');
+    };
 
     const isCard = data.payment_method === 'Credit Card';
     const isCOD  = data.payment_method === 'COD';
@@ -76,11 +120,12 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
     };
 
     // Use variant_price when set, fall back to product base_price
-    const subtotal = cart.items.reduce(
+    const subtotal  = cart.items.reduce(
         (acc: number, item: any) => acc + effectivePrice(item) * item.quantity,
         0,
     );
-    const total = subtotal + shippingFee;
+    const discount = promoApplied?.discount ?? 0;
+    const total    = Math.max(0, subtotal + shippingFee - discount);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -252,6 +297,44 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
                             </div>
                         </section>
 
+                        {/* Promo Code */}
+                        <section>
+                            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 text-brand-slate/40">Promo Code</h2>
+                            {promoApplied ? (
+                                <div className="flex items-center justify-between border border-brand-surface bg-brand-surface/30 px-6 py-5">
+                                    <div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-brand-charcoal">{promoApplied.code}</p>
+                                        <p className="text-[10px] text-brand-slate/60 mt-1 font-medium">{promoApplied.message}</p>
+                                    </div>
+                                    <button type="button" onClick={removePromo} className="text-[9px] font-black uppercase tracking-widest text-brand-slate/40 hover:text-brand-charcoal transition-colors">
+                                        Remove
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex gap-3">
+                                    <div className="flex-1 group">
+                                        <input
+                                            type="text"
+                                            value={promoInput}
+                                            onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }}
+                                            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), applyPromo())}
+                                            className={inputCls}
+                                            placeholder="ENTER CODE"
+                                        />
+                                        {promoError && <span className={errorCls}>{promoError}</span>}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={applyPromo}
+                                        disabled={promoLoading || !promoInput.trim()}
+                                        className="px-8 py-4 border border-brand-charcoal text-[9px] font-black uppercase tracking-[0.3em] hover:bg-brand-charcoal hover:text-brand-white transition-all disabled:opacity-30"
+                                    >
+                                        {promoLoading ? '...' : 'Apply'}
+                                    </button>
+                                </div>
+                            )}
+                        </section>
+
                         {/* Stock / availability errors from backend */}
                         {(errors as any).stock && (
                             <div className="border border-red-200 bg-red-50 px-6 py-4 space-y-1">
@@ -309,6 +392,12 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
                                     {shippingFee > 0 ? `$${shippingFee.toFixed(2)}` : "Complimentary"}
                                 </span>
                             </div>
+                            {promoApplied && (
+                                <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-green-600">
+                                    <span>Discount ({promoApplied.code})</span>
+                                    <span className="tabular-nums">-${discount.toFixed(2)}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between text-[10px] font-black uppercase text-brand-slate/60 tracking-widest">
                                 <span>Payment</span>
                                 <span className="text-brand-charcoal">{data.payment_method === 'COD' ? 'Cash on Delivery' : 'Card'}</span>

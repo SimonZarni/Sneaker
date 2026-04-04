@@ -19,6 +19,8 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminCustomerController;
+use App\Http\Controllers\Admin\AdminPromoController;
+use App\Http\Controllers\PromoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\AdminChatController;
@@ -71,6 +73,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/promo/apply', [PromoController::class, 'apply'])->name('promo.apply');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/lookup', [OrderController::class, 'lookup'])->name('orders.lookup');
@@ -169,6 +172,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/customers',                     [AdminCustomerController::class, 'index'])->name('customers.index');
         Route::get('/customers/{id}',                [AdminCustomerController::class, 'show'])->name('customers.show');
         Route::patch('/customers/{id}/toggle-active',[AdminCustomerController::class, 'toggleActive'])->name('customers.toggleActive');
+
+        // Promo Codes
+        Route::get('/promo-codes',                   [AdminPromoController::class, 'index'])->name('promo.index');
+        Route::post('/promo-codes',                  [AdminPromoController::class, 'store'])->name('promo.store');
+        Route::patch('/promo-codes/{promo}',         [AdminPromoController::class, 'update'])->name('promo.update');
+        Route::patch('/promo-codes/{promo}/toggle',  [AdminPromoController::class, 'toggle'])->name('promo.toggle');
+        Route::delete('/promo-codes/{promo}',        [AdminPromoController::class, 'destroy'])->name('promo.destroy');
     });
 });
 
