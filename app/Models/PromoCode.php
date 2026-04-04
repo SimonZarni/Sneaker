@@ -43,11 +43,11 @@ class PromoCode extends Model
             return ['valid' => false, 'error' => 'This promo code is invalid.'];
         }
 
-        if ($this->starts_at && now()->toDateString() < $this->starts_at->toDateString()) {
+        if ($this->starts_at && $this->starts_at->isFuture()) {
             return ['valid' => false, 'error' => 'This promo code is not active yet.'];
         }
 
-        if ($this->expires_at && now()->toDateString() > $this->expires_at->toDateString()) {
+        if ($this->expires_at && $this->expires_at->isPast()) {
             return ['valid' => false, 'error' => 'This promo code has expired.'];
         }
 
