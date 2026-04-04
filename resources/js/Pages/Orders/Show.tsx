@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import NotificationBell from "@/Components/NotificationBell";
 
 interface OrderItem {
@@ -444,10 +446,15 @@ export default function OrdersShow({ order }: Props) {
                             <StatusPill label={order.order_status} />
                             <StatusPill label={order.payment_status} />
                             <StatusPill label={order.delivery_status} />
-                            <a
-                                href={route("orders.invoice", order.id)}
-                                target="_blank"
-                                rel="noreferrer"
+                            <button
+                                onClick={() => {
+                                    const url = route("orders.invoice", order.id);
+                                    if (Capacitor.isNativePlatform()) {
+                                        Browser.open({ url });
+                                    } else {
+                                        window.open(url, "_blank", "noopener,noreferrer");
+                                    }
+                                }}
                                 className="inline-flex items-center gap-2 border border-brand-charcoal px-4 py-2 text-[8px] font-black uppercase tracking-[0.3em] hover:bg-brand-charcoal hover:text-white transition-colors"
                             >
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -456,7 +463,7 @@ export default function OrdersShow({ order }: Props) {
                                     <line x1="12" y1="15" x2="12" y2="3" />
                                 </svg>
                                 Invoice
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>

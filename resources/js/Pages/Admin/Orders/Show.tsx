@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Head, Link, router, usePage } from "@inertiajs/react";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import AdminLayout from "@/Components/AdminLayout";
 
 interface OrderItem {
@@ -305,11 +307,16 @@ export default function AdminOrdersShow({ order, deliverySteps, admin }: Props) 
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <DPill label={order.delivery_status} />
                     <PPill label={order.payment_status} />
-                    <a
-                        href={route("admin.orders.invoice", order.id)}
-                        target="_blank"
-                        rel="noreferrer"
-                        style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 14px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", border: "1px solid #0A0A0A", color: "#0A0A0A", backgroundColor: "#fff", textDecoration: "none" }}
+                    <button
+                        onClick={() => {
+                            const url = route("admin.orders.invoice", order.id);
+                            if (Capacitor.isNativePlatform()) {
+                                Browser.open({ url });
+                            } else {
+                                window.open(url, "_blank", "noopener,noreferrer");
+                            }
+                        }}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 14px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase" as const, letterSpacing: "0.15em", border: "1px solid #0A0A0A", color: "#0A0A0A", backgroundColor: "#fff", cursor: "pointer" }}
                     >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -317,7 +324,7 @@ export default function AdminOrdersShow({ order, deliverySteps, admin }: Props) 
                             <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
                         Invoice
-                    </a>
+                    </button>
                 </div>
             </div>
 
