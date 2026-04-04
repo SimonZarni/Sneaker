@@ -8,6 +8,7 @@ export interface AdminNotification {
     icon: string;
     order_id?: number;
     conversation_id?: number;
+    count?: number;
     received_at: string;
     read: boolean;
 }
@@ -109,6 +110,43 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
         showToast(notification);
     }, [showToast]);
 
+    // For chat: if an unread notification for the same conversation already exists,
+    // increment its count and update the message instead of adding a new one.
+    const upsertChatNotification = useCallback((notification: AdminNotification) => {
+        let upserted = notification;
+
+        setNotifications((prev) => {
+            const existing = prev.find(
+                (n) => n.id === notification.id && n.type === 'new_message' && !n.read
+            );
+
+            if (existing) {
+                const newCount = (existing.count ?? 1) + 1;
+                const userName = notification.message.replace(' sent a message', '');
+                upserted = {
+                    ...existing,
+                    count: newCount,
+                    message: `${userName} sent ${newCount} messages`,
+                    received_at: notification.received_at,
+                };
+                const updated = sortNotifications(
+                    prev.map((n) => (n.id === existing.id ? upserted : n))
+                );
+                saveToStorage(updated);
+                return updated;
+            }
+
+            const fresh = { ...notification, count: 1 };
+            upserted = fresh;
+            const updated = sortNotifications([fresh, ...prev]);
+            saveToStorage(updated);
+            return updated;
+        });
+
+        // showToast after state update — use a microtask so upserted is final
+        setTimeout(() => showToast(upserted), 0);
+    }, [showToast]);
+
     // Subscribe to Pusher channels once Echo is available
     useEffect(() => {
         if (!isAdminPage()) return;
@@ -139,13 +177,14 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
                 .listen('.chat.message', (data: any) => {
                     if (data.sender_type !== 'user') return;
 
-                    addNotification({
-                        id: `chat-${data.id}`,
+                    upsertChatNotification({
+                        id: `chat-conv-${data.conversation_id}`,
                         type: 'new_message',
                         title: 'New Message',
                         message: `${data.user_name} sent a message`,
                         icon: '💬',
                         conversation_id: data.conversation_id,
+                        count: 1,
                         received_at: new Date().toISOString(),
                         read: false,
                     });
@@ -172,7 +211,7 @@ export function AdminNotificationProvider({ children }: { children: React.ReactN
                 subscribedRef.current = false;
             }
         };
-    }, [addNotification]);
+    }, [addNotification, upsertChatNotification]);
 
     useEffect(() => {
         return () => {
