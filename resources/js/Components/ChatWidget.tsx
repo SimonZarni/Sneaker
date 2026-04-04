@@ -156,7 +156,7 @@ export default function ChatWidget({ userId }: Props) {
     };
 
     const formatTime = (iso: string) =>
-        new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
 
     if (!userId) return null;
 

@@ -166,13 +166,14 @@ export default function AdminChatIndex({ conversations: initial, totalUnread, ad
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
     };
 
-    const formatTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const formatTime = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' });
     const formatDate = (iso: string | null) => {
         if (!iso) return '';
         const d = new Date(iso);
-        const now = new Date();
-        if (d.toDateString() === now.toDateString()) return formatTime(iso);
-        return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        const nowBkk = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+        const dBkk   = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }));
+        if (dBkk.toDateString() === nowBkk.toDateString()) return formatTime(iso);
+        return d.toLocaleDateString([], { month: 'short', day: 'numeric', timeZone: 'Asia/Bangkok' });
     };
 
     const totalUnreadCount = conversations.reduce((s, c) => s + c.unread, 0);

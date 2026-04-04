@@ -239,7 +239,7 @@ export default function AdminPromoCodes({ promos, admin }: Props) {
                                         {p.min_order_amount ? `$${parseFloat(p.min_order_amount).toFixed(2)}` : "—"}
                                     </td>
                                     <td style={{ padding: "14px 16px", fontSize: "11px", fontWeight: 700, color: "rgba(45,50,62,0.6)" }}>
-                                        {p.expires_at ? new Date(p.expires_at).toLocaleDateString() : "—"}
+                                        {p.expires_at ? new Date(p.expires_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Bangkok" }) : "—"}
                                     </td>
                                     <td style={{ padding: "14px 16px" }}>
                                         <span style={{

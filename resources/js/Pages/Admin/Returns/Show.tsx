@@ -60,7 +60,7 @@ function StatusPill({ label }: { label: string }) {
 }
 
 function fmtDate(iso: string) {
-    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Bangkok" });
 }
 
 function fmtPrice(val: string | number | null) {
