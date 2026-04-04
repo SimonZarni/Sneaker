@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminSessionController;
+use App\Http\Controllers\OrderTrackingController;
 use App\Http\Controllers\Admin\AdminAnalyticsController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminOrderController;
@@ -47,6 +48,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile/addresses/{id}/default',  [ProfileController::class, 'setDefaultAddress'])->name('profile.address.setDefault');
 });
 
+// Public order tracking
+Route::get('/track', [OrderTrackingController::class, 'showForm'])->name('track.form');
+Route::post('/track', [OrderTrackingController::class, 'track'])->name('track.submit');
+
 Route::get('/shop', [ProductController::class, 'index'])->name('shop.index');
 Route::get('/about', fn() => inertia('About'))->name('about');
 Route::get('/privacy-policy', fn() => inertia('PrivacyPolicy'))->name('privacy');
@@ -66,6 +71,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/lookup', [OrderController::class, 'lookup'])->name('orders.lookup');
     Route::get('/orders/{id}/success', [OrderController::class, 'success'])->name('orders.success');
     Route::get('/orders/{id}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
     Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
@@ -110,6 +116,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Orders
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/lookup', [AdminOrderController::class, 'lookup'])->name('orders.lookup');
         Route::get('/orders/{id}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::get('/orders/{id}/invoice', [AdminOrderController::class, 'downloadInvoice'])->name('orders.invoice');
         Route::patch('/orders/{id}/delivery', [AdminOrderController::class, 'updateDeliveryStatus'])->name('orders.updateDelivery');

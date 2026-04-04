@@ -183,6 +183,19 @@ class AdminOrderController extends Controller
         return back()->with('success', "Order updated to {$request->delivery_status}.");
     }
 
+    public function lookup(Request $request)
+    {
+        $request->validate(['order_number' => 'required|string|max:100']);
+
+        $order = Order::where('order_number', $request->order_number)->first();
+
+        if (! $order) {
+            return back()->withErrors(['order_number' => 'No order found with that number.']);
+        }
+
+        return redirect()->route('admin.orders.show', $order->id);
+    }
+
     public function cancel(Request $request, int $id)
     {
         $order = Order::with(['items', 'payment'])->findOrFail($id);

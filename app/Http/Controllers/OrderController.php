@@ -81,6 +81,21 @@ class OrderController extends Controller
         return $pdf->download($filename);
     }
 
+    public function lookup(Request $request)
+    {
+        $request->validate(['order_number' => 'required|string|max:100']);
+
+        $order = Order::where('user_id', Auth::id())
+            ->where('order_number', $request->order_number)
+            ->first();
+
+        if (! $order) {
+            return back()->withErrors(['order_number' => 'No order found with that number in your account.']);
+        }
+
+        return redirect()->route('orders.show', $order->id);
+    }
+
     public function cancel(Request $request, int $id)
     {
         $order = Order::with(['items', 'payment'])

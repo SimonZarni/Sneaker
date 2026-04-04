@@ -46,9 +46,11 @@ function PPill({ label }: { label: string }) {
 }
 
 export default function AdminOrdersIndex({ orders, stats, filters, admin }: Props) {
-    const [search,   setSearch]   = useState(filters.search    ?? "");
-    const [dateFrom, setDateFrom] = useState(filters.date_from ?? "");
-    const [dateTo,   setDateTo]   = useState(filters.date_to   ?? "");
+    const [search,      setSearch]      = useState(filters.search    ?? "");
+    const [dateFrom,    setDateFrom]    = useState(filters.date_from ?? "");
+    const [dateTo,      setDateTo]      = useState(filters.date_to   ?? "");
+    const [jumpNumber,  setJumpNumber]  = useState("");
+    const [jumpError,   setJumpError]   = useState("");
 
     const activeStatus  = filters.status  ?? "";
     const activePayment = filters.payment ?? "";
@@ -67,6 +69,19 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
     };
 
     const isFiltered = !!(activeStatus || activePayment || filters.search || filters.date_from || filters.date_to);
+
+    const handleJump = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!jumpNumber.trim()) return;
+        setJumpError("");
+        router.get(
+            route("admin.orders.lookup"),
+            { order_number: jumpNumber.trim() },
+            {
+                onError: () => setJumpError("No order found with that number."),
+            }
+        );
+    };
 
     const statusTabs = [
         { label: "All",        value: "",           count: stats.total },
@@ -113,7 +128,7 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
             </div>
 
             {/* ── SEARCH ROW ── */}
-            <form onSubmit={(e) => { e.preventDefault(); apply({ search }); }} style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            <form onSubmit={(e) => { e.preventDefault(); apply({ search }); }} style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
                 <input
                     type="text"
                     value={search}
@@ -123,6 +138,25 @@ export default function AdminOrdersIndex({ orders, stats, filters, admin }: Prop
                 />
                 <button type="submit" style={{ padding: "12px 20px", backgroundColor: "#0A0A0A", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer", flexShrink: 0 }}>
                     Search
+                </button>
+            </form>
+
+            {/* ── JUMP TO ORDER ── */}
+            <form onSubmit={handleJump} style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <input
+                        type="text"
+                        value={jumpNumber}
+                        onChange={(e) => { setJumpNumber(e.target.value); setJumpError(""); }}
+                        placeholder="Jump to exact order number..."
+                        style={{ ...inputStyle, width: "100%", boxSizing: "border-box" as const, borderColor: jumpError ? "#fca5a5" : "#e5e7eb" }}
+                    />
+                    {jumpError && (
+                        <p style={{ marginTop: "4px", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#dc2626" }}>{jumpError}</p>
+                    )}
+                </div>
+                <button type="submit" disabled={!jumpNumber.trim()} style={{ padding: "12px 20px", backgroundColor: "#1d4ed8", color: "#fff", fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", border: "none", cursor: "pointer", flexShrink: 0, opacity: jumpNumber.trim() ? 1 : 0.4 }}>
+                    Jump →
                 </button>
             </form>
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Head, Link, usePage } from "@inertiajs/react";
+import { Head, Link, router, usePage } from "@inertiajs/react";
 import CartDrawer from "@/Components/CartDrawer";
 import Pagination from "@/Components/Pagination";
 import NotificationBell from "@/Components/NotificationBell";
@@ -62,12 +62,19 @@ function formatPrice(val: string | number) {
 }
 
 export default function OrdersIndex({ orders }: Props) {
-    const { auth, cart }: any = usePage().props;
+    const { auth, cart, errors }: any = usePage().props;
     const [isCartOpen,     setIsCartOpen]     = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [lookupNumber,   setLookupNumber]   = useState("");
     const cartCount = cart?.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0;
 
     const isEmpty = orders.data.length === 0;
+
+    const handleLookup = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!lookupNumber.trim()) return;
+        router.get(route("orders.lookup"), { order_number: lookupNumber.trim() });
+    };
 
     return (
         <div className="min-h-screen bg-brand-white text-brand-charcoal antialiased">
@@ -170,12 +177,34 @@ export default function OrdersIndex({ orders }: Props) {
                 {/* Header */}
                 <div className="mb-10 sm:mb-16 border-b border-brand-surface pb-8 sm:pb-10">
                     <p className="text-[10px] font-black uppercase tracking-[0.4em] text-brand-slate/40 mb-3">Account</p>
-                    <div className="flex items-end justify-between gap-4">
+                    <div className="flex items-end justify-between gap-4 mb-8">
                         <h2 className="text-3xl sm:text-4xl font-black tracking-tightest uppercase">Order History</h2>
                         <span className="text-[10px] font-bold uppercase tracking-widest text-brand-slate/40 text-right shrink-0">
                             {orders.total} {orders.total === 1 ? "Drop" : "Drops"}<br className="sm:hidden" /> Secured
                         </span>
                     </div>
+                    {/* Quick lookup */}
+                    <form onSubmit={handleLookup} className="flex gap-3">
+                        <div className="flex-1 min-w-0">
+                            <input
+                                type="text"
+                                value={lookupNumber}
+                                onChange={e => setLookupNumber(e.target.value)}
+                                placeholder="Jump to order number..."
+                                className="w-full border border-brand-surface px-4 py-3 text-[11px] font-bold uppercase outline-none focus:border-brand-charcoal transition-colors bg-white placeholder:text-brand-slate/30 tracking-wider"
+                            />
+                            {errors?.order_number && (
+                                <p className="mt-1.5 text-[9px] font-bold text-red-500 uppercase tracking-wider">{errors.order_number}</p>
+                            )}
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={!lookupNumber.trim()}
+                            className="px-6 py-3 bg-brand-charcoal text-brand-white text-[9px] font-black uppercase tracking-[0.3em] hover:bg-brand-slate transition-colors disabled:opacity-40 shrink-0"
+                        >
+                            Find →
+                        </button>
+                    </form>
                 </div>
 
                 {/* Empty State */}
