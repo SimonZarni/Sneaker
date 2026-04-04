@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NewOrderPlaced;
 use App\Events\OrderStatusChanged;
 use App\Mail\OrderConfirmation;
 use App\Models\Cart;
@@ -304,6 +305,16 @@ class CheckoutController extends Controller
             broadcast(new OrderStatusChanged($order, 'confirmed'));
         } catch (\Throwable $e) {
             Log::warning('Failed to broadcast order confirmed', [
+                'order_id' => $order->id,
+                'error'    => $e->getMessage(),
+            ]);
+        }
+
+        // ── Notify admin panel of new order ───────────────────────────────────
+        try {
+            broadcast(new NewOrderPlaced($order));
+        } catch (\Throwable $e) {
+            Log::warning('Failed to broadcast new order to admin', [
                 'order_id' => $order->id,
                 'error'    => $e->getMessage(),
             ]);

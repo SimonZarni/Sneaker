@@ -26,3 +26,9 @@ Broadcast::channel('admin-chat', function ($user) {
     // Security is enforced at the route level (EnsureAdmin middleware).
     return true;
 });
+
+// Admin notifications channel — receives new order and system events.
+// Only reachable via /broadcasting/auth/admin which requires admin guard.
+Broadcast::channel('admin-notifications', function ($user) {
+    return true;
+});

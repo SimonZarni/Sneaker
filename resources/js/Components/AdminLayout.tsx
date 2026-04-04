@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "@inertiajs/react";
+import AdminNotificationBell from "@/Components/AdminNotificationBell";
 
 type ActivePage = "dashboard" | "analytics" | "orders" | "products" | "inventory" | "customers" | "reviews" | "settings" | "chat";
 
@@ -223,8 +224,9 @@ export default function AdminLayout({
                             </h2>
                         </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         {headerRight}
+                        <AdminNotificationBell />
                         <Link
                             href="/"
                             target="_blank"

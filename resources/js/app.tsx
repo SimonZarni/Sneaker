@@ -6,6 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import axios from 'axios';
 import { NotificationProvider } from '@/Contexts/NotificationContext';
+import { AdminNotificationProvider } from '@/Contexts/AdminNotificationContext';
 import NotificationToast from '@/Components/NotificationToast';
 import NavigationProgress from '@/Components/NavigationProgress';
 
@@ -89,11 +90,13 @@ createInertiaApp({
         syncAuthUser((props.initialPage.props as any) ?? {});
 
         root.render(
-            <NotificationProvider>
-                <NavigationProgress />
-                <NotificationToast />
-                <App {...props} />
-            </NotificationProvider>
+            <AdminNotificationProvider>
+                <NotificationProvider>
+                    <NavigationProgress />
+                    <NotificationToast />
+                    <App {...props} />
+                </NotificationProvider>
+            </AdminNotificationProvider>
         );
     },
     progress: false,
