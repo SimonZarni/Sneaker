@@ -1,7 +1,7 @@
 // SNEAKER.DRP — Service Worker
 // Strategy: cache-first for static assets, network-first for pages/API
 
-const CACHE_VERSION = 'sneaker-v1';
+const CACHE_VERSION = 'sneaker-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
 
@@ -59,7 +59,12 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 3. API / broadcasting / Pusher — network only (never cache)
+    // 3. File downloads (invoices, PDFs) — bypass SW entirely so browser handles Content-Disposition
+    if (url.pathname.match(/\/orders\/\d+\/invoice/) || url.pathname.match(/\/admin\/orders\/\d+\/invoice/)) {
+        return;
+    }
+
+    // 3b. API / broadcasting / Pusher — network only (never cache)
     if (
         url.pathname.startsWith('/api/') ||
         url.pathname.startsWith('/broadcasting/') ||
