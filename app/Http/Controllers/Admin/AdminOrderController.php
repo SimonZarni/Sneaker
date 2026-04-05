@@ -79,7 +79,7 @@ class AdminOrderController extends Controller
 
     public function show(int $id)
     {
-        $order = Order::with(['user', 'items.product', 'payment', 'returnRequests.items'])->findOrFail($id);
+        $order = Order::with(['user', 'items.product', 'payment', 'returnRequests.items', 'promoCode'])->findOrFail($id);
 
         return Inertia::render('Admin/Orders/Show', [
             'order'         => $this->formatOrder($order),
@@ -90,7 +90,7 @@ class AdminOrderController extends Controller
 
     public function downloadInvoice(int $id)
     {
-        $order = Order::with(['user', 'items.product', 'payment'])->findOrFail($id);
+        $order = Order::with(['user', 'items.product', 'payment', 'promoCode'])->findOrFail($id);
 
         $data = $this->formatOrder($order);
 
@@ -291,6 +291,8 @@ class AdminOrderController extends Controller
             'payment_status_detail' => $order->payment?->payment_status,
             'cardholder_name'       => $order->payment?->cardholder_name,
             'card_last4'            => $order->payment?->card_last4,
+            'promo_code'            => $order->promoCode?->code,
+            'discount_amount'       => $order->discount_amount,
             'items'                 => $order->items->map(fn($item) => [
                 'id'           => $item->id,
                 'product_name' => $item->product_name,

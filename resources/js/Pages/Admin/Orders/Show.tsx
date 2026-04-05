@@ -41,6 +41,8 @@ interface Order {
     payment_status_detail: string | null;
     cardholder_name: string | null;
     card_last4: string | null;
+    promo_code: string | null;
+    discount_amount: string | null;
     items: OrderItem[];
 }
 
@@ -364,13 +366,16 @@ export default function AdminOrdersShow({ order, deliverySteps, admin }: Props) 
                         { label: "Order Number", value: order.order_number },
                         { label: "Placed",       value: order.placed_at ? fmtDate(order.placed_at) : "—" },
                         { label: "Customer",     value: order.customer_name ?? order.shipping_full_name, sub: order.customer_email ?? undefined },
-                        { label: "Subtotal",    value: `$${(parseFloat(order.total_amount) - parseFloat(order.shipping_fee ?? '0')).toFixed(2)}` },
-                            { label: "Shipping Fee", value: order.shipping_fee && parseFloat(order.shipping_fee) > 0 ? `$${parseFloat(order.shipping_fee).toFixed(2)}` : "Free" },
-                            { label: "Order Total",  value: `$${parseFloat(order.total_amount).toFixed(2)}`, big: true },
+                        { label: "Items Subtotal", value: `$${order.items.reduce((s, i) => s + parseFloat(i.subtotal), 0).toFixed(2)}` },
+                        ...(order.promo_code && order.discount_amount && parseFloat(order.discount_amount) > 0
+                            ? [{ label: `Discount (${order.promo_code})`, value: `−$${parseFloat(order.discount_amount).toFixed(2)}`, discount: true }]
+                            : []),
+                        { label: "Shipping Fee", value: order.shipping_fee && parseFloat(order.shipping_fee) > 0 ? `$${parseFloat(order.shipping_fee).toFixed(2)}` : "Free" },
+                        { label: "Order Total",  value: `$${parseFloat(order.total_amount).toFixed(2)}`, big: true },
                     ].map(item => (
                         <div key={item.label}>
                             <p style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.25em", color: "rgba(45,50,62,0.3)", marginBottom: "6px" }}>{item.label}</p>
-                            <p style={{ fontSize: (item as any).big ? "24px" : "13px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>{item.value}</p>
+                            <p style={{ fontSize: (item as any).big ? "24px" : "13px", fontWeight: 900, fontVariantNumeric: "tabular-nums", color: (item as any).discount ? "#059669" : undefined }}>{item.value}</p>
                             {(item as any).sub && <p style={{ fontSize: "10px", color: "rgba(45,50,62,0.4)", marginTop: "2px" }}>{(item as any).sub}</p>}
                         </div>
                     ))}
@@ -425,11 +430,17 @@ export default function AdminOrdersShow({ order, deliverySteps, admin }: Props) 
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px" }}>
                         <span style={{ fontSize: "9px", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: "rgba(45,50,62,0.3)" }}>Order Total</span>
                         <div>
-                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "10px", color: "rgba(45,50,62,0.5)", fontWeight: 700 }}>
-                                                <span>Shipping</span>
-                                                <span>{order.shipping_fee && parseFloat(order.shipping_fee) > 0 ? `$${parseFloat(order.shipping_fee).toFixed(2)}` : "Free"}</span>
-                                            </div>
-                                            <span style={{ fontSize: "20px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>${parseFloat(order.total_amount).toFixed(2)}</span>
+                            {order.promo_code && order.discount_amount && parseFloat(order.discount_amount) > 0 && (
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "10px", color: "#059669", fontWeight: 700 }}>
+                                    <span>Discount ({order.promo_code})</span>
+                                    <span>−${parseFloat(order.discount_amount).toFixed(2)}</span>
+                                </div>
+                            )}
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px", fontSize: "10px", color: "rgba(45,50,62,0.5)", fontWeight: 700 }}>
+                                <span>Shipping</span>
+                                <span>{order.shipping_fee && parseFloat(order.shipping_fee) > 0 ? `$${parseFloat(order.shipping_fee).toFixed(2)}` : "Free"}</span>
+                            </div>
+                            <span style={{ fontSize: "20px", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>${parseFloat(order.total_amount).toFixed(2)}</span>
                                         </div>
                     </div>
                 </div>

@@ -50,6 +50,8 @@ interface Order {
     cardholder_name: string | null;
     card_last4: string | null;
     payment_status_detail: string | null;
+    promo_code: string | null;
+    discount_amount: string | null;
     return_request: ReturnRequest | null;
     items: OrderItem[];
 }
@@ -569,6 +571,7 @@ export default function OrdersShow({ order }: Props) {
     const hasActiveReturn = order.return_request && ["Pending", "Approved"].includes(order.return_request.status);
     const canReturn      = order.delivery_status === "Delivered" && !!deliveredAt && daysDelivered <= 7 && !hasActiveReturn;
 
+    const itemsSubtotal = order.items.reduce((sum, i) => sum + parseFloat(i.subtotal), 0);
     const tax = parseFloat(order.total_amount) * 0.07;
 
     return (
@@ -846,8 +849,14 @@ export default function OrdersShow({ order }: Props) {
                             <div className="space-y-4 text-[10px] font-bold uppercase tracking-wider">
                                 <div className="flex justify-between text-brand-slate/60">
                                     <span>Subtotal</span>
-                                    <span className="tabular-nums">{formatPrice(parseFloat(order.total_amount) - tax)}</span>
+                                    <span className="tabular-nums">{formatPrice(itemsSubtotal)}</span>
                                 </div>
+                                {order.promo_code && order.discount_amount && parseFloat(order.discount_amount) > 0 && (
+                                    <div className="flex justify-between text-emerald-600">
+                                        <span>Discount ({order.promo_code})</span>
+                                        <span className="tabular-nums">−{formatPrice(order.discount_amount)}</span>
+                                    </div>
+                                )}
                                 <div className="flex justify-between text-brand-slate/60">
                                     <span>Shipping</span>
                                     <span className="tabular-nums">

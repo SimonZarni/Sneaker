@@ -36,7 +36,7 @@ class OrderController extends Controller
 
     public function show(int $id)
     {
-        $order = Order::with(['items.product', 'payment', 'returnRequests.items'])
+        $order = Order::with(['items.product', 'payment', 'returnRequests.items', 'promoCode'])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
 
@@ -47,7 +47,7 @@ class OrderController extends Controller
 
     public function success(int $id)
     {
-        $order = Order::with(['items.product', 'payment'])
+        $order = Order::with(['items.product', 'payment', 'promoCode'])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
 
@@ -58,7 +58,7 @@ class OrderController extends Controller
 
     public function downloadInvoice(int $id)
     {
-        $order = Order::with(['items.product', 'payment'])
+        $order = Order::with(['items.product', 'payment', 'promoCode'])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
 
@@ -194,6 +194,8 @@ class OrderController extends Controller
             'payment_method'        => $order->payment?->payment_method,
             'cardholder_name'       => $order->payment?->cardholder_name,
             'card_last4'            => $order->payment?->card_last4,
+            'promo_code'            => $order->promoCode?->code,
+            'discount_amount'       => $order->discount_amount,
             'items'                 => $order->items->map(fn($item) => [
                 'id'           => $item->id,
                 'product_name' => $item->product_name,

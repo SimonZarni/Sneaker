@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use App\Models\PromoCode;
 
 class Order extends Model
 {
@@ -47,6 +48,11 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class);
     }
 
     public function items(): HasMany
