@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import { loadStripe, Stripe, StripeElements, StripePaymentElement } from '@stripe/stripe-js';
+import axios from 'axios';
 
 interface Address {
     id: number;
@@ -176,41 +177,26 @@ export default function Checkout({
             }
         }
 
-        const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
-
         // Step 2: tell the server to validate shipping + create PI (card) or order (COD)
-        let intentRes: Response;
+        let intentJson: any;
         try {
-            intentRes = await fetch(route('checkout.store'), {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN':  csrfToken,
-                    'Accept':        'application/json',
-                },
-                body: JSON.stringify(data),
+            const { data: json } = await axios.post(route('checkout.store'), data, {
+                headers: { 'Accept': 'application/json' },
             });
-        } catch {
-            setCardError('Network error. Please try again.');
-            setStripeProcessing(false);
-            return;
-        }
-
-        const intentJson = await intentRes.json();
-
-        if (!intentRes.ok) {
-            if (intentJson.errors?.stock) {
+            intentJson = json;
+        } catch (err: any) {
+            const errJson = err.response?.data ?? {};
+            if (errJson.errors?.stock) {
                 setStockErrors(
-                    Array.isArray(intentJson.errors.stock)
-                        ? intentJson.errors.stock
-                        : [intentJson.errors.stock]
+                    Array.isArray(errJson.errors.stock)
+                        ? errJson.errors.stock
+                        : [errJson.errors.stock]
                 );
             } else {
-                const firstKey = intentJson.errors ? Object.keys(intentJson.errors)[0] : null;
+                const firstKey = errJson.errors ? Object.keys(errJson.errors)[0] : null;
                 const msg = firstKey
-                    ? (Array.isArray(intentJson.errors[firstKey]) ? intentJson.errors[firstKey][0] : intentJson.errors[firstKey])
-                    : (intentJson.message ?? 'Checkout failed. Please try again.');
+                    ? (Array.isArray(errJson.errors[firstKey]) ? errJson.errors[firstKey][0] : errJson.errors[firstKey])
+                    : (errJson.message ?? 'Checkout failed. Please try again.');
                 setCardError(msg);
             }
             setStripeProcessing(false);
@@ -241,29 +227,34 @@ export default function Checkout({
 
         // Inline success (no 3DS redirect was needed)
         if (paymentIntent?.status === 'succeeded') {
-            const finalRes = await fetch(route('checkout.finalize'), {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN':  csrfToken,
-                    'Accept':        'application/json',
-                },
-                body: JSON.stringify({ payment_intent_id: paymentIntent.id }),
-            });
-            const finalJson = await finalRes.json();
-
-            if (finalJson.redirect) {
-                window.location.href = finalJson.redirect;
-            } else if (finalJson.errors?.stock) {
-                setStockErrors(
-                    Array.isArray(finalJson.errors.stock)
-                        ? finalJson.errors.stock
-                        : [finalJson.errors.stock]
-                );
-                setStripeProcessing(false);
-            } else {
-                setCardError(finalJson.error ?? 'Could not complete order.');
+            try {
+                const { data: finalJson } = await axios.post(route('checkout.finalize'), { payment_intent_id: paymentIntent.id }, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                if (finalJson.redirect) {
+                    window.location.href = finalJson.redirect;
+                } else if (finalJson.errors?.stock) {
+                    setStockErrors(
+                        Array.isArray(finalJson.errors.stock)
+                            ? finalJson.errors.stock
+                            : [finalJson.errors.stock]
+                    );
+                    setStripeProcessing(false);
+                } else {
+                    setCardError(finalJson.error ?? 'Could not complete order.');
+                    setStripeProcessing(false);
+                }
+            } catch (err: any) {
+                const finalJson = err.response?.data ?? {};
+                if (finalJson.errors?.stock) {
+                    setStockErrors(
+                        Array.isArray(finalJson.errors.stock)
+                            ? finalJson.errors.stock
+                            : [finalJson.errors.stock]
+                    );
+                } else {
+                    setCardError(finalJson.error ?? 'Could not complete order.');
+                }
                 setStripeProcessing(false);
             }
         }
@@ -278,25 +269,18 @@ export default function Checkout({
         setPromoApplied(null);
 
         try {
-            const res = await fetch(route('promo.apply'), {
-                method: 'POST',
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ code: promoInput.trim() }),
+            const { data: json } = await axios.post(route('promo.apply'), { code: promoInput.trim() }, {
+                headers: { 'Accept': 'application/json' },
             });
-            const json = await res.json();
             if (json.valid) {
                 setPromoApplied({ code: json.code, discount: json.discount, message: json.message });
                 setData('promo_code', json.code);
             } else {
                 setPromoError(json.error ?? 'Invalid promo code.');
             }
-        } catch {
-            setPromoError('Failed to apply promo code. Please try again.');
+        } catch (err: any) {
+            const json = err.response?.data;
+            setPromoError(json?.error ?? 'Failed to apply promo code. Please try again.');
         } finally {
             setPromoLoading(false);
         }
