@@ -183,6 +183,7 @@ export default function Checkout({
         try {
             intentRes = await fetch(route('checkout.store'), {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN':  csrfToken,
@@ -242,6 +243,7 @@ export default function Checkout({
         if (paymentIntent?.status === 'succeeded') {
             const finalRes = await fetch(route('checkout.finalize'), {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN':  csrfToken,
@@ -278,6 +280,7 @@ export default function Checkout({
         try {
             const res = await fetch(route('promo.apply'), {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '',
