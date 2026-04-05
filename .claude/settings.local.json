@@ -8,7 +8,10 @@
       "Bash(php -r \"require 'vendor/autoload.php'; echo 'OK';\")",
       "Bash(npx tsc:*)",
       "Bash(php -r \"echo \\\\Carbon\\\\Carbon::now\\('Asia/Bangkok'\\)->toISOString\\(\\);\")",
-      "Bash(php -r \"require 'vendor/autoload.php'; echo \\\\Carbon\\\\Carbon::now\\('Asia/Bangkok'\\)->toISOString\\(\\);\")"
+      "Bash(php -r \"require 'vendor/autoload.php'; echo \\\\Carbon\\\\Carbon::now\\('Asia/Bangkok'\\)->toISOString\\(\\);\")",
+      "Bash(npm install:*)",
+      "Bash(php:*)",
+      "Bash(node:*)"
     ]
   }
 }

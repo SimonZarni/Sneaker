@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
-import { Head, useForm, Link, router } from '@inertiajs/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Head, useForm, Link } from '@inertiajs/react';
+import { loadStripe, Stripe, StripeElements, StripePaymentElement } from '@stripe/stripe-js';
 
 interface Address {
     id: number;
@@ -13,7 +14,6 @@ interface Address {
     is_default: boolean;
 }
 
-/** Resolve effective price: variant_price → sale_price → base_price */
 function effectivePrice(item: any): number {
     if (item.product_variant.variant_price != null) {
         return parseFloat(item.product_variant.variant_price);
@@ -25,8 +25,20 @@ function effectivePrice(item: any): number {
     return parseFloat(product.base_price);
 }
 
-export default function Checkout({ cart, savedAddresses, shippingFee, checkoutItemIds }: { cart: any; savedAddresses: Address[]; shippingFee: number; checkoutItemIds?: number[] | null }) {
-    const { data, setData, post, processing, errors } = useForm({
+export default function Checkout({
+    cart,
+    savedAddresses,
+    shippingFee,
+    checkoutItemIds,
+    stripeKey,
+}: {
+    cart: any;
+    savedAddresses: Address[];
+    shippingFee: number;
+    checkoutItemIds?: number[] | null;
+    stripeKey: string;
+}) {
+    const { data, setData, processing, errors } = useForm({
         shipping_full_name:    '',
         shipping_phone:        '',
         shipping_address_line: '',
@@ -35,23 +47,228 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
         shipping_postal_code:  '',
         shipping_country:      '',
         payment_method:        'Credit Card',
-        cardholder_name:       '',
-        card_number:           '',
-        card_expiry:           '',
-        card_cvc:              '',
         checkout_item_ids:     checkoutItemIds ?? null,
         promo_code:            '' as string,
     });
 
-    const [cardNumberDisplay, setCardNumberDisplay] = useState('');
-    const [expiryDisplay, setExpiryDisplay]         = useState('');
+    // Stripe state
+    const [stripe, setStripe]     = useState<Stripe | null>(null);
+    const [elements, setElements] = useState<StripeElements | null>(null);
+
+    const [paymentElement, setPaymentElement]     = useState<StripePaymentElement | null>(null);
+    const [paymentElementReady, setPaymentElementReady] = useState(false);
+    const paymentElementRef = useRef<HTMLDivElement>(null);
+
+    const [cardError, setCardError]           = useState('');
+    const [stockErrors, setStockErrors]       = useState<string[]>([]);
+    const [stripeProcessing, setStripeProcessing] = useState(false);
 
     // Promo code state
-    const [promoInput, setPromoInput]   = useState('');
+    const [promoInput, setPromoInput]     = useState('');
     const [promoApplied, setPromoApplied] = useState<{ code: string; discount: number; message: string } | null>(null);
-    const [promoError, setPromoError]   = useState('');
+    const [promoError, setPromoError]     = useState('');
     const [promoLoading, setPromoLoading] = useState(false);
 
+    const isCard = data.payment_method === 'Credit Card';
+    const isCOD  = data.payment_method === 'COD';
+
+    const subtotal = cart.items.reduce((acc: number, item: any) => acc + effectivePrice(item) * item.quantity, 0);
+    const discount = promoApplied?.discount ?? 0;
+    const total    = Math.max(0, subtotal + shippingFee - discount);
+    const isLoading = processing || stripeProcessing;
+
+    // ── Load Stripe + initialise elements in deferred-intent mode ────────────
+    useEffect(() => {
+        loadStripe(stripeKey).then((s) => {
+            if (!s) return;
+            setStripe(s);
+
+            const els = s.elements({
+                mode: 'payment',
+                amount: Math.max(50, Math.round(total * 100)),
+                currency: 'usd',
+                appearance: {
+                    theme: 'stripe',
+                    variables: {
+                        colorPrimary:     '#1a1a1a',
+                        colorBackground:  '#ffffff',
+                        colorText:        '#1a1a1a',
+                        colorDanger:      '#ef4444',
+                        fontFamily:       'inherit',
+                        borderRadius:     '2px',
+                        spacingUnit:      '4px',
+                    },
+                    rules: {
+                        '.Input': {
+                            border:    '1px solid #e5e7eb',
+                            boxShadow: 'none',
+                            fontSize:  '14px',
+                            padding:   '10px 14px',
+                        },
+                        '.Input:focus': {
+                            border:    '1px solid #1a1a1a',
+                            boxShadow: 'none',
+                            outline:   'none',
+                        },
+                        '.Label': {
+                            fontSize:      '9px',
+                            fontWeight:    '900',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            color:         '#6b7280',
+                        },
+                    },
+                },
+            } as any);
+
+            setElements(els);
+        });
+    }, [stripeKey]);
+
+    // ── Keep elements amount in sync when total changes (promo) ──────────────
+    useEffect(() => {
+        if (!elements) return;
+        elements.update({ amount: Math.max(50, Math.round(total * 100)) });
+    }, [total, elements]);
+
+    // ── Mount Payment Element ─────────────────────────────────────────────────
+    useEffect(() => {
+        if (!elements || !paymentElementRef.current || paymentElement) return;
+        if (!isCard) return;
+
+        const el = elements.create('payment', { layout: 'tabs' });
+        el.mount(paymentElementRef.current);
+
+        el.on('ready',     () => setPaymentElementReady(true));
+        el.on('loaderror', (e: any) => {
+            setCardError(e.error?.message ?? 'Payment form failed to load.');
+        });
+
+        setPaymentElement(el);
+
+        return () => {
+            el.destroy();
+            setPaymentElement(null);
+            setPaymentElementReady(false);
+        };
+    }, [elements, isCard]);
+
+    // ── Form submit ───────────────────────────────────────────────────────────
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setCardError('');
+        setStockErrors([]);
+
+        if (isCard && (!stripe || !elements || !paymentElementReady)) {
+            setCardError('Payment form not ready. Please wait.');
+            return;
+        }
+
+        setStripeProcessing(true);
+
+        // Step 1 (card only): validate the Payment Element
+        if (isCard) {
+            const { error: submitError } = await elements!.submit();
+            if (submitError) {
+                setCardError(submitError.message ?? 'Please complete payment details.');
+                setStripeProcessing(false);
+                return;
+            }
+        }
+
+        const csrfToken = (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content ?? '';
+
+        // Step 2: tell the server to validate shipping + create PI (card) or order (COD)
+        let intentRes: Response;
+        try {
+            intentRes = await fetch(route('checkout.store'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN':  csrfToken,
+                    'Accept':        'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+        } catch {
+            setCardError('Network error. Please try again.');
+            setStripeProcessing(false);
+            return;
+        }
+
+        const intentJson = await intentRes.json();
+
+        if (!intentRes.ok) {
+            if (intentJson.errors?.stock) {
+                setStockErrors(
+                    Array.isArray(intentJson.errors.stock)
+                        ? intentJson.errors.stock
+                        : [intentJson.errors.stock]
+                );
+            } else {
+                const firstKey = intentJson.errors ? Object.keys(intentJson.errors)[0] : null;
+                const msg = firstKey
+                    ? (Array.isArray(intentJson.errors[firstKey]) ? intentJson.errors[firstKey][0] : intentJson.errors[firstKey])
+                    : (intentJson.message ?? 'Checkout failed. Please try again.');
+                setCardError(msg);
+            }
+            setStripeProcessing(false);
+            return;
+        }
+
+        // COD: server created the order, redirect to success
+        if (intentJson.redirect) {
+            window.location.href = intentJson.redirect;
+            return;
+        }
+
+        // Step 3 (card): confirm payment with Stripe
+        const { error: confirmError, paymentIntent } = await stripe!.confirmPayment({
+            elements: elements!,
+            clientSecret: intentJson.client_secret,
+            confirmParams: {
+                return_url: route('checkout.return'),
+            },
+            redirect: 'if_required',
+        });
+
+        if (confirmError) {
+            setCardError(confirmError.message ?? 'Payment failed.');
+            setStripeProcessing(false);
+            return;
+        }
+
+        // Inline success (no 3DS redirect was needed)
+        if (paymentIntent?.status === 'succeeded') {
+            const finalRes = await fetch(route('checkout.finalize'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN':  csrfToken,
+                    'Accept':        'application/json',
+                },
+                body: JSON.stringify({ payment_intent_id: paymentIntent.id }),
+            });
+            const finalJson = await finalRes.json();
+
+            if (finalJson.redirect) {
+                window.location.href = finalJson.redirect;
+            } else if (finalJson.errors?.stock) {
+                setStockErrors(
+                    Array.isArray(finalJson.errors.stock)
+                        ? finalJson.errors.stock
+                        : [finalJson.errors.stock]
+                );
+                setStripeProcessing(false);
+            } else {
+                setCardError(finalJson.error ?? 'Could not complete order.');
+                setStripeProcessing(false);
+            }
+        }
+        // If no paymentIntent, Stripe redirected the browser (3DS) — nothing to do here
+    };
+
+    // ── Promo helpers ─────────────────────────────────────────────────────────
     const applyPromo = async () => {
         if (!promoInput.trim()) return;
         setPromoLoading(true);
@@ -89,9 +306,6 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
         setData('promo_code', '');
     };
 
-    const isCard = data.payment_method === 'Credit Card';
-    const isCOD  = data.payment_method === 'COD';
-
     const selectSavedAddress = (address: Address) => {
         setData({
             ...data,
@@ -103,33 +317,6 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
             shipping_postal_code:  address.postal_code   || '',
             shipping_country:      address.country,
         });
-    };
-
-    const handleCardNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const raw     = e.target.value.replace(/\D/g, '').slice(0, 16);
-        const display = raw.replace(/(.{4})/g, '$1 ').trim();
-        setCardNumberDisplay(display);
-        setData('card_number', raw.slice(-4));
-    };
-
-    const handleExpiry = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const raw     = e.target.value.replace(/\D/g, '').slice(0, 4);
-        const display = raw.length >= 3 ? raw.slice(0, 2) + '/' + raw.slice(2) : raw;
-        setExpiryDisplay(display);
-        setData('card_expiry', display);
-    };
-
-    // Use variant_price when set, fall back to product base_price
-    const subtotal  = cart.items.reduce(
-        (acc: number, item: any) => acc + effectivePrice(item) * item.quantity,
-        0,
-    );
-    const discount = promoApplied?.discount ?? 0;
-    const total    = Math.max(0, subtotal + shippingFee - discount);
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        post(route('checkout.store'));
     };
 
     const inputCls =
@@ -249,37 +436,35 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
                                 </button>
                             </div>
 
-                            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isCard ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                                <div className="border border-brand-surface p-8 space-y-10 bg-brand-surface/20">
-                                    <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-brand-slate/40">
-                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
-                                        </svg>
-                                        <span>Secured Entry — Card Data Not Stored</span>
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-y-10">
-                                        <div className="group">
-                                            <label className={labelCls}>Cardholder Name</label>
-                                            <input type="text" value={data.cardholder_name} onChange={(e) => setData('cardholder_name', e.target.value.toUpperCase())} className={inputCls} placeholder="AS PRINTED ON CARD" autoComplete="cc-name" />
-                                            {errors.cardholder_name && <span className={errorCls}>{errors.cardholder_name}</span>}
-                                        </div>
-                                        <div className="group">
-                                            <label className={labelCls}>Card Number</label>
-                                            <input type="text" inputMode="numeric" value={cardNumberDisplay} onChange={handleCardNumber} className={`${inputCls} font-mono tracking-[0.15em]`} placeholder="0000 0000 0000 0000" autoComplete="cc-number" />
-                                            {errors.card_number && <span className={errorCls}>{errors.card_number}</span>}
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-10">
-                                            <div className="group">
-                                                <label className={labelCls}>Expiry Date</label>
-                                                <input type="text" inputMode="numeric" value={expiryDisplay} onChange={handleExpiry} className={`${inputCls} font-mono tracking-[0.15em]`} placeholder="MM/YY" autoComplete="cc-exp" />
-                                                {errors.card_expiry && <span className={errorCls}>{errors.card_expiry}</span>}
-                                            </div>
-                                            <div className="group">
-                                                <label className={labelCls}>CVC / CVV</label>
-                                                <input type="password" inputMode="numeric" value={data.card_cvc} onChange={(e) => setData('card_cvc', e.target.value.replace(/\D/g, '').slice(0, 4))} className={`${inputCls} font-mono tracking-[0.15em]`} placeholder="•••" autoComplete="cc-csc" />
-                                                {errors.card_cvc && <span className={errorCls}>{errors.card_cvc}</span>}
+                            {/* Stripe Payment Element */}
+                            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isCard ? 'max-h-[700px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                                <div className="border border-brand-surface bg-brand-surface/20">
+
+                                    {/* Error banner */}
+                                    {((errors as any).payment || cardError) && (
+                                        <div className="flex items-start gap-3 bg-red-50 border-b border-red-200 px-6 py-4">
+                                            <svg className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+                                            </svg>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-wider text-red-700">
+                                                    {(errors as any).payment || cardError}
+                                                </p>
+                                                <p className="text-[9px] text-red-500 mt-0.5">Please check your details and try again.</p>
                                             </div>
                                         </div>
+                                    )}
+
+                                    <div className="p-8 space-y-4">
+                                        <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-brand-slate/40">
+                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+                                            </svg>
+                                            <span>Secured by Stripe — Card data never touches our servers</span>
+                                        </div>
+
+                                        {/* Unified Payment Element (card number, expiry, CVC, name, country) */}
+                                        <div ref={paymentElementRef} />
                                     </div>
                                 </div>
                             </div>
@@ -335,21 +520,21 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
                             )}
                         </section>
 
-                        {/* Stock / availability errors from backend */}
-                        {(errors as any).stock && (
+                        {/* Stock errors */}
+                        {stockErrors.length > 0 && (
                             <div className="border border-red-200 bg-red-50 px-6 py-4 space-y-1">
-                                {Array.isArray((errors as any).stock)
-                                    ? (errors as any).stock.map((msg: string, i: number) => (
-                                        <p key={i} className="text-[9px] font-black uppercase tracking-wide text-red-600">{msg}</p>
-                                    ))
-                                    : <p className="text-[9px] font-black uppercase tracking-wide text-red-600">{(errors as any).stock}</p>
-                                }
+                                {stockErrors.map((msg, i) => (
+                                    <p key={i} className="text-[9px] font-black uppercase tracking-wide text-red-600">{msg}</p>
+                                ))}
                             </div>
                         )}
 
-                        <button type="submit" disabled={processing}
-                            className="w-full bg-brand-charcoal text-brand-white py-10 text-[11px] font-black uppercase tracking-[0.6em] hover:bg-brand-slate transition-all disabled:opacity-20 shadow-2xl hover:shadow-none">
-                            {processing ? 'Securing Transaction...' : 'Complete Purchase'}
+                        <button
+                            type="submit"
+                            disabled={isLoading || (isCard && !paymentElementReady)}
+                            className="w-full bg-brand-charcoal text-brand-white py-10 text-[11px] font-black uppercase tracking-[0.6em] hover:bg-brand-slate transition-all disabled:opacity-20 shadow-2xl hover:shadow-none"
+                        >
+                            {stripeProcessing ? 'Processing...' : processing ? 'Securing Transaction...' : 'Complete Purchase'}
                         </button>
                     </form>
                 </div>
@@ -373,7 +558,6 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
                                             </p>
                                         </div>
                                     </div>
-                                    {/* variant_price when set, otherwise base_price */}
                                     <p className="text-[11px] font-black tracking-tighter tabular-nums">
                                         ${(effectivePrice(item) * item.quantity).toFixed(2)}
                                     </p>
@@ -388,8 +572,8 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
                             </div>
                             <div className="flex justify-between text-[10px] font-black uppercase text-brand-slate/60 tracking-widest">
                                 <span>Shipping</span>
-                                <span className={shippingFee > 0 ? "tabular-nums" : "text-brand-charcoal"}>
-                                    {shippingFee > 0 ? `$${shippingFee.toFixed(2)}` : "Complimentary"}
+                                <span className={shippingFee > 0 ? 'tabular-nums' : 'text-brand-charcoal'}>
+                                    {shippingFee > 0 ? `$${shippingFee.toFixed(2)}` : 'Complimentary'}
                                 </span>
                             </div>
                             {promoApplied && (
@@ -400,7 +584,7 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
                             )}
                             <div className="flex justify-between text-[10px] font-black uppercase text-brand-slate/60 tracking-widest">
                                 <span>Payment</span>
-                                <span className="text-brand-charcoal">{data.payment_method === 'COD' ? 'Cash on Delivery' : 'Card'}</span>
+                                <span className="text-brand-charcoal">{data.payment_method === 'COD' ? 'Cash on Delivery' : 'Card via Stripe'}</span>
                             </div>
                             <div className="flex justify-between items-center pt-6">
                                 <span className="text-[10px] font-black uppercase tracking-[0.3em]">Total Value</span>
@@ -412,7 +596,7 @@ export default function Checkout({ cart, savedAddresses, shippingFee, checkoutIt
             </main>
 
             <footer className="py-20 text-center border-t border-brand-surface opacity-20">
-                <p className="text-[8px] font-black uppercase tracking-[0.8em]">Encrypted End-to-End Secure Transaction</p>
+                <p className="text-[8px] font-black uppercase tracking-[0.8em]">Encrypted End-to-End Secure Transaction — Powered by Stripe</p>
             </footer>
         </div>
     );

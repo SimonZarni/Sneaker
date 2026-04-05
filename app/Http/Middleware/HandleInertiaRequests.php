@@ -96,6 +96,10 @@ class HandleInertiaRequests extends Middleware
                 })()
                 : null,
 
+            'flash' => [
+                'stripe_requires_action' => $request->session()->get('stripe_requires_action'),
+            ],
+
             // 2. Global Navigation Data — cached for 1 hour.
             // Brands, categories, and genders rarely change, so hitting the DB
             // on every page load for every visitor is wasteful. Cache is busted

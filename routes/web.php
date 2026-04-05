@@ -71,8 +71,10 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout',           [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/intent',   [CheckoutController::class, 'createIntent'])->name('checkout.store');
+    Route::post('/checkout/finalize', [CheckoutController::class, 'finalizeOrder'])->name('checkout.finalize');
+    Route::get('/checkout/return',    [CheckoutController::class, 'returnFromStripe'])->name('checkout.return');
     Route::post('/promo/apply', [PromoController::class, 'apply'])->name('promo.apply');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

@@ -41,6 +41,11 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect'      => env('GOOGLE_REDIRECT_URI'),
     ],
+    'stripe' => [
+        'key'    => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+    ],
+
     'vapid' => [
         'subject'     => env('VAPID_SUBJECT', 'mailto:hello@sneaker.drp'),
         'public_key'  => env('VAPID_PUBLIC_KEY'),

@@ -14,6 +14,7 @@ class Payment extends Model
         'card_last4',
         'payment_status',
         'paid_at',
+        'stripe_payment_intent_id',
     ];
 
     protected $casts = [
