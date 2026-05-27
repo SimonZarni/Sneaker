@@ -11,7 +11,15 @@
       "Bash(php -r \"require 'vendor/autoload.php'; echo \\\\Carbon\\\\Carbon::now\\('Asia/Bangkok'\\)->toISOString\\(\\);\")",
       "Bash(npm install:*)",
       "Bash(php:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(Get-Content C:\\\\Users\\\\Simon\\\\sneaker\\\\.env)",
+      "Bash(Select-String \"MAIL\")",
+      "WebSearch",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Simon\\\\sneaker\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(Select-String -Pattern \"MAIL\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
